@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+          content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <link rel='stylesheet' href='../lib/dat.gui.css'>
+  <script src='../lib/three.js'></script>
+  <script src='../lib/dat.gui.js'></script>
+  <title>2-带动画的3D模型</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+<script>
+
+  const width = window.innerWidth
+  const height = window.innerHeight
+  let scene, camera, renderer, cube
+
+  // 设置相机
+  const cameraConfig = {
+    fov: 45,
+    aspect: width / height,
+    near: 0.1,
+    far: 80
+  }
+
+  const cameraPos = {
+    x: 10,
+    y: 10,
+    z: 30
+  }
+
+  const cameraLook = {
+    x: 0,
+    y: 0,
+    z: 0
+  }
+
+  // 设置mesh
+
+  const meshPos = {
+    x: 0,
+    y: 0,
+    z: 0,
+    rotation: false
+  }
+
+  function displayGUI () {
+    const gui = new dat.GUI()
+    let cameraSettings = gui.addFolder('camera')
+    cameraSettings.add(cameraConfig, 'fov', 10, 100).onChange(updateCamera)
+    cameraSettings.add(cameraConfig, 'near', 0.01, 100).onChange(updateCamera)
+    cameraSettings.add(cameraConfig, 'far', 0.01, 100).onChange(updateCamera)
+
+    cameraSettings.add(cameraPos, 'x', 0, 100).name('pos-x').onChange(updateCamera)
+    cameraSettings.add(cameraPos, 'y', 0, 100).name('pos-y').onChange(updateCamera)
+    cameraSettings.add(cameraPos, 'z', 0, 100).name('pos-z').onChange(updateCamera)
+
+    cameraSettings.add(cameraLook, 'x', 0, 100).name('look-x').onChange(updateCamera)
+    cameraSettings.add(cameraLook, 'y', 0, 100).name('look-y').onChange(updateCamera)
+    cameraSettings.add(cameraLook, 'z', 0, 100).name('look-z').onChange(updateCamera)
+
+    cameraSettings.open()
+
+    let meshSettings = gui.addFolder('mesh')
+
+    meshSettings.add(meshPos, 'x', -100, 100).name('pos-x').onChange(updateMesh)
+    meshSettings.add(meshPos, 'y', -100, 100).name('pos-y').onChange(updateMesh)
+    meshSettings.add(meshPos, 'z', -100, 100).name('pos-z').onChange(updateMesh)
+    meshSettings.add(meshPos, 'rotation').name('旋转').onChange(updateMesh)
+
+    gui.add(rotation, [true, false])
+  }
+
+  function initScene () {
+    scene = new THREE.Scene()
+  }
+
+  function initCamera () {
+    camera = new THREE.PerspectiveCamera(cameraConfig.fov, width / height, 0.01, 80)
+    // 设置摄像机的位置并将其朝向场景中心
+    camera.position.set(10, 10, 30)
+    camera.lookAt(scene.position)
+    const helper = new THREE.CameraHelper(camera)
+    scene.add(helper)
+  }
+
+  function addMesh () {
+    let cubeGeometry = new THREE.BoxBufferGeometry(2, 2, 2)
+    let cubeMaterial = new THREE.MeshBasicMaterial({color: '#ff6600', wireframe: true})
+    cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+    cube.position.set(0, 0, 0)
+    scene.add(cube)
+  }
+
+  function addHelper () {
+    const axse = new THREE.AxesHelper(5)
+    scene.add(axse)
+  }
+
+  function initRender () {
+    renderer = new THREE.WebGLRenderer({antialias: true})
+    renderer.setSize(width, height)
+    renderer.setClearColor({alpha: true})
+    render()
+    document.body.appendChild(renderer.domElement)
+
+  }
+
+  function updateCamera () {
+    camera.fov = cameraConfig.fov
+    camera.near = cameraConfig.near
+    camera.far = cameraConfig.far
+
+    camera.position.x = cameraPos.x
+    camera.position.y = cameraPos.y
+    camera.position.z = cameraPos.z
+
+    camera.lookAt(cameraLook.x, cameraLook.y, cameraLook.z)
+
+    camera.updateProjectionMatrix()
+  }
+
+  function updateMesh () {
+    cube.position.x = meshPos.x
+    cube.position.y = meshPos.y
+    cube.position.z = meshPos.z
+  }
+
+  // 实时渲染
+  // 需要实时将相机拍下的图像展示出来
+  function render () {
+    requestAnimationFrame(render)
+    if (meshPos.rotation) {
+      cube.rotation.x += 0.02
+      cube.rotation.y += 0.02
+    }
+    renderer.render(scene, camera)
+  }
+
+  // 监听resize事件
+  window.addEventListener('resize', function () {
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+  }, false)
+
+  function init () {
+    initScene()
+    initCamera()
+    addMesh()
+    addHelper()
+    initRender()
+    displayGUI()
+  }
+
+  window.onload = init
+</script>
+</body>
+</html>

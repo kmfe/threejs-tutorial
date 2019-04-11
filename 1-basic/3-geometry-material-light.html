@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+          content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <link rel='stylesheet' href='../lib/dat.gui.css'>
+  <script src='../lib/three.js'></script>
+  <script src='../lib/dat.gui.js'></script>
+  <title>3-几何体、材质、光</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+<script>
+  const win = window.innerWidth
+  const height = window.innerHeight
+
+  // renderer
+  let renderer
+
+  function initRender () {
+    renderer = new THREE.WebGLRenderer({antialias: true})
+    renderer.setClearColor('#000000')
+    renderer.setSize(win, height)
+    // 需要渲染阴影
+    renderer.shadowMap.enabled = true
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap // 默认的是，没有设置的这个清晰 THREE.PCFShadowMap
+    document.body.appendChild(renderer.domElement)
+  }
+
+  // scene
+  let scene
+
+  function initScene () {
+    scene = new THREE.Scene()
+  }
+
+  // camera
+  let camera
+
+  function initCamera () {
+    camera = new THREE.PerspectiveCamera(45, win / height, 0.01, 800)
+    camera.position.set(0, 100, 200)
+    camera.lookAt(new THREE.Vector3(0, 0, 0))
+  }
+
+  // 添加gui 操作
+  const ambient = {
+    color: '#111111'
+  }
+
+  const directional = {
+    color: '#ffffff',
+    intensity: 2,
+    targetX: 40,
+    targetY: 60,
+    targetZ: 10,
+    near: -20,
+    far: 100,
+    left: 50,
+    right: -50,
+    top: 50,
+    bottom: -50,
+    visible: true,
+    shadow: true
+  }
+
+  function initGui () {
+    let gui = new dat.GUI()
+    const ambientLight = gui.addFolder('ambient')
+    ambientLight.addColor(ambient, 'color').onChange(updateAmbient)
+    ambientLight.open()
+
+    const direct = gui.addFolder('directional')
+    direct.addColor(directional, 'color').onChange(updateDirectionalLight)
+    direct.add(directional, 'visible').onChange(updateDirectionalLight)
+    direct.add(directional, 'intensity', 0, 10).onChange(updateDirectionalLight)
+    direct.add(directional, 'targetX', -100, 1000).onChange(updateDirectionalLight)
+    direct.add(directional, 'targetY', -100, 1000).onChange(updateDirectionalLight)
+    direct.add(directional, 'targetZ', -100, 1000).onChange(updateDirectionalLight)
+
+    const shadow = gui.addFolder('shadow')
+    shadow.add(directional, 'shadow').onChange(updateShadow)
+    shadow.add(directional, 'near', -100, 1000).onChange(updateShadow)
+    shadow.add(directional, 'far', -100, 1000).onChange(updateShadow)
+    shadow.add(directional, 'left', -100, 1000).onChange(updateShadow)
+    shadow.add(directional, 'right', -100, 1000).onChange(updateShadow)
+    shadow.add(directional, 'top', -100, 1000).onChange(updateShadow)
+    shadow.add(directional, 'bottom', -100, 1000).onChange(updateShadow)
+
+    directionalLight.shadow.camera.updateProjectionMatrix()
+  }
+
+  function updateAmbient () {
+    light.color.set(ambient.color)
+  }
+
+  function updateDirectionalLight () {
+    directionalLight.color.set(directional.color)
+    directionalLight.intensity = directional.intensity
+    directionalLight.position.x = directional.targetX
+    directionalLight.position.y = directional.targetY
+    directionalLight.position.z = directional.targetZ
+    directionalLight.visible = directional.visible
+  }
+
+  function updateShadow () {
+    directionalLight.shadow.camera.near = directional.near
+    directionalLight.shadow.camera.far = directional.far
+    directionalLight.shadow.camera.top = directional.top
+    directionalLight.shadow.camera.left = directional.left
+    directionalLight.shadow.camera.right = directional.right
+    directionalLight.shadow.camera.bottom = directional.bottom
+    directionalLight.castShadow = directional.shadow
+
+    directionalLight.shadow.camera.updateProjectionMatrix()
+  }
+
+  // 光，Mesh
+  let light, directionalLight, debug
+
+  function addSomething () {
+    // 添加环境全局光
+    // 全局光作用于所有的物体，所有的材质所以环境光所以环境光是没有方向的，
+    // 也无法产生阴影
+    light = new THREE.AmbientLight(0x111111)
+    scene.add(light)
+
+    // 添加平行灯光
+    directionalLight = new THREE.DirectionalLight(0xffffff, 0.5)
+    directionalLight.intensity = 2 //将光照强度修改为默认
+    directionalLight.position.set(directional.targetX, directional.targetY, directional.targetZ) //设置平行光的位置
+
+    directionalLight.shadow.camera.near = directional.near //产生阴影的最近距离
+    directionalLight.shadow.camera.far = directional.far //产生阴影的最远距离
+
+    directionalLight.shadow.camera.left = directional.left //产生阴影距离位置的最左边位置
+    directionalLight.shadow.camera.right = directional.right //最右边
+    directionalLight.shadow.camera.top = directional.top //最上边
+    directionalLight.shadow.camera.bottom = directional.bottom //最下面
+
+    //这两个值决定生成阴影密度 默认512
+    directionalLight.shadow.mapSize.height = 1024
+    directionalLight.shadow.mapSize.width = 1024
+
+    directionalLight.castShadow = true
+    scene.add(directionalLight)
+
+    // 添加灯光辅助
+    const debug = new THREE.CameraHelper(directionalLight.shadow.camera)
+    debug.name = 'debug'
+    scene.add(debug)
+
+    // 添加box
+    let boxGeometry = new THREE.BoxBufferGeometry(10, 10, 10)
+    let boxMaterial = new THREE.MeshPhongMaterial({color: '#cd0000'})
+    let box = new THREE.Mesh(boxGeometry, boxMaterial)
+    box.position.set(0, 0, 0)
+    box.castShadow = true // 开启阴影
+    scene.add(box)
+
+    // 添加sphere
+    let sphereGeometry = new THREE.SphereBufferGeometry(6, 90, 80)
+    let sphereMaterial = new THREE.MeshPhongMaterial({color: 0xff00ff})
+    let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+    sphere.position.set(20, 3, 0)
+    directionalLight.target = sphere
+    sphere.castShadow = true // 开启阴影
+    scene.add(sphere)
+
+    // 添加圆锥
+    let coneGeometry = new THREE.ConeBufferGeometry(10, 18, 32)
+    let coneMaterial = new THREE.MeshPhongMaterial({color: 0xffff00})
+    let cone = new THREE.Mesh(coneGeometry, coneMaterial)
+    cone.position.set(-20, 0, 0)
+    cone.castShadow = true // 开启阴影
+    scene.add(cone)
+
+    // 添加圆柱
+    let cylinderGeometry = new THREE.CylinderGeometry(6, 6, 10, 16)
+    let cylinderMaterial = new THREE.MeshPhongMaterial({color: 0xffff00})
+    let cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial)
+    cylinder.position.set(-40, 3, 0)
+    cylinder.castShadow = true // 开启阴影
+    scene.add(cylinder)
+
+    // 在所有物体下方放置一个平面，用于接收阴影
+    let planeGeometry = new THREE.PlaneBufferGeometry(150, 100)
+    let planeMaterial = new THREE.MeshLambertMaterial({color: '#333333'})
+    let plane = new THREE.Mesh(planeGeometry, planeMaterial)
+
+    // plane.position.z = -2
+    plane.position.y = -2
+    // plane.position.x = -2
+
+    plane.rotation.x = -Math.PI / 2
+    // plane.rotation.y = -Math.PI / 90
+    // plane.rotation.z = Math.PI / 3
+    plane.receiveShadow = true // 接收阴影
+
+    scene.add(plane)
+
+    //helper
+    const axse = new THREE.AxesHelper(5)
+    scene.add(axse)
+  }
+
+  function init () {
+    initScene()
+    initCamera()
+    addSomething()
+    // renderer
+    initRender()
+    let render = function () {
+      renderer.render(scene, camera)
+      if (debug) {
+        debug.update()
+      }
+      requestAnimationFrame(render)
+    }
+    initGui()
+    window.onresize = function () {
+      camera.aspect = window.innerWidth / window.innerHeight
+      camera.updateProjectionMatrix()
+      renderer.setSize(window.innerWidth, window.innerHeight)
+    }
+
+    render()
+
+  }
+
+  // 执行了
+  window.onload = init
+
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+          content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>1-凹凸实验室入门案例</title>
+  <script src='../lib/three.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+<div id='example'></div>
+<script>
+  function init () {
+    let width = window.innerWidth
+    let height = window.innerHeight
+
+    // 创建一个场景
+    const scene = new THREE.Scene()
+
+    // 创建一个摄像机
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 80)
+
+    // 设置摄像机的位置并将其朝向场景中心
+    camera.position.x = 10
+    camera.position.y = 10
+    camera.position.z = 30
+
+    //设置相机的上方向
+    camera.up.x = 0
+    camera.up.y = 1
+    camera.up.z = 0
+
+    camera.lookAt(scene.position)
+
+    // 创建一个WebGL渲染器
+    const renderer = new THREE.WebGLRenderer()
+
+    // 设置渲染器的清除颜色(即背景色)和尺寸
+    // 若想用body 作为背景，则可以不设置clearColor， 然后在创建渲染器时设置 alpha:true
+    renderer.setClearColor(0x000000)
+    renderer.setSize(width, height)
+
+    // 创建一个长宽高均为4个单位长度的几何体
+    const cubeGeometry = new THREE.BoxGeometry(4, 4, 4)
+    const material = new THREE.MeshBasicMaterial({color: '#ff6600', wireframe: true})
+    const cube = new THREE.Mesh(cubeGeometry, material)
+
+    // 设置网格位置
+    cube.position.set(0, -2, 0)
+
+    // 立方体网格加入到场景
+    scene.add(cube)
+
+    // 坐标系辅助
+    const axes = new THREE.AxesHelper()
+    scene.add(axes)
+
+    // 添加个字体形状
+    const loader = new THREE.FontLoader()
+    loader.load('../lib/helvetiker_regular.typeface.json', function (font) {
+      const text = new THREE.Mesh(new THREE.TextGeometry('What Fuck', {
+        font: font,
+        size: 1,
+        height: 1
+
+      }), material)
+
+      text.position.set(0, 2, 0)
+      scene.add(text)
+
+      // 渲染
+      renderer.render(scene, camera)
+    })
+
+    // 输入renderer
+    document.body.appendChild(renderer.domElement)
+  }
+
+  init()
+</script>
+</body>
+</html>

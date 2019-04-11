@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+          content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <link rel='stylesheet' href='../lib/dat.gui.css'>
+  <script src='../lib/three.js'></script>
+  <script src='../lib/control/OrbitControls.js'></script>
+  <script src='../lib/dat.gui.js'></script>
+  <title>4-轨迹控制相机-全景图</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+<script>
+  const win = window.innerWidth
+  const height = window.innerHeight
+
+  // renderer
+  let renderer
+
+  function initRender () {
+    renderer = new THREE.WebGLRenderer({antialias: true})
+    renderer.setClearColor('#000000')
+    renderer.setSize(win, height)
+    renderer.shadowMap.enabled = true
+
+    document.body.appendChild(renderer.domElement)
+  }
+
+  // scene
+  let scene
+
+  function initScene () {
+    scene = new THREE.Scene()
+  }
+
+  // add somethings
+
+  function addSomething () {
+
+    // 全局光
+    const light = new THREE.AmbientLight(0x111111)
+    scene.add(light)
+
+    const directionLight = new THREE.DirectionalLight('#ffffff', 1.0)
+    directionLight.position.set(10, 10, 10)
+    directionLight.castShadow = true
+    scene.add(directionLight)
+
+    let boxGeometry = new THREE.BoxBufferGeometry(2, 2, 2)
+    let boxMaterial = new THREE.MeshPhongMaterial({color: '#cd0000'})
+    let box = new THREE.Mesh(boxGeometry, boxMaterial)
+    box.position.set(0, 0, 0)
+    box.castShadow = true
+    scene.add(box)
+
+    // 添加个地板
+
+    let planeGeometry = new THREE.BoxBufferGeometry(20, 10, 0.2)
+    let planeMaterial = new THREE.MeshLambertMaterial({color: '#666666'})
+    let plane = new THREE.Mesh(planeGeometry, planeMaterial)
+    plane.rotation.x = -Math.PI / 2
+    plane.rotation.z = Math.PI * 1.1
+    plane.position.y = -1
+    plane.receiveShadow = true
+    scene.add(plane)
+
+    const axes = new THREE.AxesHelper()
+    scene.add(axes)
+  }
+
+  // camera
+  let camera, controls
+
+  function initCamera () {
+    camera = new THREE.PerspectiveCamera(45, win / height, 0.01, 800)
+    camera.position.set(10, 10, 30)
+    camera.lookAt(scene.position)
+    controls = new THREE.OrbitControls(camera)
+    controls.update()
+    scene.add(camera)
+  }
+
+  let controlsConfig
+
+  function gui () {
+    const gui = new dat.GUI()
+    controlsConfig = {
+      autoRotate: false,
+      autoRotateSpeed: 1.0,
+      enableRotate: true,
+      enableZoom: true,
+      enablePan: true,
+      enableDamping: false,
+      dampingFactor: 0.25,
+      minDistance: 0,
+      maxDistance: 1000,
+      minPolarAngle: 0,
+      maxPolarAngle: Math.PI,
+      minAzimuthAngle: -Math.PI * 10,
+      maxAzimuthAngle: Math.PI * 10
+    }
+
+    // 相机gui 配置
+    gui.add(controlsConfig, 'autoRotate').onChange(controlsUpdate)
+    gui.add(controlsConfig, 'autoRotateSpeed', 1.0, 10.0).onChange(controlsUpdate)
+    gui.add(controlsConfig, 'enableRotate').onChange(controlsUpdate)
+    gui.add(controlsConfig, 'enableZoom').onChange(controlsUpdate)
+    gui.add(controlsConfig, 'enablePan').onChange(controlsUpdate)
+    gui.add(controlsConfig, 'enableDamping').onChange(controlsUpdate)
+    gui.add(controlsConfig, 'dampingFactor', 0, 10).onChange(controlsUpdate)
+    gui.add(controlsConfig, 'minDistance', 1, 1000).onChange(controlsUpdate)
+    gui.add(controlsConfig, 'maxDistance', 1, 1000).onChange(controlsUpdate)
+
+    gui.add(controlsConfig, 'minPolarAngle', Math.PI * -10, Math.PI * 10).onChange(controlsUpdate)
+    gui.add(controlsConfig, 'maxPolarAngle', Math.PI * -10, Math.PI * 10).onChange(controlsUpdate)
+    gui.add(controlsConfig, 'minAzimuthAngle', Math.PI * -10, Math.PI * 10).onChange(controlsUpdate)
+    gui.add(controlsConfig, 'maxAzimuthAngle', Math.PI * -10, Math.PI * 10).onChange(controlsUpdate)
+
+    function controlsUpdate () {
+      Object.keys(controlsConfig).forEach(item => {
+        controls[item] = controlsConfig[item]
+      })
+      console.log(controls)
+      controls.update()
+    }
+  }
+
+  function init () {
+    initScene()
+    initCamera()
+    addSomething()
+    // renderer
+    gui()
+    initRender()
+    let render = function () {
+      requestAnimationFrame(render)
+      controls.update()
+      renderer.render(scene, camera)
+    }
+
+    window.onresize = function () {
+      camera.aspect = window.innerWidth / window.innerHeight
+      camera.updateProjectionMatrix()
+      renderer.setSize(window.innerWidth, window.innerHeight)
+    }
+
+    render()
+
+  }
+
+  // 执行了
+  window.onload = init
+
+</script>
+</body>
+</html>
