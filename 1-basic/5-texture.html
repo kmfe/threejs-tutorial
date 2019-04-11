@@ -22,6 +22,7 @@
   </style>
 </head>
 <body>
+<button id='switch'>切换至下一个场景</button>
 <script>
   const win = window.innerWidth
   const height = window.innerHeight
@@ -30,11 +31,11 @@
   let renderer
 
   function initRender () {
-    renderer = new THREE.WebGLRenderer({antialias: true})
+    renderer = new THREE.WebGLRenderer()
     renderer.setClearColor('#000000')
     renderer.setSize(win, height)
     renderer.shadowMap.enabled = true
-
+    //
     document.body.appendChild(renderer.domElement)
   }
 
@@ -58,21 +59,34 @@
     directionLight.castShadow = true
     scene.add(directionLight)
 
-    let boxGeometry = new THREE.BoxBufferGeometry(2, 2, 2)
-    let boxMaterial = new THREE.MeshPhongMaterial({color: '#cd0000'})
-    let box = new THREE.Mesh(boxGeometry, boxMaterial)
-    box.position.set(0, 0, 0)
+    // 添加cube
+    let boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1)
+
+    let textures = getTextureFromAtlasFile('../assets/sun_temple_stripe.jpg', 6)
+    let material = []
+
+    for (let i = 0; i < textures.length; i++) {
+      material.push(new THREE.MeshBasicMaterial({map: textures[i]}))
+    }
+
+    let box = new THREE.Mesh(boxGeometry, material)
+    // box.position.set(0, 2, 0)
+    box.geometry.scale(-1, 1, 1) // 内部绘制
     box.castShadow = true
     scene.add(box)
 
     // 添加个地板
+    const bgTexture = new THREE.TextureLoader().load('../assets/brick_bump.jpg')
+    bgTexture.wrapS = THREE.RepeatWrapping
+    bgTexture.wrapT = THREE.RepeatWrapping
+    bgTexture.repeat.set(20, 20)
 
     let planeGeometry = new THREE.BoxBufferGeometry(20, 10, 0.2)
-    let planeMaterial = new THREE.MeshLambertMaterial({color: '#666666'})
+    let planeMaterial = new THREE.MeshLambertMaterial({color: '#666666', map: bgTexture})
     let plane = new THREE.Mesh(planeGeometry, planeMaterial)
     plane.rotation.x = -Math.PI / 2
     plane.rotation.z = Math.PI * 1.1
-    plane.position.y = -1
+    plane.position.y = -2
     plane.receiveShadow = true
     scene.add(plane)
 
@@ -84,57 +98,14 @@
   let camera, controls
 
   function initCamera () {
-    camera = new THREE.PerspectiveCamera(45, win / height, 0.01, 800)
+    camera = new THREE.PerspectiveCamera(90, win / height, 0.1, 100)
     camera.position.set(10, 10, 30)
-    camera.lookAt(scene.position)
+    // camera.position.z = 0.01
+    // camera.lookAt(scene.position)
     controls = new THREE.OrbitControls(camera)
     controls.update()
+    // controls.enableZoom = false
     scene.add(camera)
-  }
-
-  let controlsConfig
-
-  function gui () {
-    const gui = new dat.GUI()
-    controlsConfig = {
-      autoRotate: false,
-      autoRotateSpeed: 1.0,
-      enableRotate: true,
-      enableZoom: true,
-      enablePan: true,
-      enableDamping: false,
-      dampingFactor: 0.25,
-      minDistance: 0,
-      maxDistance: 1000,
-      minPolarAngle: 0,
-      maxPolarAngle: Math.PI,
-      minAzimuthAngle: -Math.PI * 10,
-      maxAzimuthAngle: Math.PI * 10
-    }
-
-    // 相机gui 配置
-    gui.add(controlsConfig, 'autoRotate').onChange(controlsUpdate)
-    gui.add(controlsConfig, 'autoRotateSpeed', 1.0, 10.0).onChange(controlsUpdate)
-    gui.add(controlsConfig, 'enableRotate').onChange(controlsUpdate)
-    gui.add(controlsConfig, 'enableZoom').onChange(controlsUpdate)
-    gui.add(controlsConfig, 'enablePan').onChange(controlsUpdate)
-    gui.add(controlsConfig, 'enableDamping').onChange(controlsUpdate)
-    gui.add(controlsConfig, 'dampingFactor', 0, 10).onChange(controlsUpdate)
-    gui.add(controlsConfig, 'minDistance', 1, 1000).onChange(controlsUpdate)
-    gui.add(controlsConfig, 'maxDistance', 1, 1000).onChange(controlsUpdate)
-
-    gui.add(controlsConfig, 'minPolarAngle', Math.PI * -10, Math.PI * 10).onChange(controlsUpdate)
-    gui.add(controlsConfig, 'maxPolarAngle', Math.PI * -10, Math.PI * 10).onChange(controlsUpdate)
-    gui.add(controlsConfig, 'minAzimuthAngle', Math.PI * -10, Math.PI * 10).onChange(controlsUpdate)
-    gui.add(controlsConfig, 'maxAzimuthAngle', Math.PI * -10, Math.PI * 10).onChange(controlsUpdate)
-
-    function controlsUpdate () {
-      Object.keys(controlsConfig).forEach(item => {
-        controls[item] = controlsConfig[item]
-      })
-      console.log(controls)
-      controls.update()
-    }
   }
 
   function init () {
@@ -142,7 +113,6 @@
     initCamera()
     addSomething()
     // renderer
-    gui()
     initRender()
     let render = function () {
       requestAnimationFrame(render)
@@ -158,6 +128,31 @@
 
     render()
 
+  }
+
+  function getTextureFromAtlasFile (atlasImgUrl, tilesNum) {
+    let textures = []
+    for (let i = 0; i < tilesNum; i++) {
+      textures[i] = new THREE.Texture()
+    }
+
+    let imgObj = new Image()
+    imgObj.onload = function () {
+      let canvas, context
+      let tileWidth = imgObj.height
+      for (let i = 0; i < textures.length; i++) {
+        canvas = document.createElement('canvas')
+        context = canvas.getContext('2d')
+        canvas.height = tileWidth
+        canvas.width = tileWidth
+        context.drawImage(imgObj, tileWidth * i, 0, tileWidth, tileWidth, 0, 0, tileWidth, tileWidth)
+        textures[i].image = canvas
+        textures[i].needsUpdate = true
+      }
+    }
+
+    imgObj.src = atlasImgUrl
+    return textures
   }
 
   // 执行了
