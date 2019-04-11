@@ -19,10 +19,28 @@
     body, html {
       overflow: hidden;
     }
+
+    #switch {
+      position: absolute;
+      z-index: 99;
+      bottom: 20px;
+      left: 20px;
+      outline: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all .3s;
+      border: none 0;
+    }
+
+    #switch:hover {
+      background: #cd0000;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
-<button id='switch'>切换至下一个场景</button>
+<button id='switch'>切换至球形场景</button>
 <script>
   const win = window.innerWidth
   const height = window.innerHeight
@@ -70,10 +88,30 @@
     }
 
     let box = new THREE.Mesh(boxGeometry, material)
-    // box.position.set(0, 2, 0)
     box.geometry.scale(-1, 1, 1) // 内部绘制
     box.castShadow = true
+    box.visible = false
     scene.add(box)
+
+    // 球面
+    let sphereGeometry = new THREE.SphereBufferGeometry(2, 180, 180, -Math.PI / 2)
+    sphereGeometry.scale(-1, 1, 1)
+
+    let sphereTexture = new THREE.TextureLoader().load('../assets/center.jpg')
+    let sphereMaterial = new THREE.MeshBasicMaterial({map: sphereTexture})
+    let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+
+    sphere.matrixAutoUpdate = false
+    sphere.updateMatrix()
+
+    // 往球体中加入一个小东西
+    let boxinGeo = new THREE.BoxBufferGeometry(1,1,1)
+    let boxMat = new THREE.MeshBasicMaterial({color: '#cd0000'})
+    let boxin = new THREE.Mesh(boxinGeo, boxMat)
+    boxin.position.set(0, 0, 0)
+    scene.add(boxin)
+
+    scene.add(sphere)
 
     // 添加个地板
     const bgTexture = new THREE.TextureLoader().load('../assets/brick_bump.jpg')
@@ -88,6 +126,7 @@
     plane.rotation.z = Math.PI * 1.1
     plane.position.y = -2
     plane.receiveShadow = true
+
     scene.add(plane)
 
     const axes = new THREE.AxesHelper()
@@ -99,9 +138,8 @@
 
   function initCamera () {
     camera = new THREE.PerspectiveCamera(90, win / height, 0.1, 100)
-    camera.position.set(10, 10, 30)
-    // camera.position.z = 0.01
-    // camera.lookAt(scene.position)
+    // camera.position.set(10, 10, 30)
+    camera.position.z = -0.001
     controls = new THREE.OrbitControls(camera)
     controls.update()
     // controls.enableZoom = false
@@ -157,6 +195,7 @@
 
   // 执行了
   window.onload = init
+
 
 </script>
 </body>
