@@ -77,22 +77,6 @@
     directionLight.castShadow = true
     scene.add(directionLight)
 
-    // 添加cube
-    let boxGeometry = new THREE.BoxBufferGeometry(1, 1, 1)
-
-    let textures = getTextureFromAtlasFile('../assets/sun_temple_stripe.jpg', 6)
-    let material = []
-
-    for (let i = 0; i < textures.length; i++) {
-      material.push(new THREE.MeshBasicMaterial({map: textures[i]}))
-    }
-
-    let box = new THREE.Mesh(boxGeometry, material)
-    box.geometry.scale(-1, 1, 1) // 内部绘制
-    box.castShadow = true
-    box.visible = false
-    scene.add(box)
-
     // 球面
     let sphereGeometry = new THREE.SphereBufferGeometry(2, 180, 180, Math.PI)
 
@@ -107,47 +91,33 @@
     sphere.matrixAutoUpdate = false
     sphere.updateMatrix()
 
-    // 往球体中加入一个小东西
-    let circleGeo = new THREE.CircleBufferGeometry(0.5, 32)
-    let circlelMat = new THREE.MeshBasicMaterial({color: '#cd0000'})
-    let circle = new THREE.Mesh(circleGeo, circlelMat)
+    // 增加补地logo
+    let mixLogo = new THREE.TextureLoader().load('../assets/BDLogo.png')
+
+    let circleGeo = new THREE.CircleBufferGeometry(0.5, 180)
+    let circleMat = new THREE.MeshBasicMaterial({map: mixLogo, side: THREE.DoubleSide})
+    let circle = new THREE.Mesh(circleGeo, circleMat)
     circle.position.set(0, -1.5, 0)
     circle.rotation.x = -Math.PI / 2
     scene.add(circle)
-
     scene.add(sphere)
-
-    // 添加个地板
-    const bgTexture = new THREE.TextureLoader().load('../assets/brick_bump.jpg')
-    bgTexture.wrapS = THREE.RepeatWrapping
-    bgTexture.wrapT = THREE.RepeatWrapping
-    bgTexture.repeat.set(20, 20)
-
-    let planeGeometry = new THREE.BoxBufferGeometry(20, 10, 0.2)
-    let planeMaterial = new THREE.MeshLambertMaterial({color: '#666666', map: bgTexture})
-    let plane = new THREE.Mesh(planeGeometry, planeMaterial)
-    plane.rotation.x = -Math.PI / 2
-    plane.rotation.z = Math.PI * 1.1
-    plane.position.y = -2
-    plane.receiveShadow = true
-
-    scene.add(plane)
 
     const axes = new THREE.AxesHelper()
     scene.add(axes)
   }
+
+  // 增加热点
+
 
   // camera
   let camera, controls
 
   function initCamera () {
     camera = new THREE.PerspectiveCamera(90, win / height, 0.001, 1000)
-    //camera.position.set(0, 0, 0)
     camera.position.z = 0.0001
     camera.lookAt(new THREE.Vector3(0, 0, 0.001))
     controls = new THREE.OrbitControls(camera)
     controls.update()
-    // controls.enableZoom = false
     scene.add(camera)
   }
 
@@ -162,40 +132,12 @@
       controls.update()
       renderer.render(scene, camera)
     }
-
     window.onresize = function () {
       camera.aspect = window.innerWidth / window.innerHeight
       camera.updateProjectionMatrix()
       renderer.setSize(window.innerWidth, window.innerHeight)
     }
-
     render()
-
-  }
-
-  function getTextureFromAtlasFile (atlasImgUrl, tilesNum) {
-    let textures = []
-    for (let i = 0; i < tilesNum; i++) {
-      textures[i] = new THREE.Texture()
-    }
-
-    let imgObj = new Image()
-    imgObj.onload = function () {
-      let canvas, context
-      let tileWidth = imgObj.height
-      for (let i = 0; i < textures.length; i++) {
-        canvas = document.createElement('canvas')
-        context = canvas.getContext('2d')
-        canvas.height = tileWidth
-        canvas.width = tileWidth
-        context.drawImage(imgObj, tileWidth * i, 0, tileWidth, tileWidth, 0, 0, tileWidth, tileWidth)
-        textures[i].image = canvas
-        textures[i].needsUpdate = true
-      }
-    }
-
-    imgObj.src = atlasImgUrl
-    return textures
   }
 
   // 执行了
