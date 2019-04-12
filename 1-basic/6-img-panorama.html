@@ -9,7 +9,7 @@
   <script src='../lib/three.js'></script>
   <script src='../lib/control/OrbitControls.js'></script>
   <script src='../lib/dat.gui.js'></script>
-  <title>5-材质贴图</title>
+  <title>6-全景图</title>
   <style>
     * {
       margin: 0;
@@ -40,7 +40,6 @@
   </style>
 </head>
 <body>
-<button id='switch'>切换至球形场景</button>
 <script>
   const win = window.innerWidth
   const height = window.innerHeight
@@ -118,7 +117,6 @@
     camera.lookAt(new THREE.Vector3(0, 0, 0.001))
     controls = new THREE.OrbitControls(camera)
     controls.update()
-    scene.add(camera)
   }
 
   function init () {

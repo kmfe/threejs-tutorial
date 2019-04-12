@@ -40,7 +40,6 @@
   </style>
 </head>
 <body>
-<button id='switch'>切换至球形场景</button>
 <script>
   const win = window.innerWidth
   const height = window.innerHeight
@@ -69,7 +68,7 @@
   function addSomething () {
 
     // 全局光
-    const light = new THREE.AmbientLight(0x111111)
+    const light = new THREE.AmbientLight(0x111111,10, 10)
     scene.add(light)
 
     const directionLight = new THREE.DirectionalLight('#ffffff', 1.0)
@@ -90,41 +89,17 @@
     let box = new THREE.Mesh(boxGeometry, material)
     box.geometry.scale(-1, 1, 1) // 内部绘制
     box.castShadow = true
-    box.visible = false
     scene.add(box)
 
-    // 球面
-    let sphereGeometry = new THREE.SphereBufferGeometry(2, 180, 180, Math.PI)
-
-    let sphereTexture = new THREE.TextureLoader().load('../assets/center.jpg')
-
-    //sphereTexture.needsUpdate = true
-
-    let sphereMaterial = new THREE.MeshBasicMaterial({map: sphereTexture, side: THREE.BackSide})
-    let sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-
-    sphere.rotation.x = -Math.PI
-    sphere.matrixAutoUpdate = false
-    sphere.updateMatrix()
-
-    // 往球体中加入一个小东西
-    let circleGeo = new THREE.CircleBufferGeometry(0.5, 32)
-    let circlelMat = new THREE.MeshBasicMaterial({color: '#cd0000'})
-    let circle = new THREE.Mesh(circleGeo, circlelMat)
-    circle.position.set(0, -1.5, 0)
-    circle.rotation.x = -Math.PI / 2
-    scene.add(circle)
-
-    scene.add(sphere)
 
     // 添加个地板
-    const bgTexture = new THREE.TextureLoader().load('../assets/brick_bump.jpg')
+    const bgTexture = new THREE.TextureLoader().load('../assets/snow-ground.jpg')
     bgTexture.wrapS = THREE.RepeatWrapping
     bgTexture.wrapT = THREE.RepeatWrapping
-    bgTexture.repeat.set(20, 20)
+    // bgTexture.repeat.set(20, 20)
 
     let planeGeometry = new THREE.BoxBufferGeometry(20, 10, 0.2)
-    let planeMaterial = new THREE.MeshLambertMaterial({color: '#666666', map: bgTexture})
+    let planeMaterial = new THREE.MeshLambertMaterial({color: '#666666', bumpMap: bgTexture})
     let plane = new THREE.Mesh(planeGeometry, planeMaterial)
     plane.rotation.x = -Math.PI / 2
     plane.rotation.z = Math.PI * 1.1
@@ -141,9 +116,9 @@
   let camera, controls
 
   function initCamera () {
-    camera = new THREE.PerspectiveCamera(90, win / height, 0.001, 1000)
-    //camera.position.set(0, 0, 0)
-    camera.position.z = 0.0001
+    camera = new THREE.PerspectiveCamera(60, win / height, 0.001, 1000)
+    // camera.position.set(0, 0, 0)
+    camera.position.z = 1
     camera.lookAt(new THREE.Vector3(0, 0, 0.001))
     controls = new THREE.OrbitControls(camera)
     controls.update()
