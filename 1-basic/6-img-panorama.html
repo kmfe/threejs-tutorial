@@ -77,7 +77,7 @@
     scene.add(directionLight)
 
     // 球面
-    let sphereGeometry = new THREE.SphereBufferGeometry(2, 180, 180, Math.PI)
+    let sphereGeometry = new THREE.SphereBufferGeometry(200, 180, 180, Math.PI)
 
     let sphereTexture = new THREE.TextureLoader().load('../assets/center.jpg')
 
@@ -96,9 +96,15 @@
     let circleGeo = new THREE.CircleBufferGeometry(0.5, 180)
     let circleMat = new THREE.MeshBasicMaterial({map: mixLogo, side: THREE.DoubleSide})
     let circle = new THREE.Mesh(circleGeo, circleMat)
-    circle.position.set(0, -1.5, 0)
-    circle.rotation.x = -Math.PI / 2
+
+    // 贴地logo
+    // circle.position.set(0, -1.5, 0)
+    // circle.rotation.x = -Math.PI / 2
+
+    // 贴天logo
     scene.add(circle)
+    circle.position.set(0, 1.5, 0)
+
     scene.add(sphere)
 
     const axes = new THREE.AxesHelper()
@@ -106,7 +112,6 @@
   }
 
   // 增加热点
-
 
   // camera
   let camera, controls
@@ -116,6 +121,8 @@
     camera.position.z = 0.0001
     camera.lookAt(new THREE.Vector3(0, 0, 0.001))
     controls = new THREE.OrbitControls(camera)
+    controls.minDistance = 2
+    controls.maxDistance = 180
     controls.update()
   }
 
