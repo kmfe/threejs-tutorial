@@ -6,6 +6,7 @@
           content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
   <meta http-equiv='X-UA-Compatible' content='ie=edge'>
   <script src='../lib/three.js'></script>
+  <script src='../lib/control/DragControls.js'></script>
   <script src='../lib/control/OrbitControls.js'></script>
   <script src='../lib/dat.gui.js'></script>
   <title>7-精灵、粒子</title>
@@ -127,9 +128,18 @@
     canvasSprit.rotation.x = -Math.PI / 2
     canvasSprit.position.set(0, 1.5, 0)
     // canvasSprit.scale.set(0, 1.5, 0)
-    canvasSprit.center.set(0.5, 0.5);
+    canvasSprit.center.set(0.5, 0.5)
 
     scene.add(canvasSprit)
+
+    let dragControls = new THREE.DragControls([sprite, canvasSprit], camera, renderer.domElement)
+    dragControls.addEventListener('dragstart', function () {
+      controls.enabled = false
+    })
+    dragControls.addEventListener('dragend', function (e) {
+      console.log(e.object.position, '完成拖拽')
+      controls.enabled = true
+    })
   }
 
   function render () {
