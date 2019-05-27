@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+          content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <script src='../lib/Tween.js'></script>
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    #box {
+      width: 100px;
+      height: 100px;
+      background: #cd0000;
+    }
+  </style>
+</head>
+<body>
+<div id='box'>
+
+</div>
+<script>
+  let box = document.querySelector('#box')
+  const animate = time => {
+    requestAnimationFrame(animate)
+    TWEEN.update(time)
+  }
+  requestAnimationFrame(animate)
+
+  let croods = {x: 0, y: 0}
+  const tween = new TWEEN.Tween(croods)
+  .to({x: 300, y: 200}, 1000)
+  .easing(TWEEN.Easing.Quadratic.Out)
+  .onUpdate(function () {
+    box.style.setProperty('transform', 'translate(' + croods.x + 'px, ' + croods.y + 'px)')
+  })
+  tween.start()
+
+</script>
+</body>
+</html>
