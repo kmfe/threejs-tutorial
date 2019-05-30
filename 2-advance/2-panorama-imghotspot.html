@@ -5,7 +5,7 @@
   <meta name='viewport'
           content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
   <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-  <title>panorama + 热点</title>
+  <title>panorama + 图片热点</title>
   <style>
     * {
       padding: 0;
@@ -253,7 +253,7 @@
       this.controls.minDistance = 1
       this.controls.maxDistance = 500
 
-      let aes = new THREE.AxisHelper(500)
+      let aes = new THREE.AxesHelper(500)
       this.scene.add(aes)
     }
 
@@ -306,44 +306,81 @@
       meshGroup.name = button.name
       meshGroup.position.set(...position)
 
-      let mesh = this.createSpriteShape('#ffffff', 0.8, 12)
-      meshGroup.add(mesh)
+      if (!button.type) {
+        let mesh = this.createSpriteShape({color: '#ffffff', opacity: 0.8, scale: 12})
+        meshGroup.add(mesh)
 
-      mesh = this.createSpriteShape('#2d2d2d', 0.6, 24)
-      meshGroup.add(mesh)
+        mesh = this.createSpriteShape({color: '#2d2d2d', opacity: 0.6, scale: 24})
+        meshGroup.add(mesh)
 
-      mesh = this.createSpriteShape('#2d2d2d', 0.2, 36)
-      meshGroup.add(mesh)
+        mesh = this.createSpriteShape({color: '#2d2d2d', opacity: 0.2, scale: 36})
+        meshGroup.add(mesh)
 
-      this.buttonArr.push(mesh)
-      mesh.name = button.name
-      this.buttonGroup.add(meshGroup)
-      this.animatePoints(meshGroup)
+        this.buttonArr.push(mesh)
+        mesh.name = button.name
+        this.buttonGroup.add(meshGroup)
+        this.animatePoints(meshGroup)
+      } else if (button.type === 'img') {
+        this.createSpriteShape({url: button.url, type: 'img'})
+        .then(buildTexture => {
+          let mesh = buildTexture()
+          this.buttonArr.push(mesh)
+          mesh.name = button.name
+          console.log(mesh, 'then handler')
+        })
+        .catch(e => {
+          console.log('发生错误了', e)
+        })
+      } else if (button.type === 'text') {
+        console.log('hotspot text')
+      }
     }
 
-    createSpriteShape (color, opacity, scale) {
+    createSpriteShape (settings) {
+      settings.opacity = settings.opacity || 1
+      settings.scale = settings.scale || 1
       let canvas = document.createElement('canvas')
       document.body.appendChild(canvas)
       canvas.width = 128
       canvas.height = 128
       let ctx = canvas.getContext('2d')
-      ctx.fillStyle = color
-      ctx.arc(64, 64, 64, 0, 2 * Math.PI)
-      ctx.fill()
 
-      let texture = new THREE.Texture(canvas)
-      texture.needsUpdate = true
-      let material = new THREE.SpriteMaterial({
-        map: texture,
-        transparent: true,
-        opacity: opacity,
-        depthTest: false
-      })
+      const buildTexture = () => {
+        let texture = new THREE.Texture(canvas)
+        texture.needsUpdate = true
+        let material = new THREE.SpriteMaterial({
+          map: texture,
+          transparent: true,
+          opacity: settings.opacity,
+          depthTest: false
+        })
+        let mesh = new THREE.Sprite(material)
+        mesh.scale.set(settings.scale, settings.scale, 1)
+        canvas.remove()
+        return mesh
+      }
 
-      let mesh = new THREE.Sprite(material)
-      mesh.scale.set(scale, scale, 1)
-      canvas.remove()
-      return mesh
+      switch (settings.type) {
+        case 'img':
+          return new Promise((resolve, reject) => {
+            let img = new Image()
+            img.src = settings.url
+            img.setAttribute('crossOrigin', 'anonymous')
+            img.onload = () => {
+              ctx.drawImage(img, 0, 0, 128, 128)
+              resolve(buildTexture)
+              reject('something error occurred in img onload function')
+            }
+          })
+        case 'text':
+          break
+        default:
+          ctx.fillStyle = settings.color
+          ctx.arc(64, 64, 64, 0, 2 * Math.PI)
+          ctx.fill()
+          return buildTexture()
+      }
+
     }
 
     animatePoints (meshGroup) {
@@ -457,22 +494,34 @@
       {
         phi: -90,
         theta: -10,
-        name: 'huadengjie'
+        name: 'huadengjie',
+        type: 'img',
+        url: '../assets/hotspot/new_spotd1.png',
+        text: '花灯节'
       },
       {
         phi: 32,
         theta: 14,
-        name: 'ranbaotadeng'
+        name: 'ranbaotadeng',
+        type: 'img',
+        url: '../assets/hotspot/new_spotd8.png',
+        text: '燃宝塔灯'
       },
       {
         phi: -153,
         theta: -44,
-        name: 'touguasongzi'
+        name: 'touguasongzi',
+        type: 'img',
+        url: '../assets/hotspot/new_spotd11.png',
+        text: '偷瓜送子'
       },
       {
         phi: 0,
         theta: 0,
-        name: 'changeScene'
+        name: 'changeScene',
+        text: '下个场景',
+        url: '',
+        type: ''
       }
     ],
     imgUrl: '../assets/poster.png',
