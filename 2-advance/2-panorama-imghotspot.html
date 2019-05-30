@@ -322,11 +322,12 @@
         this.animatePoints(meshGroup)
       } else if (button.type === 'img') {
         this.createSpriteShape({url: button.url, type: 'img'})
-        .then(buildTexture => {
-          let mesh = buildTexture()
+        .then(mesh => {
+          mesh.position.set(...position)
+          meshGroup.add(mesh)
           this.buttonArr.push(mesh)
           mesh.name = button.name
-          console.log(mesh, 'then handler')
+          this.buttonGroup.add(meshGroup.children[0])
         })
         .catch(e => {
           console.log('发生错误了', e)
@@ -338,11 +339,11 @@
 
     createSpriteShape (settings) {
       settings.opacity = settings.opacity || 1
-      settings.scale = settings.scale || 1
+      settings.scale = settings.scale || 50
       let canvas = document.createElement('canvas')
       document.body.appendChild(canvas)
-      canvas.width = 128
-      canvas.height = 128
+      canvas.width = 80
+      canvas.height = 80
       let ctx = canvas.getContext('2d')
 
       const buildTexture = () => {
@@ -355,6 +356,7 @@
           depthTest: false
         })
         let mesh = new THREE.Sprite(material)
+
         mesh.scale.set(settings.scale, settings.scale, 1)
         canvas.remove()
         return mesh
@@ -367,8 +369,8 @@
             img.src = settings.url
             img.setAttribute('crossOrigin', 'anonymous')
             img.onload = () => {
-              ctx.drawImage(img, 0, 0, 128, 128)
-              resolve(buildTexture)
+              ctx.drawImage(img, 0, 0, 80, 80)
+              resolve(buildTexture())
               reject('something error occurred in img onload function')
             }
           })
@@ -376,7 +378,7 @@
           break
         default:
           ctx.fillStyle = settings.color
-          ctx.arc(64, 64, 64, 0, 2 * Math.PI)
+          ctx.arc(40, 40, 40, 0, 2 * Math.PI)
           ctx.fill()
           return buildTexture()
       }
