@@ -5,7 +5,7 @@
   <meta name='viewport'
           content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
   <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-  <title>panorama + 图片热点</title>
+  <title>南博会案例</title>
   <style>
     * {
       padding: 0;
@@ -17,554 +17,232 @@
       overflow: hidden;
     }
 
-    .md-modal {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 8.44rem;
-      height: auto;
-      font-size: 0.32rem;
-      z-index: 12;
-      visibility: hidden;
-      -webkit-transform: translateX(-50%) translateY(-50%);
-      -ms-transform: translateX(-50%) translateY(-50%);
-      transform: translateX(-50%) translateY(-50%);
-    }
-
-    .md-show {
-      visibility: visible;
-    }
-
-    .md-main {
-      height: 12.2rem;
-      padding: 5.626667rem 0 0 0.973333rem;
-      -webkit-box-sizing: border-box;
-      box-sizing: border-box;
-      color: #5b5b5b;
-      background: #656565;
-      position: relative;
-      margin-bottom: 0.466667rem;
-    }
-
-    .md-main-huadengjie {
-      background: url(../images/card/huadengjie.png) center center no-repeat;
-      background-size: contain;
-    }
-
-    .md-main-ranbaotadeng {
-      background: url(../images/card/ranbaotadeng.png) center center no-repeat;
-      background-size: contain;
-    }
-
-    .md-main-touguasongzi {
-      background: url(../images/card/touguasongzi.png) center center no-repeat;
-      background-size: contain;
-    }
-
-    .md-main-wuhuolong {
-      background: url(../images/card/wuhuolong.png) center center no-repeat;
-      background-size: contain;
-    }
-
-    .md-main-paopazhaoqin {
-      background: url(../images/card/paopazhaoqin.png) center center no-repeat;
-      background-size: contain;
-    }
-
-    .md-effect-3 .md-wrap {
-      transform: translateY(20%);
-      opacity: 0;
-      transition: all .5s;
-    }
-
-    .md-show.md-effect-3 .md-wrap {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .md-wrap .md-text-mask {
-      position: absolute;
-      width: 6.48rem;
-      height: 0.666667rem;
-      margin-top: -0.64rem;
-      background: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.3)), to(white));
-      background: linear-gradient(rgba(255, 255, 255, 0.3), white);
-    }
-
-    .md-content {
-      width: 6.48rem;
-      height: 5.6rem;
-      padding-right: 0.4rem;
-      overflow: auto;
-      text-align: justify;
-      text-indent: 2em;
-      line-height: 2;
-      -webkit-overflow-scrolling: touch;
-      -ms-touch-action: auto;
-      touch-action: auto;
-    }
-
-    .md-content p {
-      -ms-touch-action: auto;
-      touch-action: auto;
-    }
-
-    .md-button {
+    #c {
+      width: 100%; /* let our container decide our size */
+      height: 100%;
       display: block;
-      width: 292px;
-      height: 93px;
     }
 
-    .btn-home {
-      float: left;
-      /*background: url(../images/buttons.png) 0 0 no-repeat;*/
-      background-size: cover;
+    #container {
+      position: relative; /* makes this the origin of its children */
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
     }
 
-    .btn-share {
-      float: right;
-      /*background: url(../images/buttons.png) 100% 0 no-repeat;*/
-      background-size: cover;
-    }
-
-    .md-overlay {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      visibility: hidden;
+    #labels {
+      position: absolute; /* let us position ourself inside the container */
+      left: 0; /* make our position the top left of the container */
       top: 0;
-      left: 0;
-      z-index: 11;
-      opacity: 0;
+      color: white;
+    }
+
+    #labels > div {
+      position: relative; /* let us position them inside the container */
+      left: 0; /* make their default position the top left of the container */
+      top: 0;
+      cursor: pointer; /* change the cursor to a hand when over us */
+      font-size: 14px;
+      font-weight: normal;
+      user-select: none; /* don't let the text get selected */
+      padding: 5px 16px;
       background: rgba(0, 0, 0, .6);
-      -webkit-transition: all .3s;
-      -moz-transition: all .3s;
-      transition: all .3s;
+      border-radius: 15px;
+      z-index: 4;
+      width: fit-content;
+    }
+    #labels > div span{
+      position: relative;
+      z-index: 5;
+    }
+    #labels > div:hover {
+      color: red;
     }
 
-    .md-show ~ .md-overlay {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .md-close {
+    h1{
       position: absolute;
-      z-index: 12;
-      right: -0.186667rem;
-      top: 0.8rem;
-      width: 0.68rem;
-      height: 0.68rem;
-      background: url(../images/close.png) 0 0 no-repeat;
-      background-size: cover;
-    }
-
-    .panorama canvas {
-      transition: all .3s;
-      opacity: 0;
-    }
-
-    .loading {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 99;
-      display: none;
+      left: 50%;
+      top: 50px;
       color: #fff;
-      background: rgba(0, 0, 0, 0.8);
+      transform: translate(-50%, 0);
+      font-size: 36px;
+      font-weight: normal;
     }
+
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      z-index: 2;
+      left: 50%;
+      margin-left: -10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      animation:scaleEffect 5s infinite;
+      transform-origin: 50% 50%;
+    }
+
+    .heart::before {
+      position: absolute;
+      content: '';
+      width: 30px;
+      height: 30px;
+      left: 50%;
+      top: 50%;
+      margin:  -15px 0 0 -15px;
+      z-index: 1;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      animation:scaleEffect 5s infinite;
+      transform-origin: 50% 50%;
+    }
+
+    .heart::after {
+      position: absolute;
+      content: '';
+      width: 10px;
+      height: 10px;
+      left: 50%;
+      top: 50%;
+      margin:  -5px 0 0 -5px;
+      z-index: 3;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.8);
+      animation:scaleEffect 5s infinite;
+      transform-origin: 50% 50%;
+    }
+
+    @keyframes scaleEffect {
+      0% { transform: scale(0.8); }
+      50% { transform: scale(1); }
+      100% { transform: scale(0.8); }
+    }
+
   </style>
 </head>
 <body>
-<div id="container" class='panorama'></div>
-<div class='loading'>加载中...</div>
-<div class="md-modal md-effect-3">
-  <div class="md-wrap">
-    <div class="md-close"></div>
-    <div class="md-main">
-      <div class="md-content"></div>
-      <div class="md-text-mask"></div>
-    </div>
-  </div>
+<div id="container" class='panorama'>
+  <h1>南亚东南亚国家商品展曁投资贸易洽谈会</h1>
+  <canvas id='c'></canvas>
+  <div id="labels"></div>
 </div>
-<div class="md-overlay"></div>
-<script type="text/javascript">
-  !function () {
-    var root = document.documentElement
-    var width = root.getBoundingClientRect().width > 640 ? 640 : root.getBoundingClientRect().width
-    root.style.fontSize = width / 10 + 'px'
-  }()
-</script>
-<script type="text/html" id="tpl-content-huadengjie">
-  <p>中秋是我国三大灯节之一，人月双圆，少不了花灯。早在北宋《武林旧事》中，记载中秋夜节俗：将“一点红”灯放入江中漂流玩耍……</p>
-  <p>中秋玩花灯，多集中在南方。中秋夜，树中秋，“树”即“竖”，即将灯彩高竖起来。小孩子在家长协助下扎出兔仔灯、杨桃灯或正方形灯，横挂在短竿中，再竖在高杆上，彩光闪耀，为中秋添景。孩子们互相比赛，看谁竖得高，竖得多，灯彩最精巧。</p>
-  <p>花灯，又名“彩灯”，有吉祥的含意，是我国传统农业时代的文化产物，兼具生活功能与艺术特色。</p>
-</script>
-
-<script type="text/html" id="tpl-content-ranbaotadeng">
-  <p>玄宗皇帝微服出巡来到扬州，路上看到大明寺栖灵塔，被它独特的建筑外形和巧妙的结构设计深深吸引。</p>
-  <p>于是，每逢中秋佳节，皇宫里到处供奉扬州栖灵宝塔灯。</p>
-  <p>之后，扬州民间艺人就完全仿照栖灵塔，制作了宝塔灯，让皇上在日理万机之余还能欣赏心仪的建筑，聊以解乏，舒畅心神。</p>
-  <p>对扬州人而言，八月十五点宝塔灯敬月神是其独特的风俗习惯，也是祈求家人幸福平安的重要方式。</p>
-</script>
-
-<script type="text/html" id="tpl-content-touguasongzi">
-  <p>“偷瓜送子”的习俗在贵州省广泛流行，要是谁家不生小孩，村里好心的小伙子便在中秋这天趁着明亮的月光，来到地里，摘一个大冬瓜，刻画出小孩的模样，再把准备好的小孩衣服套上，用竹篮装好后敲锣打鼓抬到这户人家。</p>
-  <p>受瓜人在招待客人后，将瓜放在床上与妻伴睡一夜，第二天将冬瓜煮熟进食。</p>
-  <p>之后如果怀了孕，受瓜人会好好感谢送瓜的小伙子。</p>
-</script>
 
 <script type="text/javascript" src="../lib/three.js"></script>
 <script type="text/javascript" src="../lib/control/OrbitControls.js"></script>
 <script type="text/javascript" src="../lib/Tween.js"></script>
 <script type="text/javascript">
+  'use strict';
 
-  class Panorama {
-    constructor (options) {
-      this.options = options
-      this.SCREEN_WIDTH = window.innerWidth
-      this.SCREEN_HEIGHT = window.innerHeight
-      this.scene = new THREE.Scene()
-      // 判断是否已创建该类的实例
-      this.init()
+  /* global THREE */
+
+  function main() {
+    const canvas = document.querySelector('#c');
+    const renderer = new THREE.WebGLRenderer({canvas});
+
+    const fov = 75;
+    const aspect = 2;  // the canvas default
+    const near = 1.1;
+    const far = 50;
+    const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+    camera.position.z = 7;
+
+    const controls = new THREE.OrbitControls(camera, canvas);
+    controls.target.set(0, 0, 0);
+    controls.update();
+
+    const scene = new THREE.Scene();
+
+    {
+      const color = 0xFFFFFF;
+      const intensity = 1;
+      const light = new THREE.DirectionalLight(color, intensity);
+      light.position.set(-1, 2, 4);
+      scene.add(light);
     }
 
-    init () {
-      this.initCamera()
-      this.initMesh()
-      this.initRenderer()
-      this.initButtons()
-      this.initModal()
-      this.bindEvent()
-      this.animate()
-      this.start()
+    const boxWidth = 1;
+    const boxHeight = 1;
+    const boxDepth = 1;
+    const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
+    const labelContainerElem = document.querySelector('#labels');
+
+    function makeInstance(geometry, color, x, name) {
+      const material = new THREE.MeshPhongMaterial({color});
+
+      const cube = new THREE.Mesh(geometry, material);
+      scene.add(cube);
+
+      cube.position.x = x;
+
+      const elem = document.createElement('div');
+      elem.innerHTML = `${name}<div class='heart'></div>`
+      labelContainerElem.appendChild(elem);
+
+      return {cube, elem};
     }
 
-    initCamera () {
-      let aspect = this.SCREEN_WIDTH / this.SCREEN_HEIGHT
-      this.camera = new THREE.PerspectiveCamera(150, aspect, 1, 1100)
-      this.camera.aspect = aspect
-      this.camera.position.set(0, 450, 0)
-      this.camera.target = new THREE.Vector3(0, -1, 0)
-      this.controls = new THREE.OrbitControls(this.camera)
-      this.controls.enableDamping = true
-      this.controls.dampingFactor = 0.75
-      this.controls.minDistance = 1
-      this.controls.maxDistance = 500
+    const cubes = [
+      makeInstance(geometry, 0x44aa88,  0, '一号停车场'),
+      makeInstance(geometry, 0x8844aa, -2, '八号门'),
+      makeInstance(geometry, 0xaa8844,  2, '玉溪展览馆'),
+    ];
 
-      let aes = new THREE.AxesHelper(500)
-      this.scene.add(aes)
-    }
+    const tempV = new THREE.Vector3();
 
-    initMesh () {
-      let geometry = new THREE.SphereGeometry(500, 60, 40, -Math.PI / 2)
-      let material = new THREE.MeshBasicMaterial({
-        map: new THREE.TextureLoader().load(this.options.imgUrl),
-        side: THREE.BackSide
-      })
-      geometry.rotateX(-Math.PI)
-      this.mesh = new THREE.Mesh(geometry, material)
-      this.scene.add(this.mesh)
-    }
-
-    initRenderer () {
-      let container = this.options.el
-      let renderer = this.renderer = new THREE.WebGLRenderer({logarithmicDepthBuffer: true, antialias: true})
-      renderer.setPixelRatio(window.devicePixelRatio)
-      renderer.setSize(window.innerWidth, window.innerHeight)
-      renderer.sortObjects = false
-      renderer.autoClear = false
-      container.appendChild(renderer.domElement)
-      setTimeout(() => {
-        renderer.domElement.style.opacity = '1.0'
-      }, 200)
-    }
-
-    initButtons () {
-      this.buttonList = this.options.labels
-      this.buttonGroup = new THREE.Group()
-      this.buttonArr = []
-      this.buttonList.forEach(button => {
-        this.createButton(button)
-      })
-      this.scene.add(this.buttonGroup)
-    }
-
-    getButtonPoint (phi, theta) {
-      let r = 500
-      return [
-        r * Math.sin(THREE.Math.degToRad(phi)) * Math.cos(THREE.Math.degToRad(theta)),
-        r * Math.sin(THREE.Math.degToRad(phi)) * Math.sin(THREE.Math.degToRad(theta)),
-        r * Math.cos(THREE.Math.degToRad(phi))
-      ]
-    }
-
-    createButton (button) {
-      let position = this.getButtonPoint(button.phi, button.theta)
-      let meshGroup = new THREE.Group()
-      meshGroup.name = button.name
-      meshGroup.position.set(...position)
-
-      if (!button.type) {
-        let mesh = this.createSpriteShape({color: '#ffffff', opacity: 0.8, scale: 12})
-        meshGroup.add(mesh)
-
-        mesh = this.createSpriteShape({color: '#2d2d2d', opacity: 0.6, scale: 24})
-        meshGroup.add(mesh)
-
-        mesh = this.createSpriteShape({color: '#2d2d2d', opacity: 0.2, scale: 36})
-        meshGroup.add(mesh)
-
-        this.buttonArr.push(mesh)
-        mesh.name = button.name
-        this.buttonGroup.add(meshGroup)
-        this.animatePoints(meshGroup)
-      } else if (button.type === 'img') {
-        this.createSpriteShape({url: button.url, type: 'img'})
-        .then(mesh => {
-          mesh.position.set(...position)
-          meshGroup.add(mesh)
-          this.buttonArr.push(mesh)
-          mesh.name = button.name
-          this.buttonGroup.add(meshGroup.children[0])
-        })
-        .catch(e => {
-          console.log('发生错误了', e)
-        })
-      } else if (button.type === 'text') {
-        console.log('hotspot text')
+    function resizeRendererToDisplaySize(renderer) {
+      const canvas = renderer.domElement;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const needResize = canvas.width !== width || canvas.height !== height;
+      if (needResize) {
+        renderer.setSize(width, height, false);
       }
+      return needResize;
     }
 
-    createSpriteShape (settings) {
-      settings.opacity = settings.opacity || 1
-      settings.scale = settings.scale || 50
-      let canvas = document.createElement('canvas')
-      document.body.appendChild(canvas)
-      canvas.width = 80
-      canvas.height = 80
-      let ctx = canvas.getContext('2d')
+    function render(time) {
+      time *= 0.001;
 
-      const buildTexture = () => {
-        let texture = new THREE.Texture(canvas)
-        texture.needsUpdate = true
-        let material = new THREE.SpriteMaterial({
-          map: texture,
-          transparent: true,
-          opacity: settings.opacity,
-          depthTest: false
-        })
-        let mesh = new THREE.Sprite(material)
-
-        mesh.scale.set(settings.scale, settings.scale, 1)
-        canvas.remove()
-        return mesh
+      if (resizeRendererToDisplaySize(renderer)) {
+        const canvas = renderer.domElement;
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
       }
 
-      switch (settings.type) {
-        case 'img':
-          return new Promise((resolve, reject) => {
-            let img = new Image()
-            img.src = settings.url
-            img.setAttribute('crossOrigin', 'anonymous')
-            img.onload = () => {
-              ctx.drawImage(img, 0, 0, 80, 80)
-              resolve(buildTexture())
-              reject('something error occurred in img onload function')
-            }
-          })
-        case 'text':
-          break
-        default:
-          ctx.fillStyle = settings.color
-          ctx.arc(40, 40, 40, 0, 2 * Math.PI)
-          ctx.fill()
-          return buildTexture()
-      }
+      cubes.forEach((cubeInfo, ndx) => {
+        const {cube, elem} = cubeInfo;
+        // const speed = 1 + ndx * .1;
+        // const rot = time * speed;
+        // cube.rotation.x = rot;
+        // cube.rotation.y = rot;
 
+        // get the position of the center of the cube
+        cube.updateWorldMatrix(true, false)
+        cube.getWorldPosition(tempV)
+
+        // get the normalized screen coordinate of that position
+        // x and y will be in the -1 to +1 range with x = -1 being
+        // on the left and y = -1 being on the bottom
+        tempV.project(camera)
+
+        // convert the normalized position to CSS coordinates
+        const x = (tempV.x *  .5 + .5) * canvas.clientWidth;
+        const y = (tempV.y * -.5 + .5) * canvas.clientHeight;
+        console.log(x, y)
+        // move the elem to that position
+        elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
+      });
+
+      renderer.render(scene, camera);
+
+      requestAnimationFrame(render);
     }
 
-    animatePoints (meshGroup) {
-      let t = 300
-      meshGroup.children.forEach(item => {
-        let scale = item.scale
-        let tweenA = new TWEEN.Tween(scale)
-        .to({x: scale.x * 0.8, y: scale.y * 0.8}, 500)
-        .delay(100)
-
-        let tweenB = new TWEEN.Tween(scale)
-        .to({x: scale.x * 1.2, y: scale.y * 1.2}, 500)
-        .delay(100)
-
-        tweenA.chain(tweenB)
-        tweenB.chain(tweenA)
-        tweenA.start(t = t + 100)
-      })
-    }
-
-    bindEvent () {
-      let raycaster = new THREE.Raycaster()
-      document.addEventListener('click', event => {
-        if (this.isShowModaling) return
-        event.preventDefault()
-
-        let mouse = new THREE.Vector2()
-
-        // 通过鼠标点击的位置计算出raycaster 所需要的点的位置，以屏幕为中心为原点，值范围-1~1
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
-        // 通过鼠标点的位置 和 当前相机的矩阵计算出raycaster
-        raycaster.setFromCamera(mouse, this.camera)
-        // 获取raycaster 直线和所有模型相交的数组集合
-        let intersects = raycaster.intersectObjects(this.buttonArr)
-        // 获取第一个模型
-        intersects.forEach(this.options.spriteClickHandler)
-      }, true)
-    }
-
-    initModal () {
-      let modal = document.querySelector('.md-modal')
-      let main = document.querySelector('.md-main')
-      let content = modal.querySelector('.md-content')
-      let close = modal.querySelector('.md-close')
-
-      const removeModal = () => {
-        modal.classList.remove('md-show')
-        this.isShowModaling = false
-      }
-
-      close.addEventListener('click', ev => {
-        ev.stopPropagation()
-        removeModal.call(this)
-      })
-
-      this.showModal = name => {
-        main.className = 'md-main md-main-' + name
-        content.innerHTML = document.querySelector('#tpl-content-' + name).innerHTML
-        modal.classList.add('md-show')
-        this.isShowModaling = true
-      }
-    }
-
-    start () {
-      let {camera} = this
-      new TWEEN.Tween({lat: 0, y: camera.position.y, fov: camera.fov})
-      .to({lat: 90, y: 0, fov: 100}, 2500)
-      .delay(1000)
-      .easing(TWEEN.Easing.Cubic.InOut)
-      // .repeat(Infinity)
-      .onUpdate(function () {
-        let phi = THREE.Math.degToRad(this.lat)
-        camera.target.y = -500 * Math.cos(phi)
-        camera.target.z = -500 * Math.sin(phi)
-        camera.position.y = this.y
-        camera.fov = this.fov
-        camera.updateProjectionMatrix()
-      })
-      .start()
-    }
-
-    animate () {
-      this.render()
-      requestAnimationFrame(() => {this.animate()})
-    }
-
-    render () {
-      window.onresize = () => {
-        this.camera.aspect = window.innerWidth / window.innerHeight
-        this.camera.updateProjectionMatrix()
-        this.renderer.setSize(window.innerWidth, window.innerHeight)
-      }
-
-      TWEEN.update()
-      this.camera.lookAt(this.camera.target)
-      this.renderer.clear()
-      this.controls.update()
-      this.renderer.render(this.scene, this.camera)
-    }
-
-    destroy (callback) {
-      callback && callback()
-    }
+    requestAnimationFrame(render);
   }
 
-  let loading = document.querySelector('.loading')
-  let panorama = new Panorama({
-    el: document.getElementById('container'),
-    labels: [
-      {
-        phi: -90,
-        theta: -10,
-        name: 'huadengjie',
-        type: 'img',
-        url: '../assets/hotspot/new_spotd1.png',
-        text: '花灯节'
-      },
-      {
-        phi: 32,
-        theta: 14,
-        name: 'ranbaotadeng',
-        type: 'img',
-        url: '../assets/hotspot/new_spotd8.png',
-        text: '燃宝塔灯'
-      },
-      {
-        phi: -153,
-        theta: -44,
-        name: 'touguasongzi',
-        type: 'img',
-        url: '../assets/hotspot/new_spotd11.png',
-        text: '偷瓜送子'
-      },
-      {
-        phi: 0,
-        theta: 0,
-        name: 'changeScene',
-        text: '下个场景',
-        url: '',
-        type: ''
-      }
-    ],
-    imgUrl: '../assets/poster.png',
-    spriteClickHandler (e) {
-      // todo 切换场景无法实现渐隐渐显
-      if (e.object.name === 'changeScene') {
-        let url = '../assets/center.jpg'
-        const img = new Image()
-        img.src = url
-        // loading.style.display = 'block'
-
-        img.onload = () => {
-          panorama.renderer.domElement.style.opacity = '0'
-          panorama.renderer.domElement.addEventListener('transitionend', () => {
-            panorama.scene.dispose()
-            panorama.renderer.domElement.remove()
-            panorama.destroy(() => {
-              panorama = null
-              // loading.style.display = 'none'
-              new Panorama({
-                el: document.getElementById('container'),
-                labels: [
-                  {
-                    phi: -90,
-                    theta: -10,
-                    name: 'huadengjie'
-                  }
-                ],
-                imgUrl: '../assets/center.jpg'
-              })
-            })
-          }, false)
-          console.log('图片加载完成')
-        }
-
-      } else {
-        panorama.showModal(e.object.name)
-      }
-    }
-  })
-
+  main();
 
 </script>
 </body>

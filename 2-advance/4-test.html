@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+          content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      padding: 200px;
+      background: #000;
+    }
+
+    .heart {
+      position: relative;
+      width: 20px;
+      height: 20px;
+      z-index: 2;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      animation:scaleEffect 5s infinite;
+      transform-origin: 50% 50%;
+    }
+
+    .heart::before {
+      position: absolute;
+      content: '';
+      width: 30px;
+      height: 30px;
+      left: 50%;
+      top: 50%;
+      margin:  -15px 0 0 -15px;
+      z-index: 1;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      animation:scaleEffect 5s infinite;
+      transform-origin: 50% 50%;
+    }
+
+    .heart::after {
+      position: absolute;
+      content: '';
+      width: 10px;
+      height: 10px;
+      left: 50%;
+      top: 50%;
+      margin:  -5px 0 0 -5px;
+      z-index: 3;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.8);
+      animation:scaleEffect 5s infinite;
+      transform-origin: 50% 50%;
+    }
+
+    @keyframes scaleEffect {
+      0% { transform: scale(1.05); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1.05); }
+    }
+
+  </style>
+</head>
+<body>
+<div class='heart'></div>
+</body>
+</html>

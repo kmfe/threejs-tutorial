@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+          content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>点击图片生成经纬度/三维坐标</title>
+  <script type="text/javascript" src="../lib/three.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+  </style>
+</head>
+<body>
+<img src='../assets/nbh.jpg' alt=''>
+<script>
+
+  // 世界坐标系、屏幕坐标系、标准设备坐标系
+  // .project() 通过Vector3的对象方法project, 参数是相机对象，
+  // 返回的是 坐标对象在camera 相机水箱矩阵变化下对应的标准设备坐标，标准设备坐标xyz的范围是 [-1, 1]
+
+  /*
+   * 将three.js三维坐标转换成屏幕上的二维坐标
+   * @param THREE.Vector3 vector three.js三维坐标
+   * @return {x:int,y:int} 屏幕坐标
+   */
+  function transToScreenCoord (vector) {
+    const screenCoord = {}
+    vector.project(camera)
+    screenCoord.x = (0.5 + vector.x / 2) * window.innerWidth
+    screenCoord.y = (0.5 - vector.y / 2) * window.innerHeight
+    return screenCoord
+  }
+
+  /*
+  * 屏幕坐标转化成空间坐标
+  * */
+  function transToThreeCoord (x, y) {
+    let mouse = new THREE.Vector3()
+    mouse.x = (x / window.innerWidth) * 2 - 1
+    mouse.y = -(y / window.innerHeight) * 2 + 1
+    return mouse
+  }
+
+  // 点击获取坐标
+  document.addEventListener('click', e => {
+    console.log(e.clientX + document.documentElement.scrollLeft, e.clientY + document.documentElement.scrollTop)
+  }, false)
+
+  // 转化成球体之后获取三维坐标
+
+</script>
+</body>
+</html>
