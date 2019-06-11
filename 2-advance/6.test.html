@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+          content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      padding: 200px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .wrap {
+      display: flex;
+    }
+
+    .td-item {
+      border: 1px solid #cd0000;
+      margin-right: -1px;
+    }
+
+    .td {
+      display: block;
+      margin-top: -1px;
+      width: 30px;
+      height: 30px;
+      border-bottom: 1px solid #cd0000;
+      font-size: 10px;
+      text-align: center;
+      line-height: 30px;
+    }
+
+    .td:nth-last-child(1) {
+      border: none;
+    }
+  </style>
+</head>
+<body>
+<div id='app'>
+  <h1>根据经纬度获取3D物体坐标</h1>
+  <div class='wrap'>
+    <div v-for='(item, index) in list' :key='index' class='td-item'>
+      <div v-for='(axis, k) in item.data' class='td' :key='k'>
+        {{axis.value}}
+      </div>
+    </div>
+  </div>
+  <script>
+    let example = [
+      [1, 2, 3, 4, 5, 6, 7, 8],
+      [11, 12, 13, 14],
+      [21, 22, 23, 24],
+      [31, 32, 33]
+    ]
+    new Vue({
+      el: '#app',
+      data: {
+        msg: 'text',
+        column: 35,
+        row: 6,
+        list: []
+      },
+      created () {
+        // 初始化36*5组数据
+        for (let x = 0; x < 35; x++) {
+          let arr = []
+          for (let y = 0; y < 6; y++) {
+            arr.push({x, y})
+          }
+          this.list.push({
+            len: 6,
+            data: arr
+          })
+        }
+        this.convertData()
+      },
+      methods: {
+        convertData () {
+          for (let i = 0; i < example.length; i++) {
+            const nextList = []
+            let len = example[i].length
+            let currentList = this.list[i]
+
+            let diff = len - currentList.len > 0 ? (len - currentList.len) : 0
+            console.log(len, currentList.len, i)
+            // 添加未多出的数据
+
+            for (let k = 0; k < currentList.len; k++) {
+              this.$set(currentList.data[k], 'value', example[i][k])
+            }
+
+            // 处理多出的数据
+            if (diff) {
+              console.log(diff, 'diff', '第' + i + '项')
+              // 将多出来的数据添加到其他列
+              for (let j = 0; j < diff; j++) {
+                nextList.push(i + 1 + j)
+                this.$set(this.list[i + 1 + j], 'len', this.list[i + 1 + j].len - 1)
+              }
+              console.log(this.list, 'list')
+              // 将多出来的数据，分布到其他列
+              for (let x = 0; x < nextList.length; x++) {
+                this.$set(this.list[nextList[x]].data[this.row - (i + 1)], 'value', example[i][currentList.len + x])
+              }
+            }
+          }
+          // console.log(this.list)
+        }
+      }
+    })
+  </script>
+</div>
+</body>
+</html>
