@@ -51,15 +51,17 @@
       z-index: 4;
       width: fit-content;
     }
-    #labels > div span{
+
+    #labels > div span {
       position: relative;
       z-index: 5;
     }
+
     #labels > div:hover {
       color: red;
     }
 
-    h1{
+    h1 {
       position: absolute;
       left: 50%;
       top: 50px;
@@ -78,7 +80,7 @@
       margin-left: -10px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.5);
-      animation:scaleEffect 5s infinite;
+      animation: scaleEffect 5s infinite;
       transform-origin: 50% 50%;
     }
 
@@ -89,11 +91,11 @@
       height: 30px;
       left: 50%;
       top: 50%;
-      margin:  -15px 0 0 -15px;
+      margin: -15px 0 0 -15px;
       z-index: 1;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.2);
-      animation:scaleEffect 5s infinite;
+      animation: scaleEffect 5s infinite;
       transform-origin: 50% 50%;
     }
 
@@ -104,18 +106,24 @@
       height: 10px;
       left: 50%;
       top: 50%;
-      margin:  -5px 0 0 -5px;
+      margin: -5px 0 0 -5px;
       z-index: 3;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.8);
-      animation:scaleEffect 5s infinite;
+      animation: scaleEffect 5s infinite;
       transform-origin: 50% 50%;
     }
 
     @keyframes scaleEffect {
-      0% { transform: scale(0.8); }
-      50% { transform: scale(1); }
-      100% { transform: scale(0.8); }
+      0% {
+        transform: scale(0.8);
+      }
+      50% {
+        transform: scale(1);
+      }
+      100% {
+        transform: scale(0.8);
+      }
     }
 
   </style>
@@ -131,87 +139,87 @@
 <script type="text/javascript" src="../lib/control/OrbitControls.js"></script>
 <script type="text/javascript" src="../lib/Tween.js"></script>
 <script type="text/javascript">
-  'use strict';
+  'use strict'
 
   /* global THREE */
 
-  function main() {
-    const canvas = document.querySelector('#c');
-    const renderer = new THREE.WebGLRenderer({canvas});
+  function main () {
+    const canvas = document.querySelector('#c')
+    const renderer = new THREE.WebGLRenderer({canvas})
 
-    const fov = 75;
-    const aspect = 2;  // the canvas default
-    const near = 1.1;
-    const far = 50;
-    const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.position.z = 7;
+    const fov = 75
+    const aspect = 2  // the canvas default
+    const near = 1.1
+    const far = 50
+    const camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
+    camera.position.z = 7
 
-    const controls = new THREE.OrbitControls(camera, canvas);
-    controls.target.set(0, 0, 0);
-    controls.update();
+    const controls = new THREE.OrbitControls(camera, canvas)
+    controls.target.set(0, 0, 0)
+    controls.update()
 
-    const scene = new THREE.Scene();
+    const scene = new THREE.Scene()
 
     {
-      const color = 0xFFFFFF;
-      const intensity = 1;
-      const light = new THREE.DirectionalLight(color, intensity);
-      light.position.set(-1, 2, 4);
-      scene.add(light);
+      const color = 0xFFFFFF
+      const intensity = 1
+      const light = new THREE.DirectionalLight(color, intensity)
+      light.position.set(-1, 2, 4)
+      scene.add(light)
     }
 
-    const boxWidth = 1;
-    const boxHeight = 1;
-    const boxDepth = 1;
-    const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+    const boxWidth = 1
+    const boxHeight = 1
+    const boxDepth = 1
+    const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth)
 
-    const labelContainerElem = document.querySelector('#labels');
+    const labelContainerElem = document.querySelector('#labels')
 
-    function makeInstance(geometry, color, x, name) {
-      const material = new THREE.MeshPhongMaterial({color});
+    function makeInstance (geometry, color, x, name) {
+      const material = new THREE.MeshPhongMaterial({color})
 
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
+      const cube = new THREE.Mesh(geometry, material)
+      scene.add(cube)
 
-      cube.position.x = x;
+      cube.position.x = x
 
-      const elem = document.createElement('div');
+      const elem = document.createElement('div')
       elem.innerHTML = `${name}<div class='heart'></div>`
-      labelContainerElem.appendChild(elem);
+      labelContainerElem.appendChild(elem)
 
-      return {cube, elem};
+      return {cube, elem}
     }
 
     const cubes = [
-      makeInstance(geometry, 0x44aa88,  0, '一号停车场'),
+      makeInstance(geometry, 0x44aa88, 0, '一号停车场'),
       makeInstance(geometry, 0x8844aa, -2, '八号门'),
-      makeInstance(geometry, 0xaa8844,  2, '玉溪展览馆'),
-    ];
+      makeInstance(geometry, 0xaa8844, 2, '玉溪展览馆')
+    ]
 
-    const tempV = new THREE.Vector3();
+    const tempV = new THREE.Vector3()
 
-    function resizeRendererToDisplaySize(renderer) {
-      const canvas = renderer.domElement;
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      const needResize = canvas.width !== width || canvas.height !== height;
+    function resizeRendererToDisplaySize (renderer) {
+      const canvas = renderer.domElement
+      const width = canvas.clientWidth
+      const height = canvas.clientHeight
+      const needResize = canvas.width !== width || canvas.height !== height
       if (needResize) {
-        renderer.setSize(width, height, false);
+        renderer.setSize(width, height, false)
       }
-      return needResize;
+      return needResize
     }
 
-    function render(time) {
-      time *= 0.001;
+    function render (time) {
+      time *= 0.001
 
       if (resizeRendererToDisplaySize(renderer)) {
-        const canvas = renderer.domElement;
-        camera.aspect = canvas.clientWidth / canvas.clientHeight;
-        camera.updateProjectionMatrix();
+        const canvas = renderer.domElement
+        camera.aspect = canvas.clientWidth / canvas.clientHeight
+        camera.updateProjectionMatrix()
       }
 
       cubes.forEach((cubeInfo, ndx) => {
-        const {cube, elem} = cubeInfo;
+        const {cube, elem} = cubeInfo
         // const speed = 1 + ndx * .1;
         // const rot = time * speed;
         // cube.rotation.x = rot;
@@ -227,22 +235,22 @@
         tempV.project(camera)
 
         // convert the normalized position to CSS coordinates
-        const x = (tempV.x *  .5 + .5) * canvas.clientWidth;
-        const y = (tempV.y * -.5 + .5) * canvas.clientHeight;
+        const x = (tempV.x * .5 + .5) * canvas.clientWidth
+        const y = (tempV.y * -.5 + .5) * canvas.clientHeight
         console.log(x, y)
         // move the elem to that position
-        elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
-      });
+        elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`
+      })
 
-      renderer.render(scene, camera);
+      renderer.render(scene, camera)
 
-      requestAnimationFrame(render);
+      requestAnimationFrame(render)
     }
 
-    requestAnimationFrame(render);
+    requestAnimationFrame(render)
   }
 
-  main();
+  main()
 
 </script>
 </body>
