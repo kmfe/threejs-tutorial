@@ -1,12 +1,38 @@
 import * as THREE from 'three'
 import { DeviceOrientationControls } from 'three/examples/jsm/controls/DeviceOrientationControls'
-
 import TWEEN from '@tweenjs/Tween.js'
 import * as dat from 'dat.gui'
 
 const gui = new dat.GUI()
 
 const media = /iphone|android|micromessenger/ig.test(navigator.userAgent) ? 'mobile' : 'pc'
+
+// 切换图片 实现动画，标记动画vert, horiz 方向上的数量
+// tileDispDuration 每张图片显示的时间
+
+function TextureAnimator (texture, tilesHoriz, tilesVert, numTiles, tileDispDuration) {
+  this.tilesHorizontal = tilesHoriz
+  this.tilesVertical = tilesVert
+  this.numberOfTiles = numTiles
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(1 / this.tilesHorizontal, 1 / this.tilesVertical)
+  this.tileDisplayDuration = tileDispDuration
+  this.currentDisplayTime = 0
+  this.currentTile = 0
+  this.update = function (milliSec) {
+    this.currentDisplayTime += milliSec
+    while (this.currentDisplayTime > this.tileDisplayDuration) {
+      this.currentDisplayTime -= this.tileDisplayDuration
+      this.currentTile++
+      if (this.currentTile === this.numberOfTiles)
+        this.currentTile = 0
+      var currentColumn = this.currentTile % this.tilesHorizontal
+      texture.offset.x = currentColumn / this.tilesHorizontal
+      var currentRow = Math.floor(this.currentTile / this.tilesHorizontal)
+      texture.offset.y = currentRow / this.tilesVertical
+    }
+  }
+}
 
 export default class Panorama {
   constructor (options) {
@@ -37,7 +63,7 @@ export default class Panorama {
     // 全景控件, 配置
     this.camera = null
     this.controls = null
-    this.textures = []
+    this.clock = new THREE.Clock()
 
     // 储存当前全景的状态
     this.state = {
@@ -76,7 +102,7 @@ export default class Panorama {
     this.initButtons()
 
     this.clickables.forEach(item => {
-      this.addChoreAll(item.cover, item.width, item.height, item.pos, item.rotation)
+      this.addChoreAll(item.cover, item.width, item.height, item.pos, item.rotation, item.name)
     })
 
     this.animate()
@@ -87,6 +113,7 @@ export default class Panorama {
 
     this.axesHelper = new THREE.AxesHelper(500000)
     this.scene.add(this.axesHelper)
+
   }
 
   initCamera () {
@@ -250,6 +277,7 @@ export default class Panorama {
 
   render () {
     TWEEN.update()
+
     const {position} = this.state
 
     if (this.state.gyro) {
@@ -266,94 +294,80 @@ export default class Panorama {
       this.camera.target.z = 100 * Math.sin(position.phi) * Math.sin(position.theta)
       this.camera.lookAt(this.camera.target)
     }
-    if (this.textures.length) {
-      for (let i = 0; i < this.textures.length; i++) {
-        this.textures[i].needsUpdate = true
-      }
-    }
+    this.bottle.update(1000 * this.clock.getDelta())
     this.renderer.render(this.scene, this.camera)
   }
 
-  initGUI (circle) {
-    let {
-      guiParams
-    } = this
+  initGUI (circle, name) {
+    let {guiParams} = this
     let _this = this
-    // console.log('sprite',_this.circle);
     _this.gui.remember(this.guiParams)
-    // TODO:point
-    let folderPoi = this.gui.addFolder('point')
+
+    let folderPoi = this.gui.addFolder(name)
     folderPoi.add(guiParams, 'pointX', -30, 30).step(0.1).onChange(function (value) {
       circle.position.x = value
     }).listen()
+
     folderPoi.add(guiParams, 'pointY', -30, 30).step(0.1).onChange(function (value) {
       circle.position.y = value
     }).listen()
+
     folderPoi.add(guiParams, 'pointZ', -30, 30).step(0.1).onChange(function (value) {
       circle.position.z = value
     }).listen()
+
     folderPoi.add(guiParams, 'Rx', -Math.PI, Math.PI).step(0.1).onChange(function (value) {
       circle.rotation.x = value
     }).listen()
+
     folderPoi.add(guiParams, 'Ry', -Math.PI, Math.PI).step(0.1).onChange(function (value) {
       circle.rotation.y = value
     }).listen()
+
     folderPoi.add(guiParams, 'Rz', -Math.PI, Math.PI).step(0.1).onChange(function (value) {
       circle.rotation.z = value
     }).listen()
+
     folderPoi.open()
   }
 
   // img, 宽， 高，位置，角度
-  addChoreAll (pUrl, w, h, pPos, pE) {
-    let self = this
+  addChoreAll (pUrl, w, h, pPos, pE, name) {
     let circleTexture = new Image()
-    let canvas = document.createElement('canvas')
-    document.body.appendChild(canvas)
-    document.body.appendChild(circleTexture)
+    circleTexture.setAttribute('crossOrigin', 'anonymous')
+    circleTexture.src = pUrl
 
-    let url = pUrl
-    circleTexture.setAttribute('crossorigin', 'anonymous')
-    circleTexture.src = url
+    // let texture = new THREE.Texture(canvas)
+    let circleGeo = new THREE.PlaneGeometry(w, h, 32)
+    let texture = new THREE.TextureLoader().load(pUrl)
 
-    circleTexture.onload = () => {
-      let ctx = canvas.getContext('2d')
-      let w = circleTexture.width
-      let h = circleTexture.height
-      canvas.width = w
-      canvas.height = h
-
-      ctx.drawImage(circleTexture, 0, 0, w, h)
-      
-      let texture = new THREE.Texture(canvas)
-      texture.needsUpdate = true
-
-      let circleGeo = new THREE.PlaneGeometry(w, h, 32)
-
-      let circleMat = new THREE.MeshBasicMaterial({
-        map: self.texture,
-        side: THREE.DoubleSide,
-        opacity: 1.0,
-        depthTest: false,
-        transparent: true
-      })
-
-      self.textures.push(texture)
-
-      let {circle} = this
-      circle = new THREE.Mesh(circleGeo, circleMat)
-
-      circle.position.set(pPos.x, pPos.y, pPos.z)
-
-      pE.x && (circle.rotation.x = pE.x)
-      pE.y && (circle.rotation.y = pE.y)
-      pE.z && (circle.rotation.z = pE.z)
-
-      circle.scale.set(10, 10, 10)
-      this.spriteGroup.add(circle)
-      // canvas.remove()
-      // circleTexture.remove()
+    if (name === 'light') {
+      this.bottle = new TextureAnimator(texture, 2, 1, 2, 1200)
     }
+
+    let circleMat = new THREE.MeshBasicMaterial({
+      map: texture,
+      side: THREE.DoubleSide,
+      opacity: 1.0,
+      depthTest: false,
+      transparent: true
+    })
+
+    // canvas 作为texture 必须要开启needsUpdate, 性能极差
+    // texture.needsUpdate = true
+
+    let {circle} = this
+    circle = new THREE.Mesh(circleGeo, circleMat)
+    circle.name = name
+    circle.position.set(pPos.x, pPos.y, pPos.z)
+
+    pE.x && (circle.rotation.x = pE.x)
+    pE.y && (circle.rotation.y = pE.y)
+    pE.z && (circle.rotation.z = pE.z)
+
+    circle.scale.set(10, 10, 10)
+    this.spriteGroup.add(circle)
+    this.initGUI(circle, name)
   }
 
   // 初始化鼠标事件
@@ -378,7 +392,7 @@ export default class Panorama {
       autoMove = false
 
       //判断当前的设备类型
-      if (this.media === 'pc') {
+      if (that.media === 'pc') {
         mouse.onMouseDownMouseX = event.clientX
         mouse.onMouseDownMouseY = event.clientY
       } else {
@@ -387,13 +401,13 @@ export default class Panorama {
       }
 
       //如果是第一个手指，将记录当前的lon和lat
-      if (this.media === 'pc' || event.touches.length === 1) {
+      if (that.media === 'pc' || event.touches.length === 1) {
         mouse.onMouseDownLon = position.lon
         mouse.onMouseDownLat = position.lat
       }
 
       //绑定移动和抬起事件
-      if (this.media === 'pc') {
+      if (that.media === 'pc') {
         document.addEventListener('mousemove', onDocumentMouseMove, false)
         document.addEventListener('mouseup', onDocumentMouseUp, false)
       } else {
@@ -421,7 +435,7 @@ export default class Panorama {
       if (autoMove === false) {
 
         let moveX, moveY
-        if (this.media === 'pc') {
+        if (that.media === 'pc') {
           moveX = event.clientX
           moveY = event.clientY
 
