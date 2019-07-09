@@ -1,0 +1,27 @@
+{
+  "name": "panorama",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/panorama.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel src/index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tweenjs/tween.js": "^17.4.0",
+    "dat.gui": "^0.7.6",
+    "three": "^0.106.2"
+  },
+  "devDependencies": {
+    "autoprefixer": "^9.6.0",
+    "eslint": "^6.0.1",
+    "parcel-bundler": "^1.12.3",
+    "postcss-modules": "^1.4.1",
+    "postcss-px-to-viewport": "^1.1.0",
+    "postcss-scss": "^2.0.0",
+    "sass": "^1.22.3"
+  }
+}

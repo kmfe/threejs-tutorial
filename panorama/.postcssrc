@@ -1,0 +1,13 @@
+{
+  "parser": "postcss-scss",
+  "plugins": {
+    "autoprefixer": true,
+    "postcss-px-to-viewport": {
+      "unitToConvert": "px",
+      "viewportWidth": 1080,
+      "fontViewportUnit": "vw",
+      "unitPrecision": 5,
+      "selectorBlackList": ["font"]
+    }
+  }
+}

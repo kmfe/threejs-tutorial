@@ -70,3 +70,5 @@ typings/
 out
 gen
 *.mp4
+.cache
+dist
