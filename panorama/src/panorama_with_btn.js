@@ -61,7 +61,7 @@ export default class Panorama {
       this.Rx = 0
       this.Ry = 0
       this.Rz = 0
-    }
+    };
 
     // 全景控件, 配置
     this.camera = null
@@ -147,6 +147,85 @@ export default class Panorama {
     this.scene.add(mesh)
   }
 
+  // initButtons () {
+  //
+  //   this.buttonList = [...this.data]
+  //
+  //   this.buttonGroup = new THREE.Group()
+  //   this.buttonArr = []
+  //   this.buttonList.forEach((button) => {
+  //     this.createButton(button)
+  //   })
+  //   this.scene.add(this.buttonGroup)
+  //
+  // }
+  //
+  // getButtonPoint (phi, theta) {
+  //   let r = 500
+  //   return [
+  //     r * Math.sin(THREE.Math.degToRad(phi)) * Math.cos(THREE.Math.degToRad(theta)),
+  //     r * Math.sin(THREE.Math.degToRad(phi)) * Math.sin(THREE.Math.degToRad(theta)),
+  //     r * Math.cos(THREE.Math.degToRad(phi))
+  //   ]
+  // }
+  //
+  // createButton (button) {
+  //   let position = this.getButtonPoint(button.phi, button.theta)
+  //   let meshGroup = new THREE.Group()
+  //   meshGroup.name = button.name
+  //   meshGroup.position.set(...position)
+  //
+  //   let mesh = this.createSpriteShape('#ffffff', 0.8, 12)
+  //
+  //   meshGroup.add(mesh)
+  //
+  //   mesh = this.createSpriteShape('#2d2d2d', 0.6, 24)
+  //   meshGroup.add(mesh)
+  //
+  //   mesh = this.createSpriteShape('#2d2d2d', 0.2, 36)
+  //   meshGroup.add(mesh)
+  //   this.buttonArr.push(mesh)
+  //   mesh.name = button.name
+  //   this.buttonGroup.add(meshGroup)
+  //   this.animatePoints(meshGroup)
+  // }
+  //
+  // createSpriteShape (color, opacity, scale) {
+  //   let canvas = document.createElement('canvas')
+  //   // document.body.appendChild(canvas);
+  //   canvas.width = 128
+  //   canvas.height = 128
+  //   let ctx = canvas.getContext('2d')
+  //   ctx.fillStyle = color
+  //   ctx.arc(64, 64, 64, 0, 2 * Math.PI)
+  //   ctx.fill()
+  //
+  //   let texture = new THREE.Texture(canvas)
+  //   texture.needsUpdate = true
+  //   let material = new THREE.SpriteMaterial({
+  //     map: texture,
+  //     transparent: true,
+  //     opacity: opacity,
+  //     depthTest: false
+  //   })
+  //   let mesh = new THREE.Sprite(material)
+  //   mesh.scale.set(scale * 2, scale * 2, 1)
+  //   return mesh
+  // }
+  //
+  // animatePoints (meshGroup) {
+  //   let t = 300
+  //   meshGroup.children.forEach(item => {
+  //     let scale = item.scale
+  //     let tweenA = new TWEEN.Tween(scale).to({x: scale.x * 0.8, y: scale.y * 0.8}, 500).delay(100)
+  //     let tweenB = new TWEEN.Tween(scale).to({x: scale.x * 1.2, y: scale.y * 1.2}, 500).delay(100)
+  //     tweenA.chain(tweenB)
+  //     tweenB.chain(tweenA)
+  //     tweenA.start(t = t + 100)
+  //   })
+  //
+  // }
+
   bindEvent () {
     let raycaster = new THREE.Raycaster()
 
@@ -167,16 +246,10 @@ export default class Panorama {
       raycaster.setFromCamera(mouse, this.camera)
 
       let intersects = raycaster.intersectObjects(this.spriteGroup.children)
-
       if (intersects.length > 0) {
         this.showModal(intersects[0].object.name)
         if (intersects[0].object.name === 'doorCover') {
-          // 针对门
-          // todo 无法依赖某一个轴进行旋转
-          const obj = intersects[0].object
-          // obj.rotateY(-1.2)
-          const doorHandler = new TWEEN.Tween(obj.rotation).to({x: 0, y: -1.2, z: 0}, 2000)
-          doorHandler.delay(1000).start()
+          console.log('door')
         }
       }
     }

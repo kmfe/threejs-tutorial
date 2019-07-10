@@ -1,0 +1,128 @@
+.font-16 {
+  font-size: 16px;
+}
+
+#container {
+  height: 100%;
+}
+
+.md-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  z-index: 12;
+  visibility: hidden;
+  -webkit-transform: translateX(-50%) translateY(-50%);
+  -ms-transform: translateX(-50%) translateY(-50%);
+  transform: translateX(-50%) translateY(-50%);
+}
+
+.md-show {
+  visibility: visible;
+}
+
+.md-main {
+  padding: 20px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  color: #5b5b5b;
+  background: #656565;
+  position: relative;
+  margin-bottom: 0.466667rem;
+}
+
+.md-effect-3 .md-wrap {
+  transform: translateY(20%);
+  opacity: 0;
+  transition: all .5s;
+}
+
+.md-show.md-effect-3 .md-wrap {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.md-wrap .md-text-mask {
+  position: absolute;
+  height: 0.666667rem;
+  margin-top: -0.64rem;
+  background: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.3)), to(white));
+  background: linear-gradient(rgba(255, 255, 255, 0.3), white);
+}
+
+.md-content {
+  padding: 40px;
+  min-height: 300px;
+  overflow: auto;
+  text-align: justify;
+  text-indent: 2em;
+  -webkit-overflow-scrolling: touch;
+  -ms-touch-action: auto;
+  touch-action: auto;
+  color: #fff;
+}
+
+.md-content p {
+  -ms-touch-action: auto;
+  touch-action: auto;
+}
+
+.md-button {
+  display: block;
+  width: 292px;
+  height: 93px;
+}
+
+.btn-home {
+  float: left;
+  background: #cd0000;
+  background-size: cover;
+}
+
+.btn-share {
+  float: right;
+  background: #cd0000;
+  background-size: cover;
+}
+
+.md-overlay {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  visibility: hidden;
+  top: 0;
+  left: 0;
+  z-index: 11;
+  opacity: 0;
+  background: rgba(0, 0, 0, .6);
+  -webkit-transition: all .3s;
+  -moz-transition: all .3s;
+  transition: all .3s;
+}
+
+.md-show ~ .md-overlay {
+  opacity: 1;
+  visibility: visible;
+}
+
+.md-close {
+  position: absolute;
+  z-index: 12;
+  right: -40px;
+  top: -40px;
+  width: 80px;
+  height: 80px;
+  background: #f60;
+
+  &::after {
+    position: absolute;
+    content: '✘';
+    color: #fff;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    line-height: 80px;
+  }
+}
+

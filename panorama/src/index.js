@@ -1,10 +1,16 @@
 import Panorama from './panorama'
+
 import banner from './assets/banner.png'
 import doorCover from './assets/door.png'
 import bg from './assets/bg.jpg'
 import cloud from './assets/cloud.png'
-import light1 from './assets/bottle-2.png'
+import light from './assets/bottle-2.png'
+
+// import light1 from './assets/bottle.gif'
+// import jpd from './assets/jpd.png'
+
 import { boutique } from './config'
+import './panorama.scss'
 
 new Panorama({
   el: 'boutique',
@@ -36,12 +42,12 @@ new Panorama({
       rotation: {y: 0.3}
     },
     {
-      cover: light1,
+      cover: light,
       name: 'light',
       width: 0.3,
       height: 0.4,
       pos: {x: 0.7, y: -7.9, z: -9.2},
       rotation: {}
-    },
+    }
   ]
 })
