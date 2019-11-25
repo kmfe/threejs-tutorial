@@ -2,11 +2,18 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
+import parrot from '../models/Parrot.glb'
+import flamingo from '../models/Flamingo.glb'
+import stork from '../models/Stork.glb'
+
 const {
   Scene,
   WebGLRenderer,
   PerspectiveCamera
 } = THREE
+
+const mixers = []
+const clock = new THREE.Clock()
 
 class Tutorial {
   constructor () {
@@ -168,6 +175,10 @@ class Tutorial {
     this.renderer.setAnimationLoop(() => {
       this.updateMesh()
       this.render()
+      const delta = clock.getDelta()
+      for (const mixer of mixers) {
+        mixer.update(delta)
+      }
     })
   }
   
@@ -191,18 +202,28 @@ class Tutorial {
   
   loadModels () {
     const loader = new GLTFLoader()
-    loader.load(
-      '../models/Parrot.glb',
-      gltf => {
-        console.log(gltf)
-      },
-      () => {
-        console.log('loading..')
-      },
-      (e) => {
-        console.log(e, 'what\'s wrong ')
-      }
-    )
+    const onLoad = (gltf, position) => {
+      const model = gltf.scene.children[0]
+      model.position.copy(position)
+      
+      const animation = gltf.animations[0]
+      const mixer = new THREE.AnimationMixer(model)
+      mixers.push(mixer)
+      
+      const action = mixer.clipAction(animation)
+      action.play()
+      
+      this.scene.add(model)
+    }
+    const onProgress = () => {}
+    const onError = (e) => { console.log(e) }
+    const parrotPosition = new THREE.Vector3(0, 3, 2.5)
+    const flamingoPosition = new THREE.Vector3(7, 4, -10)
+    const storkPosition = new THREE.Vector3(0, 2, -10)
+    
+    loader.load(parrot, gltf => onLoad(gltf, parrotPosition), onProgress, onError)
+    loader.load(flamingo, gltf => onLoad(gltf, flamingoPosition), onProgress, onError)
+    loader.load(stork, gltf => onLoad(gltf, storkPosition), onProgress, onError)
   }
 }
 

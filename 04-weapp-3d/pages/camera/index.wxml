@@ -1,0 +1,30 @@
+<view>
+  <!-- 摄像头层 -->
+  <camera 
+    device-position="back" 
+    flash="off" 
+    binderror="error" 
+    style="position:fixed; z-index:0; left: 0; width: 100%; height: 100vh;"
+    frame-size="medium"
+    bindstop='stopHander'
+    binderror='errorHander'
+    bindinitdone='initDone'>
+  </camera>
+
+  <!-- 模型层 -->
+  <canvas 
+      type="webgl" 
+      id="c" 
+      style="position:fixed; left:0; z-index: 2; width: 100%; height:100%;" 
+      bindtouchstart="touchStart" 
+      bindtouchmove="touchMove" 
+      bindtouchend="touchEnd"         
+      bindtouchcancel="touchCancel" 
+      bindlongtap="longTap" 
+      bindtap="tap">
+      </canvas>
+
+  <!-- <button type="primary" bindtap='stopListen'>停止</button>
+  <button type="primary" bindtap="takePhoto">拍照</button>
+  <image mode="widthFix" src="{{src}}"></image> -->
+</view>
