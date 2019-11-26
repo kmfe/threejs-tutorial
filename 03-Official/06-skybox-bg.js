@@ -22,10 +22,26 @@ class Tutorial {
   constructor () {
     this.SCREEN_WIDTH = window.innerWidth
     this.SCREEN_HEIGHT = window.innerHeight
+    
     this.scene = new Scene()
     const loader = new THREE.TextureLoader()
+    const bgTexture = loader.load(bg)
     
-    this.scene.background = loader.load(bg)
+    // Set the repeat and offset properties of the background texture
+    // to keep the image's aspect correct.
+    // Note the image may not have loaded yet.
+    
+    const canvasAspect = this.SCREEN_WIDTH / this.SCREEN_HEIGHT
+    const imageAspect = bgTexture.image ? bgTexture.image.width / bgTexture.image.height : 1
+    const aspect = imageAspect / canvasAspect
+    
+    bgTexture.offset.x = aspect > 1 ? (1 - 1 / aspect) / 2 : 0
+    bgTexture.repeat.x = aspect > 1 ? 1 / aspect : 1
+    
+    bgTexture.offset.y = aspect > 1 ? 0 : (1 - aspect) / 2
+    bgTexture.repeat.y = aspect > 1 ? 1 : aspect
+    
+    this.scene.background = bgTexture
     
     this.initRenderer()
     this.initCamera()
