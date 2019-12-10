@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      height: 100%;
+    }
+    
+    #c {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      z-index: -1;
+    }
+    
+    .diagram {
+      display: inline-block;
+      width: 5em;
+      height: 3em;
+      border: 1px solid black;
+    }
+    
+    .left {
+      float: left;
+      margin-right: .25em;
+    }
+    
+    .right {
+      float: right;
+      margin-left: .25em;
+    }
+  </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<p>
+  <span id="box" class="diagram left"></span>
+  I love boxes. Presents come in boxes.
+  When I find a new box I'm always excited to find out what's inside.
+</p>
+<p>
+  When I was a kid I dreamed of going on an expedition inside a pyramid
+  and finding a undiscovered tomb full of mummies and treasure.
+  When I was a kid I dreamed of going on an expedition inside a pyramid
+  and finding a undiscovered tomb full of mummies and treasure.
+  When I was a kid I dreamed of going on an expedition inside a pyramid
+  and finding a undiscovered tomb full of mummies and treasure.
+  When I was a kid I dreamed of going on an expedition inside a pyramid
+  and finding a undiscovered tomb full of mummies and treasure.
+  When I was a kid I dreamed of going on an expedition inside a pyramid
+  and finding a undiscovered tomb full of mummies and treasure.
+  When I was a kid I dreamed of going on an expedition inside a pyramid
+  and finding a undiscovered tomb full of mummies and treasure.When I was a kid I dreamed of going on an expedition inside a pyramid
+  and finding a undiscovered tomb full of mummies and treasure.
+
+<p>
+  <span id="pyramid" class="diagram right"></span>
+  When I was a kid I dreamed of going on an expedition inside a pyramid
+  and finding a undiscovered tomb full of mummies and treasure.
+</p>
+<script src='10-multiple-canvas.js'></script>
+</body>
+</html>

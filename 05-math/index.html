@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <title>three-向量</title>
+  <style type="text/css">
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+    
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+</body>
+<script src="../lib/three.js"></script>
+<script>
+  // 二维向量
+  // https://threejs.org/docs/index.html#api/en/math/Vector2
+  let a = new THREE.Vector2(2, 3)
+  let b = new THREE.Vector2(1, 2)
+  
+  console.log(a.distanceTo(b))
+  console.log(a.add(b))
+  // set a => a +b
+  console.log(a.addVectors(b, a))
+  
+  // 三维向量
+  let a3 = new THREE.Vector3(3, 2, 1)
+  let b3 = new THREE.Vector3()
+  console.log(a3.distanceTo(b3))
+  console.log(a3.add(b3))
+</script>
+</html>
