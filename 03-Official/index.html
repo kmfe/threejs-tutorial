@@ -22,11 +22,29 @@
       height: 100vh;
       display: block;
     }
+    
+    .split {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+    }
+    
+    .split > div {
+      width: 100%;
+      height: 100%;
+    }
   
   </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<script src='./12-canvas-texture.js'></script>
+<div class='split'>
+  <div id='view1' tabindex='1'></div>
+  <div id='view2' tabindex='2'></div>
+</div>
+<script src='./14-camera.js'></script>
 </body>
 </html>
