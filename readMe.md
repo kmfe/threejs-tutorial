@@ -47,3 +47,5 @@ function getFirstIntersectObj(event) {
 
 ```
 
+### 渲染器 renderer
+
