@@ -1,8 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-/* 
-  该案例中包含了大量动画demo
-*/
+
 import TWEEN from '@tweenjs/tween.js'
 import {
   PerspectiveCamera,
@@ -28,9 +26,6 @@ function main() {
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.setPixelRatio(window.devicePixelRatio)
 
-  // 添加阴影
-  // renderer.shadowMap.enabled = true
-  // renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
   const scene = new Scene()
   const fov = 60
@@ -38,18 +33,13 @@ function main() {
   const near = 0.01
   const aspect = window.innerWidth / window.innerHeight
   const camera = new PerspectiveCamera(fov, aspect, near, far)
-  camera.position.set(0, 15, 40)
+  camera.position.set(0, 120, 40)
 
   const controls = new OrbitControls(camera, canvas)
   controls.target.set(0, 5, 0)
   controls.update()
 
-  const light = new THREE.SpotLight('#FFFFFF', 1, 100)
-  light.position.set(0, 10, 20)
-  // light.castShadow = true
-
-  const lightHelper = new THREE.SpotLightHelper(light)
-  scene.add(lightHelper)
+  const light = new THREE.AmbientLight('#ffffff', 1)
 
   scene.add(light)
 
@@ -147,51 +137,18 @@ function main() {
   resizeHandler()
 
   // 尝试一些操作试试
-
-  let coords = mesh.position
-  let rotation = mesh.rotation
-  let scale = mesh.scale
-
-  // 坐标位移
-  const tweenCoord = new TWEEN.Tween(coords)
-    .to({ x: 0, y: 10, z: -20 }, 3000)
+  const coords = camera.position
+  const tweenY = new TWEEN.Tween(coords)
+    .to({ y: 40 }, 2000)
     .easing(TWEEN.Easing.Quadratic.Out)
 
-  // mesh 旋转
-  const tweenRotation = new TWEEN.Tween(rotation)
-    .delay(1000)
-    .to({ x: THREE.Math.degToRad(90), y: THREE.Math.degToRad(-90), z: 0 }, 2000)
-    .easing(TWEEN.Easing.Quadratic.Out)
-
-  // 测试scale操作
-  const tweenScale = new TWEEN.Tween(scale)
-    .to({ x: 2, y: 2, z: 2 }, 2000)
-    .easing(TWEEN.Easing.Quadratic.Out)
-
-  // 自定义旋转
-  const customRotateHandler = new TWEEN.Tween(rotation)
-    .to({ x: 2, y: 2, z: 2 }, 2000)
+  const tweenZ = new TWEEN.Tween(coords)
+    .to({ z: 10 , x: 10}, 2000)
     .easing(TWEEN.Easing.Quadratic.Out)
 
   rotate.addEventListener('click', () => {
-    tweenCoord.start()
-    tweenRotation.start()
-    tweenScale.start()
-  }, false)
-
-  // 链式操作
-  const chain = document.getElementById('chain-transform')
-  chain.addEventListener('click', () => {
-    tweenCoord.chain(tweenRotation)
-    tweenRotation.chain(tweenScale)
-    tweenCoord.start()
-  }, false)
-
-  const customRotate = document.getElementById('rotate-custom')
-  customRotate.addEventListener('click', () => {
-    // 沿着某个轴旋转 translateOnAxis, rotateOnAxis
-    var axis = new THREE.Vector3(0, 0, 3); //向量axis
-    mesh.rotateOnAxis(axis, Math.PI / 4);
+    tweenY.chain(tweenZ)
+    tweenY.start()
   }, false)
 }
 

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    #c {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+    
+    #transform, #chain-transform, #rotate-custom{
+      position: absolute;
+      z-index: 999;
+      left: 20px;
+      top: 20px;
+      background: lightblue;
+      color: #fff;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    #chain-transform {
+      top: 60px
+    }
+
+    #rotate-custom {
+      top: 100px;
+    }
+  </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button id='transform'>
+  简单尝试
+</button>
+
+<button id='chain-transform'>
+  链式动画
+</button>
+
+<button id='rotate-custom'>
+  旋转
+</button>
+<!--<div id='container'></div>-->
+
+<script src='./20-camera-animate.js'></script>
+</body>
+</html>
