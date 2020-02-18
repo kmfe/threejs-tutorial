@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    #c {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+    
+    .world {
+      position: absolute;
+      z-index: 10;
+      left: 10px;
+      top: 10px;
+      border: 1px solid #cd0000;
+      color: #fff;
+    }
+    
+    .screen {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      border: 1px solid #ff6600;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+
+<!--<div id='container'></div>-->
+<dl class='world'>
+  <dt>当前世界坐标</dt>
+  <dd id='world-x'></dd>
+  <dd id='world-y'></dd>
+  <dd id='world-z'></dd>
+</dl>
+
+<dl class='screen'>
+  <dt>当前屏幕坐标</dt>
+  <dd id='screen-x'></dd>
+  <dd id='screen-y'></dd>
+</dl>
+<script src='./22-pick-coords.js'></script>
+</body>
+</html>
