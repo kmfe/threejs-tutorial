@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-line</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<canvas id='c' width='600' height='200'></canvas>
+<script>
+  const canvas = document.querySelector('#c')
+  const ctx = canvas.getContext('2d')
+  
+  function createLine (start, end, lineCap = 'butt') {
+    ctx.beginPath()
+    // 移动初始点
+    ctx.moveTo(start.x, start.y)
+    // 线段结束终点
+    ctx.lineTo(end.x, end.y)
+    // 指点线段宽度
+    ctx.lineWidth = 10
+    // 描边颜色
+    ctx.strokeStyle = '#cd0000'
+    // 设置端点
+    ctx.lineCap = lineCap
+    // 描边
+    ctx.stroke()
+    ctx.closePath()
+  }
+  
+  createLine({x: 100, y: 100}, {x: 200, y: 100})
+  createLine({x: 100, y: 120}, {x: 200, y: 120}, 'square')
+  createLine({x: 100, y: 150}, {x: 200, y: 150}, 'round')
+</script>
+</body>
+</html>

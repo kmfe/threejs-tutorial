@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-fillStyle</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<div></div>
+<canvas id='c' width='600' height='400'></canvas>
+<script>
+  const canvas = document.querySelector('#c')
+  const ctx = canvas.getContext('2d')
+  
+  // 线性渐变
+  const grd = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
+  grd.addColorStop(0, '#8ED6FF')
+  // grd.addColorStop(0.5, 'red')
+  grd.addColorStop(1, '#004CB3')
+  // 1. rect
+  ctx.beginPath()
+  // 起点，宽，高
+  ctx.rect(10, 10, 200, 200)
+  ctx.fillStyle = grd
+  ctx.fill()
+  ctx.lineWidth = 2
+  ctx.strokeLine = 'black'
+  ctx.stroke()
+  ctx.closePath()
+  
+  // 径向渐变
+  const radGrd = ctx.createRadialGradient(200, 200, 10, 150, 300, 300)
+  radGrd.addColorStop(0, '#8ED6FF')
+  radGrd.addColorStop(1, '#004CB3')
+  ctx.beginPath()
+  ctx.rect(220, 10, 200, 200)
+  ctx.fillStyle = radGrd
+  ctx.fill()
+  ctx.strokeLine = 'black'
+  ctx.stroke()
+  ctx.closePath()
+  
+  // pattern
+  ctx.beginPath()
+  const imgObj = new Image()
+  imgObj.onload = () => {
+    const pattern = ctx.createPattern(imgObj, 'repeat')
+    ctx.rect(10, 220, 400, 100)
+    ctx.fillStyle = pattern
+    ctx.fill()
+  }
+  imgObj.src = './assets/wood-pattern.png'
+  ctx.closePath()
+</script>
+</body>
+</html>

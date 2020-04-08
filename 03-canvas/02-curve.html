@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-curve</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+    
+    .wrap {
+      display: inline-block;
+      width: 300px;
+    }
+    
+    .wrap img {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div class='wrap'>
+  <img src='./assets/html5-canvas-arcs-diagram.png' alt=''>
+</div>=
+<div class='wrap'>
+  <img src='./assets/html5-canvas-quadratic-curves-diagram.png' alt=''>
+</div>
+<div class='wrap'>
+  <img src='./assets/html5-canvas-bezier-curves-diagram.png' alt=''>
+</div>
+<canvas id='c' width='600' height='200'></canvas>
+<script>
+  const canvas = document.querySelector('#c')
+  const ctx = canvas.getContext('2d')
+  
+  function createCurve (center, radius, startAngle, endAngle, clockwise = false) {
+    ctx.beginPath()
+    ctx.arc(center.x, center.y, radius, startAngle, endAngle, clockwise)
+    ctx.lineWidth = 2
+    ctx.strokeStyle = '#cd0000'
+    ctx.stroke()
+  }
+  
+  createCurve({x: 50, y: 50}, 30, 0, Math.PI, true)
+
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-path</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+    
+    .wrap {
+      display: inline-block;
+      width: 300px;
+    }
+    
+    .wrap img {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div class='wrap'>
+  <img src='./assets/html5-canvas-paths-diagram.png' alt=''>
+</div>
+<div></div>
+<canvas id='c' width='600' height='400'></canvas>
+<script>
+  const canvas = document.querySelector('#c')
+  const ctx = canvas.getContext('2d')
+  ctx.beginPath()
+  ctx.moveTo(100, 20)
+  // 1、随机的path1
+  // line1
+  ctx.lineTo(200, 160)
+  // quadratic curve
+  ctx.quadraticCurveTo(230, 200, 250, 120)
+  // bezier curve
+  ctx.bezierCurveTo(290, -40, 300, 200, 400, 150)
+  // line2
+  ctx.lineTo(500, 90)
+  // done
+  ctx.lineWidth = 5
+  ctx.strokeStyle = 'blue'
+  ctx.stroke()
+  
+  // 2、path2
+  ctx.beginPath()
+  ctx.moveTo(180, 250)
+  ctx.lineTo(200, 220)
+  ctx.lineTo(220, 250)
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = 2
+  ctx.moveTo(200, 220)
+  ctx.lineTo(200, 380)
+  
+  ctx.stroke()
+  ctx.closePath()
+  
+  // 3、roundCorner Rect
+  const rectWidth = 200
+  const rectHeight = 100
+  const rectX = 189
+  const rectY = 200
+  const cornerRadius = 50
+  
+  ctx.beginPath()
+  ctx.moveTo(rectX, rectY)
+  ctx.lineTo(rectX + rectWidth - cornerRadius, rectY)
+  ctx.arcTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + cornerRadius, cornerRadius)
+  ctx.lineTo(rectX + rectWidth, rectY + rectHeight)
+  ctx.lineWidth = 5
+  ctx.stroke()
+</script>
+</body>
+</html>

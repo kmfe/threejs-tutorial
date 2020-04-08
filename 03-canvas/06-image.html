@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-image</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+  
+  </style>
+</head>
+<body>
+<div class='wrap'>
+  <img src='./assets/html5-canvas-image-crop-diagram.png' alt=''>
+</div>
+<div></div>
+<canvas id='c' width='600' height='400'></canvas>
+<script>
+  // drawImage(image: CanvasImageSource, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
+  const canvas = document.querySelector('#c')
+  const ctx = canvas.getContext('2d')
+  
+  const imgObj = new Image()
+  imgObj.onload = () => {
+    ctx.drawImage(imgObj, 0, 0, 400, 400, 0, 0, 200, 200)
+  }
+  imgObj.src = 'https://www.html5canvastutorials.com/demos/assets/darth-vader.jpg'
+  
+  // imgLoader 当加载多个图片的时候采用该方法
+  // https://www.html5canvastutorials.com/tutorials/html5-canvas-image-loader/
+</script>
+</body>
+</html>
