@@ -16,43 +16,46 @@
       border: 1px solid #cd0000;
       box-sizing: border-box;
     }
-    
-    .wrap {
-      display: inline-block;
-      width: 300px;
-    }
-    
-    .wrap img {
-      max-width: 100%;
-    }
+  
   </style>
 </head>
 <body>
 <div></div>
 <canvas id='c' width='600' height='400'></canvas>
 <script>
+  
+  /*
+  * text -> fillText, strokeText
+  * textAlign: start|end|center 以设定为位置为起始点，textAlign 指定文字的排列方向rtl,ltr等
+  * textBaseline: top|hanging|middle|bottom
+  * measureText：测量文字的宽度，务必将文字大小先设置，再测量文字宽度
+  * */
   const canvas = document.querySelector('#c')
   const ctx = canvas.getContext('2d')
   
-  // 1. rect
   ctx.beginPath()
-  // 起点，宽，高
-  ctx.rect(20, 20, 100, 50)
-  ctx.fillStyle = 'yellow'
-  ctx.fill()
-  ctx.lineWidth = 6
-  ctx.strokeLine = 'black'
+  ctx.moveTo(0, 200)
+  ctx.lineTo(600, 200)
   ctx.stroke()
   ctx.closePath()
-  // 2. circle
-  ctx.beginPath()
-  ctx.arc(150, 150, 50, 0, Math.PI * 2, true)
-  ctx.fillStyle = 'green'
-  ctx.fill()
-  ctx.lineWidth = 5
-  ctx.strokeStyle = '#cd0000'
+  ctx.moveTo(300, 0)
+  ctx.lineTo(300, 400)
   ctx.stroke()
-
+  
+  ctx.font = 'italic 40px Calibri'
+  ctx.fillText('Hello world', 40, 40)
+  
+  ctx.closePath()
+  const text = 'Hello Canvas'
+  ctx.lineWidth = 2
+  ctx.strokeStyle = 'blue'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'bottom'
+  ctx.font = '40px Calibri'
+  const width = ctx.measureText(text).width
+  ctx.fillText('（' + width + 'px wide)', 300, 300)
+  
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2)
 </script>
 </body>
 </html>

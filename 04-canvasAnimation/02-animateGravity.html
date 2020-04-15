@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animation Gravity</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+<canvas id='c' width=600 height=400></canvas>
+<script>
+	const canvas = document.getElementById('c')
+	const ctx = canvas.getContext('2d')
+	let w = window.innerWidth
+	let h = window.innerHeight
+	
+	canvas.width = w
+	canvas.height = h
+	const Gravity = 0.8
+	const Friction = 0.9
+	
+	const randomIntFromRange = (low, high) => {
+		return Math.floor(Math.random() * (high - low + 1) + low)
+	}
+	const randomColorFromArr = arr => {
+		return arr[Math.floor(Math.random() * arr.length)]
+	}
+	
+	class Ball {
+		constructor (x, y, dx, dy, radius, color) {
+			this.x = x
+			this.y = y
+			this.dx = dx
+			this.dy = dy
+			this.radius = radius
+			this.color = color
+		}
+		
+		draw () {
+			ctx.beginPath()
+			ctx.fillStyle = this.color
+			ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false)
+			ctx.fill()
+		}
+		
+		update () {
+			this.y += this.dy
+			this.x += this.dx
+			if (this.y + this.radius + Gravity + this.dy > h) {
+				this.dy = -this.dy
+				this.dy *= Friction
+				this.dx *= Friction
+			} else {
+				this.dy += Gravity
+			}
+			
+			if (this.x + this.radius + this.dx > w || this.x <= this.radius) {
+				this.dx = -this.dx
+			}
+			
+			this.draw()
+		}
+	}
+	
+	let balls = null
+	
+	function init () {
+		balls = []
+		const colorArr = ['#00bcd4', '#b2ebf2', '#ff5722', '#dd2c00']
+		const renderBalls = () => {
+			for (let i = 0; i < 100; i++) {
+				const radius = randomIntFromRange(6, 18)
+				let ball = new Ball(
+					randomIntFromRange(radius, w - radius),
+					randomIntFromRange(radius, h - radius),
+					randomIntFromRange(-6, 6),
+					randomIntFromRange(2, 6),
+					radius,
+					randomColorFromArr(colorArr)
+				)
+				balls.push(ball)
+			}
+		}
+		renderBalls()
+	}
+	
+	init()
+	
+	const animate = () => {
+		ctx.clearRect(0, 0, w, h)
+		requestAnimationFrame(animate)
+		for (let b of balls) {
+			b.update()
+		}
+	}
+	animate()
+	
+	// 添加点击事件
+	document.addEventListener('mousedown', ev => {
+		init()
+	}, false)
+	
+	window.addEventListener('resize', () => {
+		w = window.innerWidth
+		h = window.innerHeight
+		canvas.width = w
+		canvas.height = h
+		init()
+	}, false)
+
+</script>
+</body>
+
+</html>

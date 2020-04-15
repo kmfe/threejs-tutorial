@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-transformation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: 'PingFang SC', serif;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<div></div>
+<canvas id='c' width='600' height='400'></canvas>
+<script>
+  const ratio = window.devicePixelRatio
+  const canvas = document.getElementById('c')
+  const ctx = canvas.getContext('2d')
+  const wrap = document.querySelector('.wrap')
+  
+  // 中心绘制个rect
+  const w = 100
+  const h = 100
+  ctx.strokeRect(canvas.width / 2 - w / 2, canvas.height / 2 - h / 2, 100, 100)
+  
+  /*
+  * transform 系列都会改变坐标系
+  * scale(2,2), x,y 轴放大元素的同时，会增加元素x,y轴两倍的坐标
+  * rotate 是以左上角为原点 顺时针 选择的角度
+  * */
+  ctx.fillStyle = '#CD0000'
+  ctx.save()
+  
+  // 测试translate
+  ctx.translate(-10, -10)
+  ctx.fillRect(10, 10, w, h)
+  
+  // ctx.restore 使得坐标系恢复到之前的状态，避免translate 对context的影响
+  ctx.restore()
+  
+  // 保持当前状态
+  ctx.save()
+  ctx.fillStyle = 'blue'
+  ctx.translate(10, 10)
+  ctx.scale(1, 0.5)
+  ctx.fillRect(w, h, w, h)
+  
+  // 重置成上一次状态
+  ctx.restore()
+  ctx.moveTo(0, h)
+  ctx.lineTo(600, h)
+  ctx.lineWidth = 0.5
+  ctx.stroke()
+  
+  // 绘制rotate Rect
+  ctx.translate(canvas.width / 2 - w / 2, canvas.height / 2 - h / 2)
+  ctx.rotate(Math.PI / 4)
+  ctx.fillStyle = 'green'
+  ctx.fillRect(0, 0, 100, 100)
+
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-shadow</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: 'PingFang SC', serif;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<div></div>
+<canvas id='c' width='600' height='400'></canvas>
+<script>
+  const ratio = window.devicePixelRatio
+  const canvas = document.getElementById('c')
+  const ctx = canvas.getContext('2d')
+  ctx.save()
+  ctx.arc(100, 100, 75, 0, 2 * Math.PI, false)
+  ctx.fillStyle = '#cd0000'
+  ctx.fill()
+  ctx.clip()
+  
+  ctx.save()
+  ctx.beginPath()
+  ctx.translate(-50, -50)
+  ctx.arc(100, 100, 75, 0, 2 * Math.PI, false)
+  ctx.fillStyle = 'blue'
+  ctx.fill()
+  
+  ctx.restore()
+  ctx.beginPath()
+  ctx.translate(50, 50)
+  ctx.arc(100, 100, 75, 0, 2 * Math.PI, false)
+  ctx.fillStyle = 'green'
+  ctx.fill()
+</script>
+</body>
+</html>

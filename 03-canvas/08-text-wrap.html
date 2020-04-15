@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-text</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: 'PingFang SC', serif;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+    
+    .wrap {
+      box-sizing: border-box;
+      padding: 60px;
+      width: 600px;
+      border: 1px solid #cd000c;
+    }
+  </style>
+</head>
+<body>
+<div></div>
+<canvas id='c' width='600' height='400'></canvas>
+<div class='wrap'></div>
+<script>
+  const ratio = window.devicePixelRatio
+  const canvas = document.getElementById('c')
+  const ctx = canvas.getContext('2d')
+  const wrap = document.querySelector('.wrap')
+  canvas.style.width = canvas.width + 'px'
+  canvas.style.height = canvas.height + 'px'
+  canvas.width = canvas.width * ratio
+  canvas.height = canvas.height * ratio
+  
+  function wrapText (context, text, x, y, maxWidth, lineHeight) {
+    const words = text.split('')
+    let line = ''
+    for (let i = 0; i < words.length; i++) {
+      const testLine = line + words[i]
+      const metrics = context.measureText(testLine)
+      const testWidth = metrics.width
+      if (testWidth > maxWidth * ratio && i > 0) {
+        context.fillText(line, x * ratio, y * ratio)
+        line = words[i]
+        y += lineHeight
+      } else {
+        line = testLine
+      }
+    }
+    context.fillText(line, x * ratio, y * ratio)
+  }
+  
+  const maxWidth = 400
+  const lineHeight = 25
+  const x = 80
+  const y = 60
+  const text = '对此，中国外交部发言人赵立坚在8日的例行记者会上表示，新冠疫情发生以来，世界卫生组织在总干事谭德塞带领下，' +
+    '为推动国际抗疫合作发挥了重要作用，得到了国际社会普遍认可和高度赞誉。' +
+    '赵立坚称，刚刚结束的20国集团领导人峰会发表声明强调，要完全支持并承诺进一步增强世界卫生组织在协调国际抗疫行动方面的职责。' +
+    '中方将一如既往的坚定支持世界卫生组织工作，支持世界卫生组织在全球抗疫合作中继续发挥领导作用。'
+  ctx.font = '32px PingFang SC'
+  wrapText(ctx, text, x, y, maxWidth, lineHeight)
+  wrap.innerHTML = text
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas Animation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+    }
+  </style>
+</head>
+<body>
+<canvas id='c' width='600' height='400'></canvas>
+<script>
+  const canvas = document.getElementById('c')
+  const ctx = canvas.getContext('2d')
+  
+  const drawRectAngle = (rect, context) => {
+    context.beginPath()
+    context.rect(rect.x, rect.y, rect.width, rect.height)
+    context.fillStyle = '#8ED6FF'
+    context.fill()
+    context.lineWidth = rect.borderWidth
+    context.stroke()
+  }
+  
+  const animate = (rect, canvas, context, startTime) => {
+    // update
+    const time = new Date().getTime() - startTime
+    const linearSpeed = 100
+    // pixels / second
+    const newX = linearSpeed * time / 1000
+    if (newX < canvas.width - rect.width - rect.borderWidth / 2) {
+      rect.x = newX
+    }
+    // clear
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    drawRectAngle(rect, context)
+    requestAnimationFrame(() => {
+      animate(rect, canvas, context, startTime)
+    })
+  }
+  
+  const rect = {
+    x: 0,
+    y: 75,
+    width: 100,
+    height: 50,
+    borderWidth: 5
+  }
+  
+  drawRectAngle(rect, ctx)
+
+  setTimeout(() => {
+    const startTime = new Date().getTime()
+    animate(rect, canvas, ctx, startTime)
+  }, 1000)
+
+</script>
+</body>
+</html>

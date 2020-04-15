@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-ImageData</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+    }
+  </style>
+</head>
+<body>
+<canvas id='c' width='600' height='400'></canvas>
+
+<script>
+  function drawImage (imgObj) {
+    const canvas = document.getElementById('c')
+    const ctx = canvas.getContext('2d')
+    const imgX = 69
+    const imgY = 50
+    const imgWidth = imgObj.width
+    const imgHeight = imgObj.height
+    ctx.drawImage(imgObj, imgX, imgY)
+    
+    const imgData = ctx.getImageData(imgX, imgY, imgWidth, imgHeight)
+    const data = imgData.data
+    
+    // iterate over all pixels
+    for (let i = 0, n = data.length; i < n; i += 4) {
+      const r = data[i]
+      const g = data[i + 1]
+      const b = data[i + 2]
+      const alpha = data[i + 3]
+      console.log(r, g, b, alpha)
+    }
+  }
+  
+  const imgObj = new Image()
+  imgObj.onload = () => {
+    drawImage(imgObj)
+  }
+  imgObj.src = '../assets/darth-vader.jpg'
+</script>
+</body>
+</html>

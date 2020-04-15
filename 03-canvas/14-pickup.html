@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas pickup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+    }
+  </style>
+</head>
+<body>
+<canvas id='c' width='600' height='400'></canvas>
+<script>
+  const canvas = document.getElementById('c')
+  const ctx = canvas.getContext('2d')
+  const w = canvas.width
+  const h = canvas.height
+  
+  const drawRect = () => {
+    ctx.fillStyle = '#cd0000'
+    ctx.fillRect(20, 20, 50, 50)
+    ctx.fill()
+  }
+  
+  const drawCircle = () => {
+    ctx.beginPath()
+    ctx.fillStyle = 'blue'
+    ctx.arc(200, 200, 30, 0, 2 * Math.PI, false)
+    ctx.fill()
+  }
+  
+  const drawLine = () => {
+    ctx.beginPath()
+    ctx.lineWidth = 5
+    ctx.moveTo(300, 300)
+    ctx.lineTo(400, 300)
+    ctx.stroke()
+  }
+  
+  // 初始化绘制
+  // drawRect()
+  // drawCircle()
+  // drawLine()
+  //
+  // const fns = [drawRect, drawCircle]
+  //
+  // canvas.addEventListener('mousemove', e => {
+  //   const box = canvas.getBoundingClientRect()
+  //   let x = e.clientX - box.left
+  //   let y = e.clientY - box.top
+  //
+  //   ctx.clearRect(0, 0, canvas.width, canvas.height)
+  //   for (let i = 0; i < fns.length; i++) {
+  //     // 每绘制一次判断当前鼠标坐标是否在这个图形上，然后自定义操作
+  //     fns[i]()
+  //     if (ctx.isPointInPath(x, y)) {
+  //       ctx.fillStyle = 'green'
+  //     } else {
+  //       ctx.fillStyle = 'blue'
+  //     }
+  //     ctx.fill()
+  //   }
+  // }, false)
+  //
+  
+  const balls = []
+  const lines = []
+  
+  const defaultColor = '#000'
+  const focusColor = '#f0f'
+  
+  window.onload = () => {
+    for (let i = 0; i < 5; i++) {
+      const rect = {
+        x: Math.random() * (w - 20),
+        y: Math.random() * (h - 20),
+        w: Math.random() * 50 + 20,
+        h: Math.random() * 50 + 20
+      }
+      balls.push(rect)
+    }
+    
+    for (let i = 0; i < 5; i++) {
+      lines.push(randomPoi())
+    }
+    
+    // draw()
+    
+    canvas.addEventListener('mousemove', draw, false)
+  }
+  
+  function draw (e) {
+    const x = e.clientX - canvas.getBoundingClientRect().left
+    const y = e.clientY - canvas.getBoundingClientRect().top
+    for (let i = 0; i < balls.length; i++) {
+      ctx.beginPath()
+      ctx.rect(balls[i].x, balls[i].y, balls[i].w, balls[i].h)
+      if (ctx.isPointInPath(x, y)) {
+        ctx.fillStyle = focusColor
+        ctx.fill()
+      } else {
+        ctx.fillStyle = defaultColor
+        ctx.fill()
+      }
+    }
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      ctx.beginPath()
+      ctx.moveTo(line[0].x, line[0].y)
+      for (let j = 0; j < line.length; j++) {
+        ctx.lineTo(line[j].x, line[j].y)
+      }
+      ctx.closePath()
+      if (ctx.isPointInPath(x, y)) {
+        ctx.fillStyle = focusColor
+        ctx.fill()
+      } else {
+        ctx.fillStyle = defaultColor
+        ctx.fill()
+      }
+    }
+  }
+  
+  function randomPoi () {
+    const pointArr = []
+    
+    // 首页生成一个中心点
+    const center = {
+      x: Math.random() * w / 2,
+      y: Math.random() * h / 2
+    }
+    pointArr.push(center)
+    
+    // 生成随机点
+    const len = 2 + Math.floor(Math.random() * 5)
+    for (let i = 0; i < len; i++) {
+      pointArr.push({
+        x: center.x * Math.random(),
+        y: center.y * Math.random()
+      })
+    }
+    return pointArr
+  }
+
+
+</script>
+</body>
+</html>

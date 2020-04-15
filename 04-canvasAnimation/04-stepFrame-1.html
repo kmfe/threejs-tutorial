@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas Frame Animation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+<canvas id='c'></canvas>
+<script>
+	const canvas = document.querySelector('#c')
+	const ctx = canvas.getContext('2d')
+	canvas.width = window.innerWidth
+	canvas.height = window.innerHeight
+	
+	// 绘制连接到鼠标的三角形
+	
+	const drawLineToMouse = dest => {
+		ctx.restore()
+		ctx.save()
+		const startX = canvas.width / 2
+		const startY = canvas.height / 2
+		
+		// 在初始化点绘制外轮廓
+		ctx.beginPath()
+		ctx.fillStyle = '#ccc'
+		ctx.arc(startX, startY, 20, 0, 2 * Math.PI, false)
+		ctx.fill()
+		ctx.clip()
+		
+    // 绘制眼睛
+		ctx.beginPath()
+		ctx.fillStyle = '#000'
+		ctx.arc(startX, startY, 8, 0, 2 * Math.PI, false)
+		ctx.fill()
+		
+		ctx.restore()
+		ctx.save()
+  
+		// 初始化点
+		ctx.beginPath()
+		ctx.moveTo(startX, startY)
+		ctx.lineTo(dest.x, dest.y)
+		
+		// 连接到垂直点
+		ctx.lineTo(dest.x, startY)
+		ctx.closePath()
+		ctx.stroke()
+		
+		// 绘制当前角度
+		const tan = (dest.y - startY) / (dest.x - startX)
+		
+		// 将弧度转换为角度
+		const deg = (Math.atan(tan) * 180 / Math.PI).toFixed(2)
+		ctx.font = '12px PingHei'
+		ctx.fillText(deg + '°', startX + 10, startY + 14)
+		ctx.restore()
+		
+		// ctx.rotate(tan)
+	}
+	
+	// 鼠标跟随
+	const mouseFollow = (ev) => {
+		ctx.save()
+		ctx.globalAlpha = 0.2
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+		ctx.beginPath()
+		ctx.fillStyle = '#000'
+		ctx.arc(ev.clientX, ev.clientY, 8, 0, 2 * Math.PI, false)
+		ctx.fill()
+	}
+	
+	document.addEventListener('mousemove', ev => {
+		mouseFollow(ev)
+		drawLineToMouse({
+			x: ev.clientX,
+			y: ev.clientY
+		})
+	}, false)
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas 逐帧动画2</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+<canvas id='person-walking'></canvas>
+<script>
+	const canvas = document.querySelector('#person-walking')
+	const ctx = canvas.getContext('2d')
+	canvas.width = window.innerWidth
+	canvas.height = window.innerHeight
+	
+	class RunningPerson {
+		constructor () {
+			this.resource = null
+			this.IMG_COUNT = 8
+			this.IMG_WIDTH = 70
+			this.IMG_HEIGHT = 92
+			this.KEYFRAME = -1
+			this.lastTime = Date.now()
+			this.x = 30
+			this.y = 30
+			this.stepDistance = 10
+		}
+		
+		async start () {
+			await this.loadResource()
+			this.run()
+		}
+		
+		loadResource () {
+			return new Promise(resolve => {
+				const img = new Image()
+				img.src = './assets/running_person.jpg'
+				img.onload = () => {
+					resolve(img)
+					this.resource = img
+				}
+			})
+		}
+		
+		run () {
+			const now = Date.now()
+			if (now - this.lastTime > 90) {
+				ctx.clearRect(0, 0, canvas.width, canvas.height)
+				// 位移
+				if (this.x + this.IMG_WIDTH <= canvas.width) {
+					this.x += this.stepDistance
+				}
+				// 切换图片
+				this.KEYFRAME = ++this.KEYFRAME % this.IMG_COUNT
+				ctx.drawImage(this.resource, this.KEYFRAME * 70, 184, this.IMG_WIDTH, this.IMG_HEIGHT, this.x, this.y, this.IMG_WIDTH, this.IMG_HEIGHT)
+				this.lastTime = now
+			}
+			requestAnimationFrame(this.run.bind(this))
+		}
+	}
+	
+	const person = new RunningPerson()
+	person.start()
+</script>
+</body>
+</html>

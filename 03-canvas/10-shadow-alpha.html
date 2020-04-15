@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-shadow</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: 'PingFang SC', serif;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<div></div>
+<canvas id='c' width='600' height='400'></canvas>
+<script>
+  /*
+  * 增加shadow，注意先写shadow，再添加其他元素，其他元素才会添加shadow
+  * 常用属性： shadowOffsetX， shadowOffsetY，shadowBlur, shadowColor
+  *
+  * globalAlpha 设置context的透明度，全局设置
+  *
+  * */
+  
+  const ratio = window.devicePixelRatio
+  const canvas = document.getElementById('c')
+  const ctx = canvas.getContext('2d')
+  ctx.shadowOffsetX = 5
+  ctx.shadowOffsetY = 5
+  ctx.shadowColor = '#595959'
+  ctx.shadowBlur = 20
+  
+  ctx.fillStyle = '#cd0000'
+  ctx.fillRect(10, 10, 120, 120)
+  
+  ctx.globalAlpha = 0.2
+  ctx.fillStyle = 'blue'
+  ctx.font = '30px PingHei'
+  ctx.fillText('hello shadow', 0, 30)
+  
+  ctx.beginPath()
+  ctx.moveTo(200, 200)
+  ctx.lineTo(300, 300)
+  ctx.stroke()
+  
+</script>
+</body>
+</html>

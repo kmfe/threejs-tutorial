@@ -34,6 +34,10 @@
 <div></div>
 <canvas id='c' width='600' height='400'></canvas>
 <script>
+  /*
+  * context.beginPath() 开始一条路径，或重置当前路径
+  * context.closePath() 创建从当前点到起始点的路径
+  * */
   const canvas = document.querySelector('#c')
   const ctx = canvas.getContext('2d')
   ctx.beginPath()

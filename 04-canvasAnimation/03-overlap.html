@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animation Overlap</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+<canvas id='c' width=600 height=400></canvas>
+<script>
+	const canvas = document.getElementById('c')
+	const ctx = canvas.getContext('2d')
+	let w = window.innerWidth
+	let h = window.innerHeight
+	
+	canvas.width = w
+	canvas.height = h
+	
+	const randomIntFromRange = (low, high) => {
+		return Math.floor(Math.random() * (high - low + 1) + low)
+	}
+	const randomColorFromArr = arr => {
+		return arr[Math.floor(Math.random() * arr.length)]
+	}
+	const getDistance = (x1, y1, x2, y2) => {
+		let dx = x1 - x2
+		let dy = y1 - y2
+		return Math.sqrt(dx * dx + dy * dy)
+	}
+	
+	class Ball {
+		constructor (x, y, dx, dy, radius, color) {
+			this.x = x
+			this.y = y
+			this.dx = dx
+			this.dy = dy
+			this.radius = radius
+			this.color = color
+		}
+		
+		draw () {
+			ctx.beginPath()
+			ctx.fillStyle = this.color
+			ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false)
+			ctx.fill()
+		}
+		
+		update () {
+			this.y += this.dy
+			this.x += this.dx
+			if (this.y + this.radius > h || this.y <= this.radius) {
+				this.dy = -this.dy
+			}
+			if (this.x + this.radius + this.dx > w || this.x <= this.radius) {
+				this.dx = -this.dx
+			}
+			this.draw()
+		}
+	}
+	
+	let balls = null
+	
+	function init () {
+		balls = []
+		const colorArr = ['#00bcd4', '#b2ebf2', '#ff5722', '#dd2c00']
+		const renderBalls = () => {
+			for (let i = 0; i < 100; i++) {
+				let radius = randomIntFromRange(6, 18)
+				let x = randomIntFromRange(radius, w - radius)
+				let y = randomIntFromRange(radius, h - radius)
+				
+				for (let j = 0; j < balls.length; j++) {
+					// 如果两个小球重叠的话
+					if (getDistance(x, y, balls[j].x, balls[j].y) <= radius + balls[j].radius) {
+						radius = randomIntFromRange(6, 18)
+						x = randomIntFromRange(radius, w - radius)
+						y = randomIntFromRange(radius, h - radius)
+						j = -1
+					}
+				}
+				// const speed = (Math.random() - 0.5) * 8
+				let ball = new Ball(x, y, 0, 0, radius, randomColorFromArr(colorArr))
+				balls.push(ball)
+			}
+		}
+		
+		renderBalls()
+		
+		for (let b of balls) {
+			b.draw()
+		}
+	}
+	
+	init()
+	
+	const animate = () => {
+		ctx.clearRect(0, 0, w, h)
+		requestAnimationFrame(animate)
+		for (let b of balls) {
+			b.update()
+		}
+	}
+	animate()
+	
+	// resize
+	window.addEventListener('resize', () => {
+		w = window.innerWidth
+		h = window.innerHeight
+		canvas.width = w
+		canvas.height = h
+		init()
+	}, false)
+
+</script>
+</body>
+
+</html>

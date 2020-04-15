@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas-shadow</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: 'PingFang SC', serif;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<div></div>
+<canvas id='c' width='600' height='400'></canvas>
+<canvas id='tempCanvas' style='display: none'></canvas>
+<script>
+  const canvas = document.getElementById('c')
+  const ctx = canvas.getContext('2d')
+  const tempCanvas = document.getElementById('tempCanvas')
+  const tempCtx = tempCanvas.getContext('2d')
+  
+  const squareWidth = 55
+  const circleRadius = 35
+  const shapeOffset = 50
+  const operationOffset = 130
+  const arr = []
+  
+  arr.push('source-atop')
+  arr.push('source-in')
+  arr.push('source-out')
+  arr.push('source-over')
+  
+  arr.push('destination-atop')
+  arr.push('destination-in')
+  arr.push('destination-out')
+  arr.push('destination-over')
+  
+  arr.push('lighter')
+  arr.push('darker')
+  arr.push('xor')
+  arr.push('copy')
+  
+  // translate context to add 10px padding
+  ctx.translate(10, 10)
+  
+  // draw each of the operations
+  for (let n = 0; n < arr.length; n++) {
+    const thisOperate = arr[n]
+    tempCtx.save()
+    // clear temp context
+    tempCtx.clearRect(0, 0, canvas.width, canvas.height)
+    
+    // draw rectangle (destination)
+    tempCtx.beginPath()
+    tempCtx.rect(0, 0, squareWidth, squareWidth)
+    tempCtx.fillStyle = 'blue'
+    tempCtx.fill()
+    
+    // set global composite
+    tempCtx.globalCompositeOperation = thisOperate
+    
+    // draw circle (source)
+    tempCtx.beginPath()
+    tempCtx.arc(shapeOffset, shapeOffset, circleRadius, 0, 2 * Math.PI, false)
+    tempCtx.fillStyle = 'red'
+    tempCtx.fill()
+    tempCtx.restore()
+    
+    // draw text
+    tempCtx.font = '12px Verdana'
+    tempCtx.fillStyle = 'black'
+    tempCtx.fillText(thisOperate, 0, squareWidth + 45)
+    
+    // translate visible context so operation is drawn in the right place
+    if (n > 0) {
+      if (n % 4 === 0) {
+        ctx.translate(operationOffset * -3, operationOffset)
+      } else {
+        ctx.translate(operationOffset, 0)
+      }
+    }
+    
+    ctx.drawImage(tempCanvas, 0, 0)
+  }
+</script>
+</body>
+</html>
