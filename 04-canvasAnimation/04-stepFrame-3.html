@@ -10,6 +10,7 @@
     * {
       margin: 0;
       padding: 0;
+      overflow: hidden;
     }
   </style>
 </head>
@@ -27,15 +28,31 @@
 			this.IMG_COUNT = 8
 			this.IMG_WIDTH = 70
 			this.IMG_HEIGHT = 92
+			this.H_STEP = 92
 			this.KEYFRAME = -1
 			this.lastTime = Date.now()
 			this.x = 30
 			this.y = 30
 			this.stepDistance = 10
+			this.imgType = {
+				front: 1,
+				left: 2,
+				right: 3,
+				back: 4,
+				leftDown: 5,
+				rightDown: 6,
+				leftUp: 7,
+				rightUp: 8
+			}
+			this.trace = {
+				x: 0,
+				y: 0
+			}
 		}
 		
 		async start () {
 			await this.loadResource()
+			this.traceMouse()
 			this.run()
 		}
 		
@@ -50,20 +67,87 @@
 			})
 		}
 		
+		// 判断当前鼠标点 在 小人的哪个象限，或轴以使用哪种图片
+		detectQuadrant (x1, y1, x2, y2) {
+			if (x1 > x2 + this.IMG_WIDTH && y1 > y2 + this.IMG_HEIGHT) {
+				// 第四象限
+				this.imgType = 6
+			} else if (x1 < x2 && y1 > y2 + this.IMG_HEIGHT) {
+				// 第三象限
+				this.imgType = 5
+			} else if (x1 > x2 + this.IMG_WIDTH && y1 < y2) {
+				// 第二象限
+				this.imgType = 8
+			} else if (x1 < x2 && y1 < y2) {
+				// 第一象限
+				this.imgType = 7
+			} else if ((y1 >= y2 && y1 <= y2 + this.IMG_HEIGHT) && x1 < x2) {
+				// 左X轴
+				this.imgType = 2
+			} else if ((y1 >= y2 && y1 <= y2 + this.IMG_HEIGHT) && x1 > x2 + this.IMG_WIDTH) {
+				// 右X轴
+				this.imgType = 3
+			} else if ((x1 >= x2 && x1 <= x2 + this.IMG_WIDTH) && y1 > y2 + this.IMG_HEIGHT) {
+				// 下Y轴
+				this.imgType = 1
+			} else if ((x1 >= x2 && x1 <= x2 + this.IMG_WIDTH) && y1 < y2) {
+				// 上Y轴
+				this.imgType = 4
+			}
+			return this.imgType
+		}
+		
 		run () {
 			const now = Date.now()
 			if (now - this.lastTime > 90) {
 				ctx.clearRect(0, 0, canvas.width, canvas.height)
-				// 位移
-				if (this.x + this.IMG_WIDTH <= canvas.width) {
-					this.x += this.stepDistance
+				// 判断当前鼠标位置在第几象限
+				const type = this.detectQuadrant(this.trace.x, this.trace.y, this.x, this.y)
+				// X位移
+				switch (this.imgType) {
+					case 6:
+					case 8:
+					case 3:
+						console.log(6, 8, 3)
+						this.x += this.stepDistance
+						break
+					default:
+						this.x -= this.stepDistance
 				}
+				
+				// Y位移
+				switch (this.imgType) {
+					case 1:
+					case 5:
+					case 6:
+						this.y += this.stepDistance
+						break
+					default:
+						this.y -= this.stepDistance
+						break
+				}
+				
 				// 切换图片
 				this.KEYFRAME = ++this.KEYFRAME % this.IMG_COUNT
-				ctx.drawImage(this.resource, this.KEYFRAME * 70, 184, this.IMG_WIDTH, this.IMG_HEIGHT, this.x, this.y, this.IMG_WIDTH, this.IMG_HEIGHT)
+				ctx.drawImage(
+					this.resource,
+					this.KEYFRAME * 70, (type - 1) * this.H_STEP,
+					this.IMG_WIDTH,
+					this.IMG_HEIGHT,
+					this.x,
+					this.y,
+					this.IMG_WIDTH,
+					this.IMG_HEIGHT)
 				this.lastTime = now
 			}
 			requestAnimationFrame(this.run.bind(this))
+		}
+		
+		traceMouse () {
+			window.addEventListener('mousemove', ev => {
+				this.trace.x = ev.clientX
+				this.trace.y = ev.clientY
+			})
 		}
 	}
 	
