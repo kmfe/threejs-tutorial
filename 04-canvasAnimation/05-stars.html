@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas Stars</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    body, html {
+      overflow: hidden;
+      background: rgba(0, 0, 0, .9);
+    }
+  </style>
+</head>
+<body>
+<canvas id='c'></canvas>
+<script>
+	const W = window.innerWidth
+	const H = window.innerHeight
+	let num = 500
+	let stars = []
+	const canvas = document.querySelector('#c')
+	canvas.width = W
+	canvas.height = H
+	const ctx = canvas.getContext('2d')
+	let lastTime = new Date().getTime()
+	let rnd = 999
+	
+	window.onload = () => {
+		addStar()
+		render()
+		renderMeteor()
+	}
+	
+	function renderMeteor () {
+		let time = Math.round(Math.random() * 3000)
+		setTimeout(() => {
+			rnd = Math.ceil(Math.random() * stars.length)
+			renderMeteor()
+		}, time)
+	}
+	
+	// renderStar()
+	function render () {
+		const now = Date.now()
+		if (now - lastTime > 40) {
+			ctx.clearRect(0, 0, W, H)
+			for (let i = 0; i < num; i++) {
+				let star = stars[i]
+				if (i === rnd) {
+					star.vx = -5
+					star.vy = 20
+					const startPoint = {
+						x: star.x,
+						y: star.y
+					}
+					const endPoint = {
+						x: star.x + (star.vx * star.length),
+						y: star.y + (star.vy * star.length)
+					}
+					
+					const shootStarBg = ctx.createLinearGradient(startPoint.x, startPoint.y, endPoint.x, endPoint.y)
+					shootStarBg.addColorStop(0, 'rgba(255, 255,255, 0)')
+					shootStarBg.addColorStop(1, 'rgba(255, 255, 255, ' + star.alpha + ')')
+					
+					ctx.beginPath()
+					ctx.moveTo(startPoint.x, startPoint.y)
+					ctx.lineTo(endPoint.x, endPoint.y)
+					ctx.strokeStyle = shootStarBg
+					ctx.lineWidth = star.r
+					ctx.lineCap = 'round'
+					ctx.stroke()
+				}
+				star.alpha += star.ra
+				if (star.alpha <= 0) {
+					star.alpha = 0
+					star.ra = -star.ra
+				} else if (star.alpha > 1) {
+					star.alpha = 1
+					star.ra = -star.ra
+				}
+				star.x += star.vx
+				star.y += star.vy
+				if (star.y >= H) {
+					star.y = 0
+				}
+				
+				ctx.beginPath()
+				let bg = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.r)
+				bg.addColorStop(0, 'rgba(255, 255, 255, ' + star.alpha + ')')
+				bg.addColorStop(1, 'rgba(255, 255, 255, 0)')
+				ctx.fillStyle = bg
+				ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2, true)
+				ctx.fill()
+				ctx.closePath()
+			}
+			lastTime = now
+		}
+		requestAnimationFrame(render)
+	}
+	
+	// 添加星星
+	function addStar () {
+		for (let i = 0; i < num; i++) {
+			let aStar = {
+				x: Math.round(Math.random() * W),
+				y: Math.round(Math.random() * H),
+				r: Math.random() * 4,
+				ra: Math.random() * 0.05,
+				alpha: Math.random(),
+				vx: Math.random() * 0.2 - 0.1,
+				vy: Math.random() * 0.2 - 0.1,
+				length: Math.random() * 4 + 4
+			}
+			stars.push(aStar)
+		}
+	}
+
+</script>
+</body>
+</html>
