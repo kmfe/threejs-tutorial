@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Animate Circular</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      overflow: hidden;
+      background: rgba(0, 0, 0, 1);
+    }
+    
+    canvas {
+      background: rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+<canvas id='c'></canvas>
+<script>
+	const canvas = document.querySelector('#c')
+	const ctx = canvas.getContext('2d')
+	canvas.width = window.innerWidth
+	canvas.height = window.innerHeight
+	
+	class Ball {
+		constructor () {
+			this.angle = 0
+			this.centerX = canvas.width / 2
+			this.centerY = canvas.height / 2
+			this.radius = 100
+			this.speed = 0.01745
+			
+			this.x = 120
+			this.y = 120
+		}
+		
+		draw () {
+			ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
+			
+			ctx.beginPath()
+			ctx.strokeStyle = '#cd0000'
+			ctx.lineWidth = 4
+			ctx.fillStyle = '#6db5cc'
+			ctx.arc(120, 120, 100, 0, 2 * Math.PI, false)
+			ctx.stroke()
+			ctx.fill()
+			
+			ctx.beginPath()
+			ctx.fillStyle = '#cd0000'
+			ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI, false)
+			ctx.fill()
+			
+			ctx.beginPath()
+			ctx.lineWidth = 1
+			ctx.moveTo(this.centerX, this.centerY)
+			ctx.lineTo(this.x, this.y)
+			ctx.strokeStyle = '#fff'
+			ctx.stroke()
+			
+			// Math.sin 等使用的参数均为弧度， 1deg ≈ 0.017弧度
+			// 变换弧度即可实现圆周运动
+			this.angle += this.speed
+			this.x = this.centerX + Math.cos(this.angle) * this.radius
+			this.y = this.centerY + Math.sin(this.angle) * this.radius
+		}
+	}
+	
+	const ball = new Ball()
+	ball.draw()
+	setInterval(() => {
+		ball.draw()
+	}, 1000)
+</script>
+</body>
+</html>

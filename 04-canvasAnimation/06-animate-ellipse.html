@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Animate Ellipse</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+<canvas id='c'></canvas>
+<script>
+	const canvas = document.querySelector('#c')
+	const ctx = canvas.getContext('2d')
+	canvas.width = window.innerWidth
+	canvas.height = window.innerHeight
+	
+	class Ball {
+		constructor (x, y) {
+			this.x = x
+			this.y = y
+			this.radiusX = 60
+			this.radiusY = 100
+			this.angle = 0
+			this.speed = 0.0175
+			this.centerX = window.innerWidth / 2
+			this.centerY = window.innerHeight / 2
+		}
+		
+		draw () {
+			ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
+			
+			this.angle += this.speed
+			this.x = this.centerX + this.radiusX * Math.cos(this.angle)
+			this.y = this.centerY + this.radiusY * Math.sin(this.angle)
+			
+			ctx.beginPath()
+			ctx.strokeStyle = '#cd0000'
+			ctx.arc(this.x, this.y, 10, 0, 2 * Math.PI, false)
+			ctx.stroke()
+			
+			ctx.beginPath()
+			ctx.strokeStyle = '#cd0000'
+			ctx.ellipse(this.centerX, this.centerY, 60, 100, 0, 0, this.angle, false)
+			ctx.stroke()
+			
+			requestAnimationFrame(this.draw.bind(this))
+		}
+	}
+	
+	const ball = new Ball(120, 120)
+	ball.draw()
+
+</script>
+</body>
+</html>

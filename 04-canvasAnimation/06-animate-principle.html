@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Animate Principle</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      overflow: hidden;
+      background: rgba(0, 0, 0, 1);
+    }
+    
+    canvas {
+      background: rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+<canvas id='c'></canvas>
+<script>
+	class Ball {
+		constructor (canvas, x, y, dx, dy) {
+			this.canvas = document.querySelector(canvas)
+			this.W = window.innerWidth
+			this.H = window.innerHeight
+			this.canvas.width = this.W
+			this.canvas.height = this.H
+			this.context = this.canvas.getContext('2d')
+			
+			this.x = x
+			this.y = y
+			this.dx = dx
+			this.dy = dy
+			this.radius = 60
+		}
+		
+		draw () {
+			this.context.clearRect(0, 0, this.W, this.H)
+			this.context.beginPath()
+			this.context.fillStyle = '#6db5cc'
+			this.context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false)
+			this.context.fill()
+		}
+		
+		move () {
+			// 1. 固定参数-> 匀速运动
+			// this.x += this.dx
+			// 2. 变化的参数 -> 加速/减速运动
+			// this.dx -= 0.05
+			// if (this.x + this.radius > this.W) {
+			// 	this.x = 0
+			// }
+			// if (this.dx <= 0) {
+			// 	this.dx = 0
+			// }
+			
+			// 3. 自由落体运动
+			let gravity = 2 // 重力加速度
+			const bounce = -0.9 // 反弹系数
+			
+			// this.dy 加速度, 向下加速运动
+			this.dy += gravity
+			this.y += this.dy
+			
+			// 达到底部之后，反弹
+			if (this.y + this.radius >= this.H) {
+				// 将球置于地面
+				this.y = this.H - this.radius
+				this.dy *= bounce
+			}
+			this.draw()
+			requestAnimationFrame(this.move.bind(this))
+		}
+	}
+	
+	const ball = new Ball('#c', 120, 120, 10, 2)
+	ball.move()
+</script>
+</body>
+</html>
