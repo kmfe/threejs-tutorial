@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Image Handler</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      overflow: hidden;
+    }
+    
+    .range-wrap {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+    }
+    
+    input {
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<canvas id='c'></canvas>
+<div class='range-wrap'>
+  <p>
+    <label for='scale-range'>
+      缩放
+      <input type="range" id="scale-range" min="0.5" max="2.0" step="0.01" value="1.0">
+    </label>
+  </p>
+</div>
+<script>
+	const range = document.querySelector('#scale-range')
+	const imgUrl = '../images/hmmmface.png'
+	const canvas = document.querySelector('#c')
+	const ctx = canvas.getContext('2d')
+	const w = window.innerWidth
+	const h = window.innerHeight
+	const ratio = window.devicePixelRatio
+	let image = null
+	canvas.width = w * ratio
+	canvas.height = h * ratio
+	
+	canvas.style.width = w + 'px'
+	canvas.style.height = h + 'px'
+	
+	function render () {
+		ctx.save()
+		ctx.translate(w * ratio / 2, h * ratio / 2)
+		ctx.scale(range.value, range.value)
+		ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2)
+		ctx.restore()
+	}
+	
+	function loadResource () {
+		return new Promise(resolve => {
+			image = new Image()
+			image.src = imgUrl
+			image.onload = () => resolve(image)
+			resolve()
+		})
+	}
+	
+	async function init () {
+		await loadResource()
+		render()
+		range.onmousemove = render
+	}
+	
+	init()
+
+</script>
+</body>
+</html>
