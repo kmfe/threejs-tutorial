@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+      max-width: 768px
+    }
+  </style>
+</head>
+<body>
+<canvas id='c'></canvas>
+<script>
+	function renderRoundRectWithText (context, type = 'grey', rectCoordinate, content, indicate = 'left') {
+		const {x, y} = rectCoordinate
+		const ratio = window.devicePixelRatio
+		const r = 2 * ratio
+		const w = 120 * ratio
+		const h = 40 * ratio
+		let textColor = ''
+		let subColor = ''
+		context.beginPath()
+		if (type === 'grey') {
+			context.strokeStyle = 'rgba(145,175,201,0.51)'
+			context.fillStyle = 'rgba(0,0,0,0.35)'
+			textColor = 'rgba(167,167,167,1)'
+			subColor = 'rgba(111,111,111,1)'
+		} else {
+			context.strokeStyle = '#91AFC9'
+			context.fillStyle = 'rgba(44,107,152,0.82)'
+			textColor = 'rgba(142,211,255,1)'
+			subColor = 'rgba(243,109,79,1)'
+		}
+		context.lineWidth = 3 * ratio
+		// context.moveTo(x + r, y);
+		context.arc(x + r, y, r, Math.PI, Math.PI * 3 / 2, false)
+		
+		context.lineTo(w + x, y - r)
+		context.arc(w + x, y, r, Math.PI * 3 / 2, Math.PI * 2, false)
+		context.lineTo(w + x + r, y + h)
+		context.arc(w + x, y + h, r, 0, Math.PI / 2, false)
+		context.lineTo(x + r, y + h + r)
+		
+		context.arc(x + r, y + h, r, Math.PI / 2, Math.PI, false)
+		context.moveTo(x, y + h)
+		context.lineTo(x, y)
+		context.stroke()
+		context.fill()
+		
+		// 添加文字
+		context.fillStyle = textColor
+		context.font = '22px PingFang SC'
+		context.fillText(content.title, x + 20, y + 28)
+		
+		context.fillStyle = subColor
+		context.font = '16px PingFang SC'
+		context.fillText(content.desc, x + 20, y + 64)
+		context.closePath()
+		
+		// 添加位置指示
+		context.beginPath()
+		context.strokeStyle = 'rgba(142,211,255,1)'
+		context.lineCap = 'round'
+		context.lineWidth = 1
+		const indicateY = 30 * ratio
+		const indicateX = 50 * ratio
+		const rightIndicateX = 20 * ratio
+		const bigCircleRadius = 20 * ratio
+		const smallCircleRadius = 4 * ratio
+		if (indicate === 'left') {
+			context.moveTo(x + w + r / 2, y + h + r / 2)
+			context.lineTo(x + w + indicateX, y + h + r + indicateY)
+			context.stroke()
+			context.beginPath()
+			context.fillStyle = 'rgba(142,211,255,1)'
+			context.arc(x + w + indicateX, y + h + r + indicateY, smallCircleRadius, 0, 2 * Math.PI, true)
+			context.fill()
+			
+			context.beginPath()
+			context.strokeStyle = 'rgba(145,175,201,1)'
+			context.fillStyle = 'rgba(51,176,255,0.46)'
+			context.arc(x + w + indicateX, y + h + r + indicateY, bigCircleRadius, 0, 2 * Math.PI, true)
+			context.stroke()
+			context.fill()
+		} else {
+			context.moveTo(x - r / 2, y + h + r / 2)
+			context.lineTo(x - rightIndicateX, y + h + r + indicateY)
+			context.stroke()
+			context.beginPath()
+			context.fillStyle = 'rgba(142,211,255,1)'
+			context.arc(x - rightIndicateX, y + h + r + indicateY, smallCircleRadius, 0, 2 * Math.PI, true)
+			context.fill()
+			
+			context.beginPath()
+			context.strokeStyle = 'rgba(145,175,201,1)'
+			context.fillStyle = 'rgba(51,176,255,0.46)'
+			context.arc(x - rightIndicateX, y + r + h + indicateY, bigCircleRadius, 0, 2 * Math.PI, true)
+			context.stroke()
+			context.fill()
+		}
+	}
+	
+	const canvas = document.querySelector('#c')
+	const ctx = canvas.getContext('2d')
+	const w = window.innerWidth
+	const h = window.innerHeight
+	const ratio = window.devicePixelRatio
+	const image = new Image()
+	
+	const bg = 'http://res.eschervr.com/assets/map.jpg'
+	let scaleRatio = 1
+	let startPos = -1000
+	const bases = [
+		{
+			title: '云南省文山州丘北县',
+			desc: '海拔：928m'
+		},
+		{
+			title: '武定种源种植基地',
+			desc: '海拔：310m'
+		},
+		{
+			title: '太安种植基地',
+			desc: '海拔：412m'
+		}
+	]
+	
+	canvas.style.width = `${w}px`
+	canvas.style.height = `${h}px`
+	
+	canvas.width = w * ratio
+	canvas.height = h * ratio
+	
+	const drawImageWithText = (img) => {
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+		ctx.save()
+		const {naturalHeight, naturalWidth} = img
+		scaleRatio = h * ratio / naturalHeight
+		ctx.translate(startPos * scaleRatio, 0)
+		ctx.drawImage(
+			img,
+			0,
+			0,
+			naturalWidth,
+			naturalHeight,
+			0,
+			0,
+			scaleRatio * naturalWidth,
+			scaleRatio * naturalHeight
+		)
+		ctx.closePath()
+		// ctx.restore();
+		this.renderRoundRectWithText(ctx, 'grey', {
+			x: 1240 * scaleRatio,
+			y: 680 * scaleRatio
+		}, bases[1])
+		this.renderRoundRectWithText(ctx, 'blue', {
+			x: 1680 * scaleRatio,
+			y: 1180 * scaleRatio
+		}, bases[0])
+		this.renderRoundRectWithText(ctx, 'grey', {
+			x: 1180 * scaleRatio,
+			y: 1340 * scaleRatio
+		}, bases[2], 'right')
+		ctx.restore()
+	}
+	const loadResource = () => {
+		image.src = bg
+		image.onload = () => {
+			drawImageWithText(image)
+		}
+	}
+	
+	loadResource()
+	let startX = 0
+	window.addEventListener('touchstart', ev => {
+		const {clientX} = ev.changedTouches[0]
+		startX = clientX
+	}, false)
+	window.addEventListener('touchmove', ev => {
+		const {clientX} = ev.changedTouches[0]
+		const gap = clientX - startX
+		startPos += gap * 0.5
+		if (startPos >= 0) {
+			startPos = 0
+		}
+		if (startPos <= w * ratio - image.naturalWidth * scaleRatio) {
+			startPos = w * ratio - image.naturalWidth * scaleRatio
+		}
+		drawImageWithText(image)
+	}, false)
+
+</script>
+</body>
+</html>
