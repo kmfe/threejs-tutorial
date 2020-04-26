@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas Composite</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    .handler {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+    }
+  </style>
+</head>
+<body>
+<canvas id='c'></canvas>
+<div class='handler'>
+  <button id='add'>添加圆圈</button>
+  <button id='clear'>清空画布</button>
+</div>
+<script>
+	const canvas = document.querySelector('#c')
+	const ctx = canvas.getContext('2d')
+	const w = window.innerWidth
+	const h = window.innerHeight
+	const ratio = window.devicePixelRatio
+	
+	canvas.width = w * ratio
+	canvas.height = h * ratio
+	canvas.style.cssText = `width: ${w}px; height: ${h}px`
+	
+	const r = [50, 40, 80, 60]
+	const color = ['#FF9900', '#FFFFCC', '#336699', '#990033']
+	
+	const renderMath = (min, max) => {
+		return Math.random() * (max - min) + min
+	}
+	
+	class Circle {
+		constructor () {
+			const renderRadius = r[Math.ceil(renderMath(0, 4) - 1)]
+			const xBoundary = renderMath(renderRadius, w * ratio - renderRadius)
+			const yBoundary = renderMath(renderRadius, h * ratio - renderRadius)
+			this.x = xBoundary
+			this.y = yBoundary
+			this.color = color[Math.ceil(renderMath(0, 4)) - 1]
+			this.radius = renderRadius
+			this.selected = false
+		}
+	}
+	
+	const circles = []
+	let previousSelected = null
+	
+	function addRandomCircle () {
+		const circle = new Circle()
+		circles.push(circle)
+		drawCircles()
+	}
+	
+	function drawCircles () {
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+		for (let i = 0; i < circles.length; i++) {
+			ctx.beginPath()
+			ctx.fillStyle = circles[i].color
+			ctx.strokeStyle = '#000'
+			ctx.lineWidth = circles[i].selected ? 8 : 2
+			ctx.arc(circles[i].x, circles[i].y, circles[i].radius, 0, 2 * Math.PI, false)
+			ctx.fill()
+			ctx.stroke()
+		}
+	}
+	
+	addRandomCircle()
+	
+	canvas.addEventListener('mousemove', ev => {
+		// 注意x, y轴的位置必须要乘以ratio, canvas 是在乘以ratio的大小上绘制的
+		const x = ev.clientX * ratio
+		const y = ev.clientY * ratio
+		// 查找被单击的圆形
+		// 后面的会叠加在前面的上面，从后面循环会更好
+		for (let i = circles.length - 1; i >= 0; i--) {
+			let circle = circles[i]
+			
+			// 勾股计算距离，注意circle的x, y轴是乘以ratio之后的值
+			let distanceFromCenter = Math.sqrt(
+				Math.pow(circle.x - x, 2) + Math.pow(circle.y - y, 2)
+			)
+			
+			// 判断是否在圆中
+			if (distanceFromCenter <= circle.radius) {
+				if (previousSelected !== null) previousSelected.selected = false
+				previousSelected = circle
+				circle.selected = true
+				drawCircles()
+				return
+			} else {
+				if (previousSelected !== null) previousSelected.selected = false
+				drawCircles()
+			}
+		}
+	})
+	
+	// 获取DOM 操作canvas
+	const add = document.querySelector('#add')
+	const clear = document.querySelector('#clear')
+	
+	add.addEventListener('click', addRandomCircle)
+	clear.addEventListener('click', () => {
+		ctx.clearRect(0, 0, w * ratio, h * ratio)
+		circles.length = 0
+	})
+
+</script>
+</body>
+</html>
