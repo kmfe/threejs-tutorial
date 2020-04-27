@@ -7,6 +7,8 @@ import parrot from '../models/Parrot.glb'
 import flamingo from '../models/Flamingo.glb'
 import stork from '../models/Stork.glb'
 import mi from '../models/mi.glb'
+import huo from '../models/test-2.glb'
+
 import miTf from '../models/mi.gltf'
 import test from '../models/fbx/test.fbx'
 import floor from '../models/gltf/Floor.gltf'
@@ -240,7 +242,9 @@ class Tutorial {
     loader.load(parrot, gltf => onLoad(gltf, parrotPosition), onProgress, onError)
     loader.load(flamingo, gltf => onLoad(gltf, flamingoPosition), onProgress, onError)
     loader.load(stork, gltf => onLoad(gltf, storkPosition), onProgress, onError)
-    loader.load(mi, gltf => onLoad(gltf, floorPosition), onProgress, onError)
+    loader.load(huo, gltf => onLoad(gltf, storkPosition), onProgress, onError)
+    
+    // loader.load(mi, gltf => onLoad(gltf, floorPosition), onProgress, onError)
     
     // 新增fbx 模型
     // const fbxLoader = new FBXLoader()

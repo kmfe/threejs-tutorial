@@ -5,26 +5,20 @@
   <meta name='viewport'
     content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
   <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-  <title>Canvas Composite</title>
+  <title>Canvas Pickup - 2</title>
   <style>
     * {
       margin: 0;
       padding: 0;
     }
     
-    .handler {
-      position: absolute;
-      right: 10px;
-      top: 10px;
+    html, body {
+      overflow: hidden;
     }
   </style>
 </head>
 <body>
 <canvas id='c'></canvas>
-<div class='handler'>
-  <button id='add'>添加圆圈</button>
-  <button id='clear'>清空画布</button>
-</div>
 <script>
 	const canvas = document.querySelector('#c')
 	const ctx = canvas.getContext('2d')
@@ -36,105 +30,122 @@
 	canvas.height = h * ratio
 	canvas.style.cssText = `width: ${w}px; height: ${h}px`
 	
-	const r = [50, 40, 80, 60]
-	const color = ['#FF9900', '#FFFFCC', '#336699', '#990033']
-	
-	const renderMath = (min, max) => {
-		return Math.random() * (max - min) + min
+	// 绘制矩形
+	function drawRect (x = 400, y = 20, width = 40, height = 150) {
+		ctx.beginPath()
+		ctx.fillStyle = 'pink'
+		ctx.rect(x, y, width, height)
+		ctx.fill()
 	}
 	
-	class Circle {
-		constructor () {
-			const renderRadius = r[Math.ceil(renderMath(0, 4) - 1)]
-			const xBoundary = renderMath(renderRadius, w * ratio - renderRadius)
-			const yBoundary = renderMath(renderRadius, h * ratio - renderRadius)
-			this.x = xBoundary
-			this.y = yBoundary
-			this.color = color[Math.ceil(renderMath(0, 4)) - 1]
-			this.radius = renderRadius
-			this.selected = false
+	// 绘制圆形
+	
+	function drawCircle (x = 200, y = 200, r = 60) {
+		ctx.beginPath()
+		ctx.fillStyle = 'navy'
+		ctx.arc(x, y, r, 0, 2 * Math.PI, false)
+		ctx.fill()
+	}
+	
+	/*
+	* 绘制多边形
+	* 圆心角为 360/ n, 弧度为 2π/n
+	* */
+	
+	function drawPolygon (x = 300, y = 300, r = 40, num = 5, color = 'blue') {
+		ctx.beginPath()
+		ctx.fillStyle = color
+		for (let i = 0; i <= num; i++) {
+			if (i === 0) {
+				ctx.moveTo(
+					x + r * Math.cos(2 * Math.PI * i / num),
+					y + r * Math.sin(2 * Math.PI * i / num))
+			}
+			let newX = x + r * Math.cos(2 * Math.PI * i / num)
+			let newY = y + r * Math.sin(2 * Math.PI * i / num)
+			ctx.lineTo(newX, newY)
 		}
+		ctx.closePath()
+		console.log('polygon', num)
+		ctx.fill()
 	}
 	
-	const circles = []
-	let previousSelected = null
-	let currentIndex = undefined
-	
-	function addRandomCircle () {
-		const circle = new Circle()
-		circles.push(circle)
-		drawCircles()
+	// 绘制扇形
+	function drawSector (x = 400, y = 500, r = 60, deg = 180) {
+		ctx.beginPath()
+		ctx.fillStyle = 'lightgreen'
+		ctx.arc(x, y, r, 0, deg * Math.PI / 180, false)
+		ctx.closePath()
+		ctx.fill()
 	}
 	
-	function drawCircles () {
-		ctx.clearRect(0, 0, canvas.width, canvas.height)
-		for (let i = 0; i < circles.length; i++) {
-			ctx.beginPath()
-			ctx.fillStyle = circles[i].color
-			ctx.strokeStyle = '#000'
-			ctx.lineWidth = circles[i].selected ? 8 : 2
-			ctx.arc(circles[i].x, circles[i].y, circles[i].radius, 0, 2 * Math.PI, false)
-			ctx.fill()
-			ctx.stroke()
+	// 绘制气泡
+	function drawBubble () {
+		ctx.beginPath()
+		ctx.fillStyle = 'orange'
+		ctx.moveTo(50, 50)
+		ctx.lineTo(60, 40)
+		ctx.lineTo(60, 20)
+		ctx.lineTo(140, 20)
+		ctx.lineTo(140, 80)
+		ctx.lineTo(60, 80)
+		ctx.lineTo(60, 60)
+		ctx.closePath()
+		ctx.fill()
+	}
+	
+	let drawArr = [drawRect, drawCircle, drawPolygon, drawSector, drawBubble]
+	
+	drawArr.forEach(it => {
+		if (it.name === 'drawPolygon') {
+			drawPolygon()
+			drawPolygon(600, 300, 60, 6, 'green')
+			drawPolygon(800, 400, 60, 3, 'red')
+			drawPolygon(1000, 500, 60, 4, 'lightblue')
+		} else {
+			it()
 		}
-	}
+	})
 	
-	addRandomCircle()
-	
-	canvas.addEventListener('mousedown', ev => {
-		// 注意x, y轴的位置必须要乘以ratio, canvas 是在乘以ratio的大小上绘制的
+	// 开始搞事情
+	window.addEventListener('click', ev => {
 		const x = ev.clientX * ratio
 		const y = ev.clientY * ratio
-		// 查找被单击的圆形
-		// 后面的会叠加在前面的上面，从后面循环会更好
-		for (let i = circles.length - 1; i >= 0; i--) {
-			let circle = circles[i]
-			
-			// 勾股计算距离，注意circle的x, y轴是乘以ratio之后的值
-			let distanceFromCenter = Math.sqrt(
-				Math.pow(circle.x - x, 2) + Math.pow(circle.y - y, 2)
-			)
-			
-			// 判断是否在圆中
-			if (distanceFromCenter <= circle.radius) {
-				if (previousSelected !== null) previousSelected.selected = false
-				previousSelected = circle
-				circle.selected = true
-				currentIndex = i
-				drawCircles()
-				return
-			} else {
-				if (previousSelected !== null) previousSelected.selected = false
-				drawCircles()
+		/*
+		* ctx.isPointInPath(x, y) 判断 (x, y) 是否在某个路径
+		* ctx.isPointInStroke() 判断某个点是否在某个描边路径上
+		* 该api 均对fillRect(), strokeRect() 无效
+		* isPointInPath(x, y) 默认只检测 某个点 是否在最后一个path当中
+		* */
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+		
+		drawArr.forEach(it => {
+			const collide = () => {
+				if (ctx.isPointInPath(x, y)) {
+					ctx.strokeStyle = '#000000'
+					ctx.lineWidth = 10
+					ctx.lineCap = 'round'
+				} else {
+					ctx.strokeStyle = '#000000'
+					ctx.lineWidth = 6
+					ctx.lineCap = 'round'
+				}
+				ctx.stroke()
 			}
-		}
-	})
-	
-	canvas.addEventListener('mousemove', ev => {
-		console.log(currentIndex)
-		if (currentIndex !== undefined) {
-			const x = ev.clientX * ratio
-			const y = ev.clientY * ratio
-			circles[currentIndex].x = x
-			circles[currentIndex].y = y
-			console.log(x - circles[currentIndex].radius, y - circles[currentIndex].radius)
-			drawCircles()
-		}
-	})
-	
-	canvas.addEventListener('mouseup', ev => {
-		currentIndex = undefined
-	})
-	
-	// 获取DOM 操作canvas
-	const add = document.querySelector('#add')
-	const clear = document.querySelector('#clear')
-	add.addEventListener('click', addRandomCircle)
-	clear.addEventListener('click', () => {
-		ctx.clearRect(0, 0, w * ratio, h * ratio)
-		circles.length = 0
-	})
-
+			if (it.name === 'drawPolygon') {
+				console.log('what fuck')
+				drawPolygon()
+				drawPolygon(1000, 500, 60, 4, 'lightblue')
+				drawPolygon(800, 400, 60, 3, 'red')
+				drawPolygon(600, 300, 60, 6, 'green')
+				collide()
+			} else {
+				it()
+				collide()
+			}
+		})
+		
+	}, false)
 </script>
 </body>
 </html>
