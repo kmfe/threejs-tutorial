@@ -77,27 +77,47 @@
 		}
 	}
 	
-	function drawBox (ctx, isCache = false) {
-		const box = new Box(100, 400, 60, 60, 'red')
+	function addBox (x, y, w, h, bgColor) {
+		const box = new Box(x, y, w, h, bgColor)
+		shapes.push(box)
+	}
+	
+	function addCircle (x, y, r) {
+		const circle = new Circle(x, y, r)
+		shapes.push(circle)
+	}
+	
+	function addPolygon (x, y, r, num, bgColor) {
+		const polygon = new Polygon(x, y, r, num, bgColor)
+		shapes.push(polygon)
+	}
+	
+	function addSector (x, y, r, degree) {
+		const sector = new Sector(x, y, r, degree)
+		shapes.push(sector)
+	}
+	
+	function addBubble (x, y) {
+		const bubble = new Bubble(x, y)
+		shapes.push(bubble)
+	}
+	
+	function drawBox (ctx, box) {
 		ctx.beginPath()
 		ctx.fillStyle = box.bgColor
 		ctx.rect(box.x, box.y, box.w, box.h)
 		ctx.fill()
-		if (!isCache) shapes.push(box)
 	}
 	
-	function drawCircle (ctx, isCache = false) {
-		const circle = new Circle(300, 300, 80)
+	function drawCircle (ctx, circle) {
 		ctx.beginPath()
 		ctx.strokeStyle = 'navy'
 		ctx.arc(circle.x, circle.y, circle.r, 0, 2 * Math.PI)
 		ctx.stroke()
 		ctx.closePath()
-		if (!isCache) shapes.push(circle)
 	}
 	
-	function drawPolygon (ctx, isCache) {
-		const polygon = new Polygon(450, 100, 80, 5, 'orange')
+	function drawPolygon (ctx, polygon) {
 		ctx.beginPath()
 		ctx.fillStyle = polygon.bgColor
 		for (let i = 0; i <= polygon.num; i++) {
@@ -112,42 +132,30 @@
 		}
 		ctx.fill()
 		ctx.closePath()
-		if (!isCache) shapes.push(polygon)
 	}
 	
-	function drawSector (ctx, isCache) {
-		const sector = new Sector(400, 600, 60, 180)
+	function drawSector (ctx, sector) {
 		ctx.beginPath()
 		ctx.fillStyle = 'lightgreen'
 		ctx.arc(sector.x, sector.y, sector.r, 0, sector.deg * Math.PI / 180, false)
 		ctx.closePath()
 		ctx.fill()
-		if (!isCache) shapes.push(sector)
 	}
 	
-	function drawBubble (ctx, isCache) {
-		const bubble = new Bubble(50, 50)
+	function drawBubble (ctx, bubble) {
+		const w = 80
+		const h = 30
 		ctx.beginPath()
 		ctx.fillStyle = 'orange'
 		ctx.moveTo(bubble.x, bubble.y)
-		ctx.lineTo(60, 40)
-		ctx.lineTo(60, 20)
-		ctx.lineTo(140, 20)
-		ctx.lineTo(140, 80)
-		ctx.lineTo(60, 80)
-		ctx.lineTo(60, 60)
+		ctx.lineTo(bubble.x + 10, bubble.y - 10)
+		ctx.lineTo(bubble.x + 10, bubble.y - h)
+		ctx.lineTo(bubble.x + 10 + w, bubble.y - h)
+		ctx.lineTo(bubble.x + 10 + w, bubble.y + h)
+		ctx.lineTo(bubble.x + 10, bubble.y + h)
+		ctx.lineTo(bubble.x + 10, bubble.y + 10)
 		ctx.closePath()
 		ctx.fill()
-		if (!isCache) shapes.push(bubble)
-	}
-	
-	function drawShapes (ctx) {
-		ctx.clearRect(0, 0, w, h)
-		drawBox(ctx)
-		drawCircle(ctx)
-		drawPolygon(ctx)
-		drawSector(ctx)
-		drawBubble(ctx)
 	}
 	
 	// initialization
@@ -164,11 +172,33 @@
 	ghostCanvas.height = h
 	const gctx = ghostCanvas.getContext('2d')
 	document.querySelector('.wrap').appendChild(ghostCanvas)
-	let selected = null
+	let selected = {
+		shape: null,
+		index: undefined
+	}
 	
-	drawShapes(ctx)
+	addBox(300, 0, 100, 100, 'blue')
+	addCircle(200, 200, 40)
+	addPolygon(300, 300, 40, 5, 'black')
+	addSector(400, 200, 60, 100, 'navy')
+	addBubble(50, 50)
 	
-	canvas.addEventListener('mousemove', (ev) => {
+	let len = shapes.length
+	for (let i = len - 1; i >= 0; i--) {
+		if (shapes[i] instanceof Box) {
+			drawBox(ctx, shapes[i])
+		} else if (shapes[i] instanceof Circle) {
+			drawCircle(ctx, shapes[i])
+		} else if (shapes[i] instanceof Polygon) {
+			drawPolygon(ctx, shapes[i])
+		} else if (shapes[i] instanceof Sector) {
+			drawSector(ctx, shapes[i])
+		} else if (shapes[i] instanceof Bubble) {
+			drawBubble(ctx, shapes[i])
+		}
+	}
+	
+	canvas.addEventListener('click', (ev) => {
 		gctx.clearRect(0, 0, w, h)
 		let x = ev.clientX
 		let y = ev.clientY
@@ -176,15 +206,15 @@
 		// 绘制fake canvas
 		for (let i = len - 1; i >= 0; i--) {
 			if (shapes[i] instanceof Box) {
-				drawBox(gctx, true)
+				drawBox(gctx, shapes[i])
 			} else if (shapes[i] instanceof Circle) {
-				drawCircle(gctx, true)
+				drawCircle(gctx, shapes[i])
 			} else if (shapes[i] instanceof Polygon) {
-				drawPolygon(gctx, true)
-			} else if (shapes[i] instanceof Bubble) {
-				drawBubble(gctx, true)
+				drawPolygon(gctx, shapes[i])
 			} else if (shapes[i] instanceof Sector) {
-				drawSector(gctx, true)
+				drawSector(gctx, shapes[i])
+			} else if (shapes[i] instanceof Bubble) {
+				drawBubble(gctx, shapes[i])
 			}
 			gctx.fillStyle = `rgb(${i}, ${i}, ${i})`
 			gctx.fill()
@@ -193,15 +223,36 @@
 		// 判断mouse coordinate
 		const imgData = gctx.getImageData(x, y, 1, 1)
 		if (imgData.data[3] > 0) {
-			selected = shapes[imgData.data[0]]
-			// 操作当前选中的shape
-			selected.x += 10
-			selected.y += 10
-			drawShapes(ctx)
+			selected = {
+				shape: shapes[imgData.data[0]],
+				index: imgData.data[0]
+			}
 		} else {
-			selected = null
+			selected = {
+				shape: null,
+				index: undefined
+			}
 		}
-		console.log(selected)
+		if (selected.shape !== null) {
+			selected.shape.x += 10
+			selected.shape.y += 10
+			selected.shape.bgColor = 'pink'
+			ctx.clearRect(0, 0, w, h)
+			
+			for (let i = 0; i < len; i++) {
+				if (shapes[i] instanceof Box) {
+					drawBox(ctx, shapes[i])
+				} else if (shapes[i] instanceof Circle) {
+					drawCircle(ctx, shapes[i])
+				} else if (shapes[i] instanceof Polygon) {
+					drawPolygon(ctx, shapes[i])
+				} else if (shapes[i] instanceof Sector) {
+					drawSector(ctx, shapes[i])
+				} else if (shapes[i] instanceof Bubble) {
+					drawBubble(ctx, shapes[i])
+				}
+			}
+		}
 	}, false)
 </script>
 </body>
