@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas pickup by cache canvas</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      overflow: hidden;
+    }
+    
+    .wrap {
+      display: flex;
+    }
+    
+    canvas {
+      border: 1px solid #cd0000;
+    }
+  </style>
+</head>
+<body>
+<div class='wrap'>
+  <canvas id='c'></canvas>
+</div>
+<script>
+	let shapes = []
+	
+	class Box {
+		constructor (x, y, w, h, bgColor) {
+			this.x = x
+			this.y = y
+			this.w = w
+			this.h = h
+			this.bgColor = bgColor
+		}
+	}
+	
+	class Circle {
+		constructor (x, y, r) {
+			this.x = x
+			this.y = y
+			this.r = r
+		}
+	}
+	
+	class Polygon {
+		constructor (x, y, r, num, bgColor) {
+			this.x = x
+			this.y = y
+			this.r = r
+			this.num = num
+			this.bgColor = bgColor
+		}
+	}
+	
+	class Sector {
+		constructor (x, y, r, deg) {
+			this.x = x
+			this.y = y
+			this.r = r
+			this.deg = deg
+		}
+	}
+	
+	class Bubble {
+		constructor (x, y) {
+			this.x = x
+			this.y = y
+		}
+	}
+	
+	function drawBox (ctx, isCache = false) {
+		const box = new Box(100, 400, 60, 60, 'red')
+		ctx.beginPath()
+		ctx.fillStyle = box.bgColor
+		ctx.rect(box.x, box.y, box.w, box.h)
+		ctx.fill()
+		if (!isCache) shapes.push(box)
+	}
+	
+	function drawCircle (ctx, isCache = false) {
+		const circle = new Circle(300, 300, 80)
+		ctx.beginPath()
+		ctx.strokeStyle = 'navy'
+		ctx.arc(circle.x, circle.y, circle.r, 0, 2 * Math.PI)
+		ctx.stroke()
+		ctx.closePath()
+		if (!isCache) shapes.push(circle)
+	}
+	
+	function drawPolygon (ctx, isCache) {
+		const polygon = new Polygon(450, 100, 80, 5, 'orange')
+		ctx.beginPath()
+		ctx.fillStyle = polygon.bgColor
+		for (let i = 0; i <= polygon.num; i++) {
+			if (i === 0) {
+				ctx.moveTo(
+					polygon.x + polygon.r * Math.cos(2 * Math.PI * i / polygon.num),
+					polygon.y + polygon.r * Math.sin(2 * Math.PI * i / polygon.num))
+			}
+			let newX = polygon.x + polygon.r * Math.cos(2 * Math.PI * i / polygon.num)
+			let newY = polygon.y + polygon.r * Math.sin(2 * Math.PI * i / polygon.num)
+			ctx.lineTo(newX, newY)
+		}
+		ctx.fill()
+		ctx.closePath()
+		if (!isCache) shapes.push(polygon)
+	}
+	
+	function drawSector (ctx, isCache) {
+		const sector = new Sector(400, 600, 60, 180)
+		ctx.beginPath()
+		ctx.fillStyle = 'lightgreen'
+		ctx.arc(sector.x, sector.y, sector.r, 0, sector.deg * Math.PI / 180, false)
+		ctx.closePath()
+		ctx.fill()
+		if (!isCache) shapes.push(sector)
+	}
+	
+	function drawBubble (ctx, isCache) {
+		const bubble = new Bubble(50, 50)
+		ctx.beginPath()
+		ctx.fillStyle = 'orange'
+		ctx.moveTo(bubble.x, bubble.y)
+		ctx.lineTo(60, 40)
+		ctx.lineTo(60, 20)
+		ctx.lineTo(140, 20)
+		ctx.lineTo(140, 80)
+		ctx.lineTo(60, 80)
+		ctx.lineTo(60, 60)
+		ctx.closePath()
+		ctx.fill()
+		if (!isCache) shapes.push(bubble)
+	}
+	
+	function drawShapes (ctx) {
+		ctx.clearRect(0, 0, w, h)
+		drawBox(ctx)
+		drawCircle(ctx)
+		drawPolygon(ctx)
+		drawSector(ctx)
+		drawBubble(ctx)
+	}
+	
+	// initialization
+	const canvas = document.querySelector('#c')
+	const ctx = canvas.getContext('2d')
+	const w = window.innerWidth / 2
+	const h = window.innerHeight
+	const ratio = window.devicePixelRatio
+	canvas.width = w
+	canvas.height = h
+	
+	const ghostCanvas = document.createElement('canvas')
+	ghostCanvas.width = w
+	ghostCanvas.height = h
+	const gctx = ghostCanvas.getContext('2d')
+	document.querySelector('.wrap').appendChild(ghostCanvas)
+	let selected = null
+	
+	drawShapes(ctx)
+	
+	canvas.addEventListener('mousemove', (ev) => {
+		gctx.clearRect(0, 0, w, h)
+		let x = ev.clientX
+		let y = ev.clientY
+		let len = shapes.length
+		// 绘制fake canvas
+		for (let i = len - 1; i >= 0; i--) {
+			if (shapes[i] instanceof Box) {
+				drawBox(gctx, true)
+			} else if (shapes[i] instanceof Circle) {
+				drawCircle(gctx, true)
+			} else if (shapes[i] instanceof Polygon) {
+				drawPolygon(gctx, true)
+			} else if (shapes[i] instanceof Bubble) {
+				drawBubble(gctx, true)
+			} else if (shapes[i] instanceof Sector) {
+				drawSector(gctx, true)
+			}
+			gctx.fillStyle = `rgb(${i}, ${i}, ${i})`
+			gctx.fill()
+		}
+		
+		// 判断mouse coordinate
+		const imgData = gctx.getImageData(x, y, 1, 1)
+		if (imgData.data[3] > 0) {
+			selected = shapes[imgData.data[0]]
+			// 操作当前选中的shape
+			selected.x += 10
+			selected.y += 10
+			drawShapes(ctx)
+		} else {
+			selected = null
+		}
+		console.log(selected)
+	}, false)
+</script>
+</body>
+</html>

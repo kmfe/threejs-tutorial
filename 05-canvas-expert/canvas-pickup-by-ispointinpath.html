@@ -5,7 +5,7 @@
   <meta name='viewport'
     content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
   <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-  <title>Canvas Pickup - 2</title>
+  <title>Canvas Pickup By isPointInPath</title>
   <style>
     * {
       margin: 0;
@@ -30,27 +30,27 @@
 	canvas.height = h * ratio
 	canvas.style.cssText = `width: ${w}px; height: ${h}px`
 	
-	const paths = []
+	let current = undefined
 	
 	// 绘制矩形
 	function drawRect (x = 400, y = 20, width = 40, height = 150) {
-		const path = new Path2D()
+		current = 'rect'
+		ctx.beginPath()
+		ctx.rect(x, y, width, height)
 		ctx.fillStyle = 'pink'
-		path.rect(x, y, width, height)
-		ctx.fill(path)
-		path.closePath()
-		paths.push(path)
+		ctx.fill()
+		ctx.closePath()
 	}
 	
 	// 绘制圆形
 	
 	function drawCircle (x = 200, y = 200, r = 60) {
-		const path = new Path2D()
+		current = 'circle'
+		ctx.beginPath()
 		ctx.fillStyle = 'navy'
-		path.arc(x, y, r, 0, 2 * Math.PI, false)
-		ctx.fill(path)
-		path.closePath()
-		paths.push(path)
+		ctx.arc(x, y, r, 0, 2 * Math.PI, false)
+		ctx.fill()
+		ctx.closePath()
 	}
 	
 	/*
@@ -59,65 +59,70 @@
 	* */
 	
 	function drawPolygon (x = 300, y = 300, r = 40, num = 5, color = 'blue') {
-		const path = new Path2D()
+		current = 'drawPolygon'
+		ctx.beginPath()
 		ctx.fillStyle = color
 		for (let i = 0; i <= num; i++) {
 			if (i === 0) {
-				path.moveTo(
+				ctx.moveTo(
 					x + r * Math.cos(2 * Math.PI * i / num),
 					y + r * Math.sin(2 * Math.PI * i / num))
 			}
 			let newX = x + r * Math.cos(2 * Math.PI * i / num)
 			let newY = y + r * Math.sin(2 * Math.PI * i / num)
-			path.lineTo(newX, newY)
+			ctx.lineTo(newX, newY)
 		}
-		ctx.fill(path)
-		path.closePath()
-		paths.push(path)
+		ctx.fill()
+		ctx.closePath()
 	}
 	
 	// 绘制扇形
 	function drawSector (x = 400, y = 500, r = 60, deg = 180) {
-		const path = new Path2D()
+		current = 'sector'
+		ctx.beginPath()
 		ctx.fillStyle = 'lightgreen'
-		path.arc(x, y, r, 0, deg * Math.PI / 180, false)
-		path.closePath()
-		ctx.fill(path)
-		paths.push(path)
+		ctx.arc(x, y, r, 0, deg * Math.PI / 180, false)
+		ctx.closePath()
+		ctx.fill()
 	}
 	
 	// 绘制气泡
 	function drawBubble () {
-		const path = new Path2D()
+		current = 'bubble'
+		ctx.beginPath()
 		ctx.fillStyle = 'orange'
-		path.moveTo(50, 50)
-		path.lineTo(60, 40)
-		path.lineTo(60, 20)
-		path.lineTo(140, 20)
-		path.lineTo(140, 80)
-		path.lineTo(60, 80)
-		path.lineTo(60, 60)
-		path.closePath()
-		ctx.fill(path)
-		paths.push(path)
+		ctx.moveTo(50, 50)
+		ctx.lineTo(60, 40)
+		ctx.lineTo(60, 20)
+		ctx.lineTo(140, 20)
+		ctx.lineTo(140, 80)
+		ctx.lineTo(60, 80)
+		ctx.lineTo(60, 60)
+		ctx.closePath()
+		ctx.fill()
 	}
 	
-	let drawArr = [drawRect, drawCircle, drawPolygon, drawSector, drawBubble]
-	drawArr.forEach(it => {
-		if (it.name === 'drawPolygon') {
-			drawPolygon()
-			drawPolygon(600, 300, 60, 6, 'green')
-			drawPolygon(800, 400, 60, 3, 'red')
-			drawPolygon(1000, 500, 60, 4, 'lightblue')
-		} else {
-			it()
-		}
-	})
+	function draw6Polygon () {
+		drawPolygon(600, 300, 60, 6, 'green')
+		current = 'polygon6'
+	}
 	
-	console.log(paths, '---><----')
+	function draw3Polygon () {
+		drawPolygon(800, 400, 60, 3, 'red')
+		current = 'polygon3'
+	}
+	
+	function draw4Polygon () {
+		drawPolygon(1000, 500, 60, 4, 'lightblue')
+		current = 'polygon4'
+	}
+	
+	const drawArr = [drawRect, drawCircle, drawPolygon, draw6Polygon, draw3Polygon, draw4Polygon, drawSector, drawBubble]
+	
+	drawArr.forEach(it => it())
 	
 	// 开始搞事情
-	window.addEventListener('click', ev => {
+	window.addEventListener('mousemove', ev => {
 		const x = ev.clientX * ratio
 		const y = ev.clientY * ratio
 		/*
@@ -128,32 +133,17 @@
 		* */
 		ctx.clearRect(0, 0, canvas.width, canvas.height)
 		
-		drawArr.forEach(it => {
-			const collide = () => {
-				if (ctx.isPointInPath(x, y)) {
-					ctx.strokeStyle = '#000000'
-					ctx.lineWidth = 10
-					ctx.lineCap = 'round'
-				} else {
-					ctx.strokeStyle = '#000000'
-					ctx.lineWidth = 6
-					ctx.lineCap = 'round'
-				}
+		drawArr.forEach(draw => {
+			draw()
+			if (ctx.isPointInPath(x, y)) {
+				canvas.style.cursor = 'pointer'
+				ctx.strokeStyle = '#000000'
+				ctx.lineWidth = 10
+				ctx.lineCap = 'round'
 				ctx.stroke()
-			}
-			if (it.name === 'drawPolygon') {
-				console.log('what fuck')
-				drawPolygon()
-				drawPolygon(1000, 500, 60, 4, 'lightblue')
-				drawPolygon(800, 400, 60, 3, 'red')
-				drawPolygon(600, 300, 60, 6, 'green')
-				collide()
-			} else {
-				it()
-				collide()
+				return false
 			}
 		})
-		
 	}, false)
 </script>
 </body>
