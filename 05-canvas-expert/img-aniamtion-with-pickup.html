@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Image planform</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+      'Noto Color Emoji';
+    }
+    
+    ul, li {
+      list-style: none;
+    }
+    
+    html, body {
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background: #666;
+    }
+    
+    .planform {
+      position: absolute;
+      width: 400px;
+      height: 260px;
+      right: 10px;
+      bottom: 10px;
+      border: 1px solid #cd0000;
+    }
+    
+    canvas {
+      cursor: pointer;
+    }
+    
+    .article-dialog {
+      display: none;
+      position: absolute;
+      z-index: 10;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      width: 800px;
+      max-height: 400px;
+      border-radius: 8px;
+      padding: 10px;
+      line-height: 1.2;
+    }
+    
+    .article-content {
+      width: 610px;
+      padding: 0 10px 0 0;
+      overflow-y: auto;
+      line-height: 1.2;
+    }
+    
+    .article-list {
+      box-sizing: border-box;
+      padding: 4px;
+      width: 180px;
+      border-left: 1px solid #eaeaea;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    
+    .article-list li {
+      padding: 4px;
+      width: 100%;
+      border-bottom: 1px dotted #eaeaea;
+      overflow: hidden;
+      box-sizing: border-box;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all .3s;
+    }
+    
+    .article-list li:hover {
+      background: rgba(0, 0, 0, .05);
+    }
+    
+    .article-list li.active {
+      background: #ccc;
+    }
+    
+    .article-list li:nth-last-child(1) {
+      border: none;
+    }
+    
+    .article-list li h3 {
+      margin-bottom: 4px;
+      width: 100%;
+      /*font-size: 12px;*/
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .article-cover {
+      float: left;
+      width: 60px;
+      height: 56px;
+      line-height: 56px;
+    }
+    
+    .article-cover img {
+      max-width: 100%;
+      vertical-align: middle;
+    }
+    
+    .article-desc {
+      float: right;
+      margin-left: 4px;
+      width: 96px;
+      font-size: 12px;
+    }
+    
+    .article-intro {
+      height: 30px;
+      overflow: hidden;
+      display: -webkit-box;
+      width: 100%;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+  </style>
+</head>
+<body>
+<div class='article-dialog'>
+  <div class='article-content'>
+    新华社北京4月28日电 一年前的4月28日，2019年中国北京世界园艺博览会拉开帷幕，习近平主席在开幕式上发表题为《共谋绿色生活，共建美丽家园》的重要讲话。
+    
+    
+    <img src="http://dingyue.ws.126.net/2020/0429/7fc2c152j00q9jht3002mc000rs00lom.jpg"
+      style="box-sizing: inherit; border-width: 0px; border-style: initial; border-color: initial; max-width: 100%; height: auto; display: block; vertical-align: middle; white-space: initial; margin: 0px auto;">
+    2019年4月28日，习近平出席2019年中国北京世界园艺博览会开幕式并发表重要讲话。新华社记者鞠鹏摄
+    
+    “仰望夜空，繁星闪烁。地球是全人类赖以生存的唯一家园。”
+    
+    如何让人类在这个美丽星球上诗意地栖居？如何实现顺应自然、保护生态的绿色发展？
+    
+    在北京世园会开幕式上的重要讲话中，习主席提出“五个追求”的主张，为全球同筑生态文明之基、同走绿色发展之路提供重要指引，彰显中国作为全球生态治理参与者、贡献者、引领者的作为担当。
+  </div>
+  <div class='article-list'>
+    <ul>
+      <li class='active'>
+        <div class='article-cover'>
+          <img src='./assets/planform.png' alt=''>
+        </div>
+        <div class='article-desc'>
+          <h3>简介的标题简介的标题简介的标题简介的标题简介的标题</h3>
+          <div class='article-intro'>
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class='article-cover'>
+          <img src='./assets/planform.png' alt=''>
+        </div>
+        <div class='article-desc'>
+          <h3>简介的标题简介的标题简介的标题简介的标题简介的标题</h3>
+          <div class='article-intro'>
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class='article-cover'>
+          <img src='./assets/planform.png' alt=''>
+        </div>
+        <div class='article-desc'>
+          <h3>简介的标题简介的标题简介的标题简介的标题简介的标题</h3>
+          <div class='article-intro'>
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class='article-cover'>
+          <img src='./assets/planform.png' alt=''>
+        </div>
+        <div class='article-desc'>
+          <h3>简介的标题简介的标题简介的标题简介的标题简介的标题</h3>
+          <div class='article-intro'>
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class='article-cover'>
+          <img src='./assets/planform.png' alt=''>
+        </div>
+        <div class='article-desc'>
+          <h3>简介的标题简介的标题简介的标题简介的标题简介的标题</h3>
+          <div class='article-intro'>
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class='article-cover'>
+          <img src='./assets/planform.png' alt=''>
+        </div>
+        <div class='article-desc'>
+          <h3>简介的标题简介的标题简介的标题简介的标题简介的标题</h3>
+          <div class='article-intro'>
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class='article-cover'>
+          <img src='./assets/planform.png' alt=''>
+        </div>
+        <div class='article-desc'>
+          <h3>简介的标题简介的标题简介的标题简介的标题简介的标题</h3>
+          <div class='article-intro'>
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class='article-cover'>
+          <img src='./assets/planform.png' alt=''>
+        </div>
+        <div class='article-desc'>
+          <h3>简介的标题简介的标题简介的标题简介的标题简介的标题</h3>
+          <div class='article-intro'>
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍简介的介绍简介的介绍简介的介绍简介的介绍
+            简介的介绍
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class='planform'>
+  <canvas id='c'></canvas>
+</div>
+<script>
+	const canvas = document.querySelector('#c')
+	const ctx = canvas.getContext('2d')
+	const ratio = window.devicePixelRatio
+	const w = 400
+	const h = 260
+	canvas.width = w * ratio
+	canvas.height = h * ratio
+	canvas.style.width = w + 'px'
+	canvas.style.height = h + 'px'
+	
+	const planform = './assets/planform.png'
+	const img = new Image()
+	img.src = planform
+	img.onload = () => {
+		loadHandler(() => {
+			ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, 0, 0, w * ratio, h * ratio)
+		})
+	}
+	
+	class Arrow {
+		constructor (ctx, x, y, image) {
+			this.x = x
+			this.y = y
+			this.startY = y - 5
+			this.speed = Math.random() * 0.1 + 0.1
+			this.ctx = ctx
+			this.image = image
+		}
+		
+		draw () {
+			this.ctx.beginPath()
+			// 图片无法执行isPointInPath, 所以加上透明的路径
+			this.ctx.fillStyle = 'rgba(1,1,1,0)'
+			this.ctx.rect(this.x, this.startY, this.image.naturalWidth / 4, this.image.naturalHeight / 4)
+			this.ctx.drawImage(
+				this.image,
+				0,
+				0,
+				this.image.naturalWidth,
+				this.image.naturalHeight,
+				this.x,
+				this.startY,
+				this.image.naturalWidth / 4,
+				this.image.naturalHeight / 4
+			)
+			this.ctx.fill()
+		}
+		
+		animate () {
+			this.startY += this.speed
+			if (this.startY > this.y) {
+				this.speed = -this.speed
+			}
+			if (this.startY <= this.y - 5) {
+				this.speed = Math.abs(this.speed)
+			}
+			this.draw()
+		}
+	}
+	
+	let arrows = []
+	
+	function loadHandler (callback) {
+		const arrowUrl = './assets/locate.png'
+		const image = new Image()
+		image.src = arrowUrl
+		image.onload = () => {
+			arrows = [
+				new Arrow(ctx, 86 * ratio, 100 * ratio, image),
+				new Arrow(ctx, 156 * ratio, 122 * ratio, image),
+				new Arrow(ctx, 212 * ratio, 144 * ratio, image),
+				new Arrow(ctx, 292 * ratio, 178 * ratio, image),
+				new Arrow(ctx, 338 * ratio, 154 * ratio, image),
+				new Arrow(ctx, 218 * ratio, 84 * ratio, image),
+				new Arrow(ctx, 92 * ratio, 30 * ratio, image)
+			]
+			const animate = () => {
+				ctx.clearRect(0, 0, canvas.width, canvas.height)
+				callback()
+				for (let arrow of arrows) {
+					arrow.animate()
+				}
+				requestAnimationFrame(animate)
+			}
+			animate()
+		}
+	}
+	
+	canvas.addEventListener('click', ev => {
+		let x = ev.clientX - canvas.getBoundingClientRect().left
+		let y = ev.clientY - canvas.getBoundingClientRect().top
+		for (let i = 0; i < arrows.length; i++) {
+			arrows[i].draw()
+			/*
+      * 特别注意位置需要乘以ratio
+      * */
+			if (ctx.isPointInPath(x * ratio, y * ratio)) {
+				console.log('scene=' + i)
+				alert(i)
+			}
+		}
+	}, false)
+
+</script>
+</body>
+</html>
