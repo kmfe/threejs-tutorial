@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>video</title>
+  <script src='https://res.eschervr.com/vrPlayer/lib/three114.min.js'></script>
+  <script src='./lib/xgplayer.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    #c {
+      position: absolute;
+      width: 100%;
+      top: 50%;
+      border: 1px solid #cccccc;
+      height: 50%;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<div id='mse'></div>
+<div id='c'></div>
+<script>
+	window.onload = () => {
+		new Player({
+			el: document.querySelector('#mse'),
+			url: 'http://video.eschervr.com/sv/516f726a-16ad2e76ffe/516f726a-16ad2e76ffe.mp4',
+			autoplay: true,
+			controls: true,
+			width: '100%',
+			height: '100%',
+			playsinline: true,
+			volume: 1,
+			loop: true,
+			'x5-video-player-type': 'h5',
+			'x5-video-player-fullscreen': true,
+			'x5-video-orientation': 'portrait',
+			'x5-playsinline': true,
+			cssFullscreen: true,
+			ignores: ['time', 'definition', 'fullscreen', 'i18n', 'loading', 'play', 'poster', 'progress', 'replay', 'start', 'volume'],
+			poster: '',
+			'enterLogo': {
+				'url': 'http://res.eschervr.com/vrPlayer/assets/img/logo.png',
+				'width': 90,
+				'height': 100
+			},
+			'enterBg': {
+				'color': 'rgb(0, 0, 0)'
+			},
+			'enterTips': {
+				'background': 'linear-gradient(90deg, #2a6ae5, blue, blue, blue, #2a6ae5)'
+			},
+			error: function (a, b) {
+				console.log(a, b)
+			},
+			lang: 'zh-cn'
+		})
+  
+    // 使用video作为texture
+    
+	}
+</script>
+</body>
+</html>
