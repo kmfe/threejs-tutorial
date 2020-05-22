@@ -1,5 +1,38 @@
 ## PIXI
 
+    PIXI 中的几个概念
+    
+    舞台  stage
+    画布  renderer
+    精灵  sprite
+    几何图形 graph
+    
+```javascript
+
+// 创建Pixi应用和舞台
+let app = new PIXI.Application({
+  width: 256,
+  height: 256,
+  transparent: false,
+  resolution: 1
+})
+
+document.body.appendChild(app)
+
+// 画布
+app.renderer.view.width = 100
+app.renderer.view.height = 100
+
+app.renderer.backgroundColor = 0x061639
+app.renderer.autoResize = true
+app.renderer.resize(512, 512)
+
+// 设置canvas的样式
+app.renderer.view.style.position = 'absolute'
+app.renderer.view.style.display = 'block'
+
+```
+    
 #### positioning sprite
 
 ```javascript

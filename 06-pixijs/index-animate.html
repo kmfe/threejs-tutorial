@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Animate index</title>
+  <script src='./lib/pixi.min.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id='px-renderer'></div>
+  <script>
+    // 创建 Application
+    const app = new PIXI.Application({
+      transparent: true,
+      width: 600,
+      height: 600
+    })
+    
+    // 添加应用到页面
+    const playGround = document.querySelector('#px-renderer')
+    playGround.appendChild(app.view)
+    
+    // 设置别名
+    
+    let TextureCache = PIXI.utils.TextureCache
+    let Texture = PIXI.Texture
+    let Rectangle = PIXI.Rectangle
+    let AnimatedSprite = PIXI.AnimatedSprite
+    
+    // 需要加载的雪碧图的地址
+    let imgURL = './assets/list.png'
+    PIXI.loader.add(imgURL).load(setup)
+    
+    function setup(){
+    	// 获取纹理
+      let base = TextureCache[imgURL]
+      
+      // 第一个纹理
+      let texture0 = new Texture(base)
+      texture0.frame = new Rectangle(0, 0, 80, 143)
+      
+      // 第二个纹理
+      let texture1 = new Texture(base)
+      texture1.frame = new Rectangle(80, 0, 80, 143)
+      
+      // 第三个纹理
+      let texture2 = new Texture(base)
+      texture2.frame = new Rectangle(160, 0, 80, 143)
+      
+      // 第四个纹理
+	    let texture3 = new Texture(base);
+	    texture3.frame = new Rectangle(240, 0, 80, 143);
+	    
+	    // 创建纹理数组
+      let textures = [
+      	texture0,
+	      texture1,
+	      texture2,
+	      texture3
+      ]
+      
+      // 创建动画精灵
+      let pixie = new AnimatedSprite(textures)
+      
+      // 设置动画精灵的速度
+      pixie.animationSpeed = 0.1
+      
+      // 把精灵添加到舞台
+      app.stage.addChild(pixie)
+      
+      // 播放动画精灵
+      pixie.play()
+    }
+    
+  </script>
+</body>
+</html>

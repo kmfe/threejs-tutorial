@@ -1,121 +1,74 @@
-const app = new PIXI.Application({
-	width: 514,         // default: 800
-	height: 514,        // default: 600
-	antialias: true,    // default: false
-	transparent: false, // default: false
-	resolution: window.devicePixelRatio,        // default: 1
-	forceCanvas: true
-})
+const option = {
+	width: 400,
+	height: 300,
+	autoDensity: true,
+	transparent: true
+}
+// 创建一个PIXI应用
+const app = new PIXI.Application(option)
 
-app.renderer.backgroundColor = 0X000000
+// 获取渲染器
+const renderer = app.renderer
 
-// 修改stage的大小
-app.renderer.autoResize = true
-app.renderer.resize(556, 556)
+// 图片精灵
+let preview = null
 
-/*
-* PIXI 精灵
-* PIXI拥有一个精灵类来创建游戏精灵，有三种主要方法创建它
-* 1. 单图片文件
-* 2. 用雪碧图来创建，雪碧图是一个放入游戏所需的所有图像的大图
-* 3. 从一个纹理贴图集中创建（纹理贴图就是用json定义了图像大小和位置的雪碧图）
-* */
+// 置换图精灵
+let displacementSprite = null
 
-function init () {
-	/*
-	* 将图片加载到纹理中
-	* PIXI用webGL和GPU来渲染图像，所以图像需要转化成GPU可以处理的版本，可以被GPU处理的图像被称为 纹理
-	* 在你让精灵显示图片之前，需要将普通的图片转化成WebGL纹理，为了让工作执行快速有效率，PIXI使用 纹理缓存 来储存和引用所有精灵需要的纹理
-	*
-	* PIXI.utils.TextureCache('images/cat.png')
-	* let texture = PIXI.utils.TextureCache('images/anySpriteImage.png')
-	* let sprite = new PIXI.Sprite(texture)
-	*
-	* 加载图片
-	* PIXI.loader
-	* .add('images/anyImage.png')
-	* .load(setup)
-	*
-	* function setup(){
-	*   // This code will run when the loader has finished loading the image
-	* }
-	*
-	* */
+// 置换滤镜，就是选择另外一幅图片，让其在当前的图片产生凹凸效果
+let displacementFilter = null
+let stage = null
+let playground = document.querySelector('#px-render')
+
+function setScene (url) {
+	// renderer.view 是PIXI创建的canvas
+	playground.appendChild(renderer.view)
+	stage = new PIXI.Container()
 	
-	// 暂存三个sprite
-	let lightBluePlane, darkBluePlane, redPlane, gameState
-	let direction = 0.01
-	PIXI.loader
-	.add([
-		'./assets/army/plane_red.png',
-		'./assets/army/plane_darkBlue.png',
-		'./assets/army/plane_lightBlue.png'
-	])
-	.load(setup)
+	// 根据图片的url 创建图片精灵
+	preview = PIXI.Sprite.from(url)
 	
-	function play (delta) {
-		lightBluePlane.vx += 0.01
-		lightBluePlane.vy += direction
-		
-		if (lightBluePlane.vy >= 1) {
-			direction = -direction
-		}
-		
-		lightBluePlane.x += lightBluePlane.vx
-		lightBluePlane.y -= lightBluePlane.vy
-	}
+	// 创建置换图精灵，在创建置换滤镜时会用到这个精灵
+	displacementSprite = PIXI.Sprite.from('./assets/sprite.png')
 	
-	function gameLoop (delta) {
-		gameState(delta)
-	}
+	// 设置置换图精灵为平铺模式
+	displacementSprite.texture.baseTexture.wrapMode = PIXI.WRAP_MODES.REPEAT
 	
-	function setup () {
-		redPlane = new PIXI.Sprite(
-			PIXI.loader.resources['./assets/army/plane_red.png'].texture
-		)
-		
-		lightBluePlane = new PIXI.Sprite(
-			PIXI.loader.resources['./assets/army/plane_lightBlue.png'].texture
-		)
-		
-		darkBluePlane = new PIXI.Sprite(
-			PIXI.loader.resources['./assets/army/plane_darkBlue.png'].texture
-		)
-		
-		// lightBluePlane.position.set(x, y)
-		lightBluePlane.x = 120
-		lightBluePlane.y = 120
-		
-		lightBluePlane.vx = 0
-		lightBluePlane.vy = 0
-		
-		// lightBluePlane.width = 20
-		// lightBluePlane.height = 20
-		
-		// lightBluePlane.anchor.x = 0.5
-		// lightBluePlane.anchor.y = 0.5
-		
-		lightBluePlane.scale.set(0.5, 0.5)
-		
-		lightBluePlane.rotation = Math.PI * 1.888
-		
-		gameState = play
-		app.ticker.add(delta => gameLoop(delta))
-		
-		app.stage.addChild(redPlane)
-		app.stage.addChild(lightBluePlane)
-		app.stage.addChild(darkBluePlane)
-		
-		// 移除
-		app.stage.removeChild(darkBluePlane)
-		
-		// 隐藏sprite
-		// lightBluePlane.visible = false
-	}
+	// 创建一个置换滤镜
+	displacementFilter = new PIXI.filters.DisplacementFilter(displacementSprite)
 	
-	document.body.appendChild(app.view)
-	console.log(app.renderer.view.width, 'app.renderer.view.width')
+	// 添加 置换图精灵 到舞台
+	stage.addChild(displacementSprite)
 	
+	// 添加图片精灵到舞台
+	stage.addChild(preview)
+	
+	// 把stage 添加到根容器上
+	app.stage.addChild(stage)
 }
 
-window.onload = init
+// 置换图精灵的移动速度
+
+let velocity = 2
+let raf;
+function animate(){
+	raf = requestAnimationFrame(animate)
+	displacementSprite.x += velocity
+	displacementSprite.y += velocity
+}
+
+setScene('./assets/view.jpg')
+
+const start = document.querySelector('.start-btn')
+const stop = document.querySelector('.stop-btn')
+
+start.addEventListener('click', () => {
+	stage.filters = [displacementFilter]
+	animate()
+}, false)
+
+stop.addEventListener('click', () => {
+	stage.filters = []
+	cancelAnimationFrame(raf)
+}, false)

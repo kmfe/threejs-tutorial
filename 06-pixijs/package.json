@@ -1,0 +1,28 @@
+{
+  "main": "./index.js",
+  "name": "06-pixijs",
+  "version": "1.0.0",
+  "directories": {
+    "lib": "lib"
+  },
+  "alias": {
+    "pixi.js": "./lib/pixi.min.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "parcel index.html -p 3030"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "cssnano": "^4.1.10",
+    "parcel-bundler": "^1.12.4"
+  },
+  "dependencies": {
+    "pixi.js": "^5.2.4"
+  }
+}
