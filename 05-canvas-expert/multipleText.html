@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas Multiple Text</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      border: 1px solid #cd0000;
+      background: #f60;
+    }
+  </style>
+</head>
+<body>
+<script>
+	const canvas = document.createElement('canvas')
+	const ctx = canvas.getContext('2d')
+	const ratio = window.devicePixelRatio
+	const title = '三七（30头）'
+	const desc = '批次号：189892898->'
+	const padding = 80
+	const fontSize = 48
+	document.body.appendChild(canvas)
+	
+	let downUp = 0
+	
+	function drawBubble (downUp) {
+		canvas.width = 0
+		canvas.height = 0
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+		ctx.save()
+		const font = `${fontSize}px bold -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei`
+		const wrapWidth = ctx.measureText(desc).width
+		
+		const width = (wrapWidth + padding)
+		const height = fontSize + 10
+		// console.log(wrapWidth, 'xxx-------> ------> ')
+		const realHeight = height * ratio
+		const realWidth = width * ratio
+		const bubbleHeight = 40
+		
+		canvas.height = realHeight + bubbleHeight * ratio
+		canvas.width = realWidth
+		canvas.style.cssText = `height: ${height + bubbleHeight}px; width: ${width}px`
+		
+		const x = 0
+		const y = 0
+		const radius = {tl: 40, tr: 40, br: 40, bl: 40}
+		ctx.translate(0, downUp)
+		ctx.beginPath()
+		ctx.moveTo(x + radius.tl, y)
+		ctx.lineTo(x + realWidth - radius.tr, y)
+		ctx.quadraticCurveTo(x + realWidth, y, x + realWidth, y + radius.tr)
+		ctx.lineTo(x + realWidth, y + realHeight - radius.br)
+		ctx.quadraticCurveTo(x + realWidth, y + realHeight, x + realWidth - radius.br, y + realHeight)
+		
+		// add bubble
+		ctx.lineTo(x + realWidth / 2, y + realHeight)
+		ctx.lineTo(x + realWidth / 2 - bubbleHeight / 2, y + realHeight + 40)
+		ctx.lineTo(x + realWidth / 2 - bubbleHeight, y + realHeight)
+		ctx.lineTo(x + realWidth / 2, y + realHeight)
+		
+		ctx.lineTo(x + radius.bl, y + realHeight)
+		ctx.quadraticCurveTo(x, y + realHeight, x, y + realHeight - radius.bl)
+		ctx.lineTo(x, y + radius.tl)
+		ctx.quadraticCurveTo(x, y, x + radius.tl, y)
+		ctx.closePath()
+		
+		ctx.fillStyle = 'rgba(0, 0, 0, .6)'
+		ctx.fill()
+		
+		ctx.font = font
+		ctx.textBaseline = 'top'
+		ctx.textAlign = 'left'
+		ctx.fillStyle = 'white'
+		
+		ctx.fillText(title, 30, fontSize - 10)
+		ctx.fillText(desc, 30, fontSize * 2 + 6)
+		ctx.restore()
+	}
+	
+	let speed = 0.2
+	
+	function update () {
+		// console.log('what fuck')
+		downUp += speed
+		if (downUp > 30 || downUp <= 0) {
+			speed = -speed
+		}
+		drawBubble(downUp)
+	}
+	
+	function animate () {
+		update()
+		requestAnimationFrame(animate)
+	}
+	
+	animate()
+
+</script>
+</body>
+</html>

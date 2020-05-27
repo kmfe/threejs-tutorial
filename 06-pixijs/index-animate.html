@@ -37,7 +37,9 @@
     
     // 需要加载的雪碧图的地址
     let imgURL = './assets/list.png'
-    PIXI.loader.add(imgURL).load(setup)
+    const loader = PIXI.Loader.shared
+    // const loader = new PIXI.Loader
+    loader.add(imgURL).load(setup)
     
     function setup(){
     	// 获取纹理
