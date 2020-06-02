@@ -29,7 +29,7 @@
   
 	const fontSize = 16
 	const padding = 20
-	const text = '明纪区礼包'
+	const text = '明纪区'
 	
 	let scale = 1
 	let scaleRatio = 0.002
@@ -38,7 +38,6 @@
 	canvasTexture.style.cssText = 'border: 1px solid #cd0000'
 	const img = new Image()
 	img.src = './assets/forward.png'
-	
 	let imgWidth = 0
 	let imgHeight = 0
 	
@@ -64,7 +63,7 @@
 		
 		ctx.font = `${fontSize}px bold -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei`
 		const textWidth = ctx.measureText(text).width
-		ctx.fillText(text, (textWidth - canvasTexture.width / ratio) / 2, fontSize + 4)
+		ctx.fillText(text, (Math.abs(textWidth - canvasTexture.width / ratio)) / 2, fontSize + 4)
 		ctx.restore()
 	}
 	
@@ -132,7 +131,7 @@
 		texture = new THREE.CanvasTexture(canvasTexture)
 		texture.minFilter = THREE.LinearFilter
 		texture.magFilter = THREE.LinearFilter
-		texture.format = THREE.RGBFormat
+		// texture.format = THREE.RGBFormat
 		
 		material = new THREE.MeshBasicMaterial({
 			map: texture,
@@ -184,7 +183,7 @@
 	function animate () {
 		//更新控制器
 		controls.update()
-		texture.needsUpdate = true
+		 if(texture) texture.needsUpdate = true
 		renderer.render(scene, camera)
 		
 		requestAnimationFrame(animate)
@@ -199,11 +198,7 @@
 		initLight()
 		initModel()
 		initControls()
-		
-		setTimeout(() => {
-			console.log('正式执行')
-			animate()
-		}, 3000)
+		animate()
 		window.onresize = onWindowResize
 	}
 	
