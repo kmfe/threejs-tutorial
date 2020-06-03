@@ -131,7 +131,7 @@
 		texture = new THREE.CanvasTexture(canvasTexture)
 		texture.minFilter = THREE.LinearFilter
 		texture.magFilter = THREE.LinearFilter
-		// texture.format = THREE.RGBFormat
+		texture.format = THREE.RGBFormat
 		
 		material = new THREE.MeshBasicMaterial({
 			map: texture,

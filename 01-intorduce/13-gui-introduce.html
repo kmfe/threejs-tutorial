@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <script src="../lib/dat.gui.js"></script>
+  <title>Document</title>
+</head>
+<body>
+<script>
+  /*
+  * Refer:  http://workshop.chromeexperiments.com/examples/gui/#1--Basic-Usage
+  *
+  * 1. constraining input
+  * You can specify limits on numbers. A number with a min and max value becomes a slider.
+  *
+  * gui.add(obj, 'objAttr').step(5) // Increase amount
+  * gui.add(obj, 'growSpeed', -5, 5) // Min and Max
+  * gui.add(obj, 'maxSize').min(0).step(0.25) // min and match
+  *
+  * You can also choose to select from a dropdown of values for both numbers and strings
+  *
+  * gui.add(text, 'message', ['pizza', 'chrome', 'hooray'])
+  * gui.add(text, 'speed', {Stopped: 0, slow: 0.1, fast: 1.5})
+  *
+  * 2. Folders
+  * You can nest as many GUI's as you please, Nested GUI's act as collapsible folders
+  *
+  * const f1 = gui.addFolder('Flow Field')
+  * f1.add(text, 'speed')
+  *
+  * const f2 = gui.addFolder('letters')
+  * f2.add(text, 'maxSize')
+  * f2.open()
+  *
+  * 3. Color Controllers
+  * support
+  * ①  css string color
+  * this.color0 = '#ff6600'
+  *
+  * ② rgb array
+  * this.color1 = [0, 128, 255]
+  *
+  * ③ rgb with alpha
+  * this.color2 = [0, 126, 255, 0.3]
+  *
+  * ④ hue, saturation, value
+  * this.color3 = [h: 250, s: 0.9, v: 0.3]
+  *
+  * 4. save values
+  * add a save menu to the GUI interface by calling gui, remember on all the object you've added to the GUI
+  * const option = new Options()
+  * const gui = new dat.GUI({load: JSON})
+  * gui.remember(option)
+  *
+  * 5. Events
+  * You can listen for events on individual controllers using an event listener syntax
+  * const controller = gui.add(option, 'maxSize',0 , 10)
+  * controller.onchange(function(value) {
+  *   // fires on every change, drag, keypress, etc.
+  * })
+  *
+  * controller.onFinishChange(value => {
+  *   // finish when a controller loses focus
+  *   console.log(value)
+  * })
+  *
+  * 6. updating the display automatically
+  * gui.add(option, 'noiseStrength', 0, 100).listen()
+  *
+  * const update = function() {
+  *   requestAnimationFrame(update)
+  *   option.noiseStrength = Math.random()
+  * }
+  *
+  * update()
+  * */
+  
+	const Options = function () {
+		this.message = 'dat.gui'
+		this.speed = 0.8
+		this.displayOutline = false
+		this.button = function () {}
+	}
+	
+	window.onload = () => {
+		const option = new Options()
+		const gui = new dat.GUI()
+		gui.add(option, 'message')
+		gui.add(option, 'speed', -5, 5)
+		gui.add(option, 'displayOutline')
+		gui.add(option, 'explode')
+	}
+</script>
+</body>
+</html>
