@@ -2,29 +2,37 @@
 
     PIXI 中的几个概念
     
-    舞台  stage
-    画布  renderer
-    精灵  sprite
+    应用 application: 实例化PIXI对象
+    
+    画布  renderer：控制canvas 对象的大小，缩放，分辨等操作
+    
+    舞台(根容器)  stage：根容器，存放一切展示对象
+    
+    精灵  sprite: 游戏精灵，stage 上的展示对象，可以通过 单图像文件，雪碧图，纹理贴图三种方式创建
+    
     几何图形 graph
     
+    容器 container
+      
 ```javascript
 
-// 创建Pixi应用和舞台
-let app = new PIXI.Application({
-  width: 256,
-  height: 256,
-  transparent: false,
-  resolution: 1
-})
+// 创建Pixi应用
 
-document.body.appendChild(app)
+const options = {
+    width: 256,
+    height: 256,
+    transparent: false,
+    resolution: 1
+}
+let app = new PIXI.Application(options)
+
+document.body.appendChild(app.view)
 
 // 画布
 app.renderer.view.width = 100
 app.renderer.view.height = 100
 
 app.renderer.backgroundColor = 0x061639
-app.renderer.autoResize = true
 app.renderer.resize(512, 512)
 
 // 设置canvas的样式

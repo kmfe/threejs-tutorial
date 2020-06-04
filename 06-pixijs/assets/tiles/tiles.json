@@ -1,0 +1,52 @@
+{"frames": {
+
+"plane_darkBlue.png":
+{
+	"frame": {"x":0,"y":0,"w":62,"h":96},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":96},
+	"sourceSize": {"w":62,"h":96}
+},
+"plane_lightBlue.png":
+{
+	"frame": {"x":62,"y":0,"w":62,"h":96},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":96},
+	"sourceSize": {"w":62,"h":96}
+},
+"plane_red.png":
+{
+	"frame": {"x":124,"y":0,"w":62,"h":96},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":62,"h":96},
+	"sourceSize": {"w":62,"h":96}
+},
+"sign_fail.png":
+{
+	"frame": {"x":186,"y":0,"w":90,"h":93},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":90,"h":93},
+	"sourceSize": {"w":90,"h":93}
+},
+"sign_ok.png":
+{
+	"frame": {"x":276,"y":0,"w":110,"h":88},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":110,"h":88},
+	"sourceSize": {"w":110,"h":88}
+}},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "tiles.png",
+	"format": "RGBA8888",
+	"size": {"w":386,"h":96},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:e33d42310405fc59b7e4072c11ae51c2:0a29e4b53167bd6092a17bee069883f9:accbe1e7e294ded8391337fc1c446319$"
+}
+}

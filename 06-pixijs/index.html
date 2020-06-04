@@ -12,9 +12,10 @@
       margin: 0;
       padding: 0;
     }
+    
     html, body {
-      overflow: hidden;
     }
+    
     .start-btn,
     .stop-btn {
       display: inline-block;
@@ -26,16 +27,19 @@
       padding: 10px 20px;
       margin-bottom: 30px;
     }
+    
     .start-btn {
       background-color: #ff0081;
       box-shadow: 0 2px 25px rgba(255, 0, 130, 0.5);
     }
+    
     .stop-btn {
       background-image: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
       margin-left: 20px;
       box-shadow: 0 2px 25px rgba(22, 217, 227, 0.5);
     }
-    .control-panel{
+    
+    .control-panel {
       margin-bottom: 30px;
     }
   </style>
@@ -45,9 +49,14 @@
 <div class='control-panel'>
   <button class='start-btn'>开始</button>
   <button class='stop-btn'>停止</button>
+  <button class='removePlane'>删除飞机</button>
 </div>
 <div id='px-render'></div>
 
-<script src='./index.js'></script>
+<!--<script src='./01-welcome.js'></script>-->
+<!--<script src='./02-display-sprite-1.js'></script>-->
+<!--<script src='./03-display-sprite-from-tiles.js'></script>-->
+<!--<script src='./04-display-sprite-from-tiles-json.js'></script>-->
+<script src='./05-move-sprite.js'></script>
 </body>
 </html>
