@@ -26,8 +26,9 @@ function setup () {
 		loader.resources['bg'].texture
 	)
 	
+	// 注意用法
 	let darkPlane = new PIXI.Sprite(
-		loader.resources['darkPlane'].texture
+		new PIXI.Texture(PIXI.utils.TextureCache['darkPlane'])
 	)
 	darkPlane.position.set(100, 100)
 	

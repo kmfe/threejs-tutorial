@@ -20,6 +20,7 @@ function setup(){
 	const darkPlane = new PIXI.Sprite(textures['plane_darkBlue.png'])
 	const lightPlane = new PIXI.Sprite(textures['plane_lightBlue.png'])
 	const redPlane = new PIXI.Sprite(textures['plane_red.png'])
+	
 	lightPlane.position.set(100, 100)
 	redPlane.position.set(200, 200)
 	
