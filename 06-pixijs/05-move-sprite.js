@@ -19,8 +19,7 @@ loader
 .add('redPlane', './assets/army/plane_red.png')
 .load(setup)
 
-
-function setup(){
+function setup () {
 	const redPlaneTexture = loader.resources['redPlane'].texture
 	redPlane = new PIXI.Sprite(redPlaneTexture)
 	app.stage.addChild(redPlane)
@@ -28,19 +27,18 @@ function setup(){
 	
 	// 添加速度属性
 	redPlane.vx = 1
-	
 	redPlane.anchor.set(0.5, 0.5)
-	
 	app.ticker.add(delta => gameLoop(delta))
 }
 
-
-function gameLoop(){
+function gameLoop () {
+	// requestAnimationFrame(gameLoop)
 	redPlane.position.x += redPlane.vx
-
-	if (redPlane.position.x > app.renderer.width || redPlane.position.x < 0){
+	
+	if (redPlane.position.x > app.renderer.width || redPlane.position.x < 0) {
 		redPlane.vx = -redPlane.vx
 	}
 	redPlane.rotation += 0.01
-	
 }
+
+// gameLoop()
