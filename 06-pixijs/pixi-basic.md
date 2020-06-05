@@ -12,7 +12,7 @@
     
     几何图形 graph
     
-    容器 container
+    容器（分组） container
       
 ```javascript
 

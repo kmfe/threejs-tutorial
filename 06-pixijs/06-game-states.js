@@ -40,6 +40,7 @@ function setup () {
 	app.stage.addChild(planes)
 	gameState = play
 	app.ticker.add(delta => gameLoop(delta))
+	console.log(planes.children, '获取分组')
 }
 
 // 添加运动及运动状态
