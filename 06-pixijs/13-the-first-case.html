@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>pixi.js tutorial</title>
+  <script src='./lib/tween.umd.js'></script>
+  <script src='./lib/pixi.min.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    
+    html, body {
+    }
+    
+    .playground canvas {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+<h1>Army Squadron</h1>
+<div class='playground'></div>
+<div class='game-info'>
+  <section>
+    <h3 class='game-info__title'>Training focus</h3>
+    <div class='game-info__desc'>
+      <ul>
+        <li>Attention concentration</li>
+        <li>Reaction speed</li>
+      </ul>
+    </div>
+  </section>
+  <section>
+    <h3 class='game-info__title'>Principles of the training</h3>
+    <div class='game-info__desc'>
+      <ul>
+        <li>
+          Army squadron improves spatial orientation and the ability to distinguish similar stimuli.
+        </li>
+        <li>
+          It is necessary to focus attention on the main fighter and to determine its direction correctly while
+          neglecting the flight direction of the other fighters.
+        </li>
+        <li>
+          Working in a time limit improves the response speed.
+        </li>
+      </ul>
+    </div>
+  </section>
+  <section>
+    <h3 class='game-info__title'>How to play this game</h3>
+    <div class='game-info__desc'>
+      The game shows triangles formed by fighters. The goal of the game is to determine the direction of the leading
+      fighter by pressing the corresponding arrows.
+      <img src='./assets/army/gameHelper/games_help/urci_1_trn.png' alt=''>
+      <img src='./assets/army/gameHelper/games_help/urci_2_trn.png' alt=''>
+      <img src='./assets/army/gameHelper/games_help/urci_3_trn.png' alt=''>
+      <img src='./assets/army/gameHelper/games_help/keyb_arrow_left_trn.png' alt=''>
+      <img src='./assets/army/gameHelper/games_help/keyb_arrow_right_trn.png' alt=''>
+    </div>
+  </section>
+</div>
+<script>
+	const options = {
+		width: 615,
+		height: 505,
+		transparent: true
+	}
+	const app = new PIXI.Application(options)
+	// app.view.style.cssText = 'border: 2px solid #333';
+	
+	const playground = document.querySelector('.playground')
+	playground.appendChild(app.view)
+	
+	const loader = new PIXI.Loader()
+	const Sprite = PIXI.Sprite
+  let currentScene = 0
+	let playBtnActiveTexture = null
+  let playBtnTexture = null
+  let scene1 = null
+  let scene2 = null
+  let game = null
+  
+  let transform = {
+		x: 0
+  }
+  let introTransform = {
+		posX: -app.renderer.view.width
+  }
+  let gameTransform = {
+		x: -app.renderer.view.width
+  }
+	loader
+	.add('startScene', './assets/army/sprites/en/title_screen.png')
+	.add('introScene', './assets/army/sprites/en/instructions.png')
+	.add('correctBtn', './assets/army/sprites/common/sign_ok.png')
+	.add('failBtn', './assets/army/sprites/common/sign_fail.png')
+	.add('redPlane', './assets/army/sprites/common/plane_red.png')
+	.add('lightBluePlane', './assets/army/sprites/common/plane_lightBlue.png')
+  .add('gameBackground', './assets/army/sprites/common/gameBackground.png')
+	.add('darkBluePlane', './assets/army/sprites/common/gameBackground.png')
+	.add('playBtn', './assets/army/sprites/en/button_play.png')
+	.load(setup)
+	
+  function armySquadron(texture){
+	  const width = 200
+    const perpendicularLine = width * Math.cos(30 * Math.PI / 180)
+	  const originPoint = [app.renderer.view.width / 2, app.renderer.view.height / 2 - perpendicularLine / 2]
+    
+    const arr = [
+    	// 三个顶点
+	    originPoint,
+      [originPoint[0] - width * Math.sin(30 * Math.PI / 180), originPoint[1] + width * Math.cos(30 * Math.PI / 180)],
+	    [originPoint[0] + width * Math.sin(30 * Math.PI / 180), originPoint[1] + width * Math.cos(30 * Math.PI / 180)],
+      
+      // 第二行
+      [originPoint[0] - perpendicularLine / 4 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4],
+	    [originPoint[0] + perpendicularLine / 4 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4],
+	
+	    // 第三行
+	    [originPoint[0] - perpendicularLine / 4 * 2 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 2],
+	    [originPoint[0] + perpendicularLine / 4 * 2 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 2],
+	    [originPoint[0],  originPoint[1] + perpendicularLine / 4 * 2],
+     
+      // 第四行
+	    [originPoint[0] - perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 3],
+	    [originPoint[0] + perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 3],
+     
+	    [originPoint[0] - perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180) + perpendicularLine / 2  * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 3],
+	    [originPoint[0] - perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180) + perpendicularLine * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 3],
+      
+      // 第五行
+	    [originPoint[0] - width * Math.sin(30 * Math.PI / 180) + width / 4,  originPoint[1] + perpendicularLine],
+	    [originPoint[0] - width * Math.sin(30 * Math.PI / 180) + width / 4 * 2,  originPoint[1] + perpendicularLine],
+	    [originPoint[0] - width * Math.sin(30 * Math.PI / 180) + width / 4 * 3,  originPoint[1] + perpendicularLine],
+    ]
+    
+	  const planeGroup = new PIXI.Container()
+   
+   
+	  for(let i=0; i<arr.length; i++){
+		  const plane = new Sprite(new PIXI.Texture(texture))
+		  plane.anchor.set(0.5, 0.5)
+		  plane.scale.set(0.5, 0.5, 0.5)
+		  plane.x = arr[i][0]
+			plane.y = arr[i][1]
+			planeGroup.addChild(plane)
+    }
+    
+	  app.stage.addChild(planeGroup)
+  }
+  
+	function setup () {
+		const textureCache = PIXI.utils.TextureCache
+		const {startScene, playBtn, introScene, gameBackground, redPlane} = textureCache
+  
+		scene1 = new Sprite(new PIXI.Texture(startScene))
+    scene2 = new Sprite(new PIXI.Texture(introScene))
+  
+		scene1.x = transform.x
+		scene2.x = introTransform.posX
+  
+		playBtnTexture = new PIXI.Texture(playBtn)
+		playBtnTexture.frame = new PIXI.Rectangle(0, 55, 150, 55)
+		playBtnTexture.requiresUpdate = true
+  
+		playBtnActiveTexture = new PIXI.Texture(playBtn)
+		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 0, 150, 55)
+  
+		const playButton = new Sprite(playBtnTexture)
+		
+		playButton.x = (app.renderer.view.width - playButton.width) / 2
+		playButton.y = app.renderer.view.height - 80
+		
+		playButton.interactive = true
+		playButton.buttonMode = true
+  
+		playButton.on('pointerdown', playHandler)
+		playButton.on('pointerup', playUpHandler)
+		
+		app.stage.addChild(scene1)
+		app.stage.addChild(scene2)
+		app.stage.addChild(playButton)
+    
+    // gameContent
+    let gameBg = new Sprite(new PIXI.Texture(gameBackground))
+    game = new PIXI.Container()
+    game.x = gameTransform.x
+    game.addChild(gameBg)
+    app.stage.addChild(game)
+    
+		armySquadron(new PIXI.Texture(redPlane))
+	}
+	
+	function playHandler () {
+		let self = this
+		self.texture = playBtnActiveTexture
+    if (currentScene === 0){
+	    const tween = new TWEEN.Tween(transform)
+	    .to({
+		    x: app.renderer.view.width
+	    }, 500)
+	    .onUpdate(updateScene1Handler)
+	    .onComplete(() => {
+		    currentScene = 1
+	    })
+	
+	    const introScene = new TWEEN.Tween(introTransform)
+	    .to({
+		    posX: 0
+	    }, 500)
+	    .onUpdate(updateScene2Handler)
+	
+	    tween.start()
+	    introScene.start()
+	
+	    function updateScene1Handler(object){
+		    scene1.x = object.x
+	    }
+	
+	    function updateScene2Handler(object){
+		    scene2.x = object.posX
+	    }
+    }
+    if (currentScene === 1){
+	    const tween = new TWEEN.Tween(gameTransform)
+	    .to({
+		    x: 0
+	    }, 500)
+	    .onUpdate(obj => {
+		    game.x = obj.x
+      })
+	    const introTrans = new TWEEN.Tween(introTransform)
+	    .to({
+		    posX: app.renderer.view.width
+	    }, 500)
+	    .onUpdate(obj => {
+		    scene2.x = obj.posX
+      })
+      
+	    tween.start()
+	    introTrans.start()
+    }
+	}
+	
+	function playUpHandler(){
+		this.texture = playBtnTexture
+  }
+	
+	animate()
+  
+  function animate(){
+		requestAnimationFrame(animate)
+    TWEEN.update()
+  }
+	
+</script>
+</body>
+</html>
