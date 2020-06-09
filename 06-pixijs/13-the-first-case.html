@@ -112,7 +112,11 @@
 	  const width = 200
     const perpendicularLine = width * Math.cos(30 * Math.PI / 180)
 	  const originPoint = [app.renderer.view.width / 2, app.renderer.view.height / 2 - perpendicularLine / 2]
-    
+    /*
+    * 根据起始顶点坐标，及整个等腰三角形的边长 => 确定三个顶点的坐标
+    * 再根据中心线等分，算出每个边上 点 的坐标
+    *
+    * */
     const arr = [
     	// 三个顶点
 	    originPoint,
@@ -143,7 +147,6 @@
     
 	  const planeGroup = new PIXI.Container()
    
-   
 	  for(let i=0; i<arr.length; i++){
 		  const plane = new Sprite(new PIXI.Texture(texture))
 		  plane.anchor.set(0.5, 0.5)
@@ -152,7 +155,10 @@
 			plane.y = arr[i][1]
 			planeGroup.addChild(plane)
     }
-    
+	  planeGroup.pivot.set(app.renderer.view.width / 2, app.renderer.view.height / 2)
+	  planeGroup.x = app.renderer.view.width / 2
+	  planeGroup.y = app.renderer.view.height / 2
+	  planeGroup.angle = 180
 	  app.stage.addChild(planeGroup)
   }
   
