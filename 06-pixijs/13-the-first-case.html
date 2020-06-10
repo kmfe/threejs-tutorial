@@ -12,6 +12,13 @@
     * {
       margin: 0;
       padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+      'Noto Color Emoji';
+    }
+    
+    ul, li {
+      list-style: none;
     }
     
     html, body {
@@ -21,10 +28,30 @@
       display: block;
       margin: 0 auto;
     }
+    
+    .game-title {
+      text-align: center;
+      font-size: 24px;
+      line-height: 2;
+    }
+    
+    .game-info {
+      margin: 30px auto;
+      width: 80%;
+      line-height: 1.2;
+    }
+    
+    .game-info section {
+      margin-bottom: 20px;
+    }
+    
+    .game-info__title {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
-<h1>Army Squadron</h1>
+<h1 class='game-title'>Army Squadron</h1>
 <div class='playground'></div>
 <div class='game-info'>
   <section>
@@ -56,8 +83,10 @@
   <section>
     <h3 class='game-info__title'>How to play this game</h3>
     <div class='game-info__desc'>
-      The game shows triangles formed by fighters. The goal of the game is to determine the direction of the leading
-      fighter by pressing the corresponding arrows.
+      <p>
+        The game shows triangles formed by fighters. The goal of the game is to determine the direction of the leading
+        fighter by pressing the corresponding arrows.
+      </p>
       <img src='./assets/army/gameHelper/games_help/urci_1_trn.png' alt=''>
       <img src='./assets/army/gameHelper/games_help/urci_2_trn.png' alt=''>
       <img src='./assets/army/gameHelper/games_help/urci_3_trn.png' alt=''>
@@ -73,29 +102,37 @@
 		transparent: true
 	}
 	const app = new PIXI.Application(options)
-	// app.view.style.cssText = 'border: 2px solid #333';
 	
 	const playground = document.querySelector('.playground')
 	playground.appendChild(app.view)
-	
+	const centerX = app.renderer.view.width / 2
+	const centerY = app.renderer.view.height / 2
 	const loader = new PIXI.Loader()
 	const Sprite = PIXI.Sprite
-  let currentScene = 0
+	let currentScene = 0
 	let playBtnActiveTexture = null
-  let playBtnTexture = null
-  let scene1 = null
-  let scene2 = null
-  let game = null
-  
-  let transform = {
+	let playBtnTexture = null
+	let redPlaneTexture = null
+	let scene1 = null
+	let scene2 = null
+	let game = null
+	let countSet = []
+	let countOne, countTwo, countThree
+	let correctAnswer = 'none'
+	let planeGroup = undefined
+	
+	const angles = [0, 90, 180, 270]
+	
+	let transform = {
 		x: 0
-  }
-  let introTransform = {
-		posX: -app.renderer.view.width
-  }
-  let gameTransform = {
-		x: -app.renderer.view.width
-  }
+	}
+	let introTransform = {
+		posX: -centerX * 2
+	}
+	let gameTransform = {
+		x: -centerX * 2
+	}
+	
 	loader
 	.add('startScene', './assets/army/sprites/en/title_screen.png')
 	.add('introScene', './assets/army/sprites/en/instructions.png')
@@ -103,169 +140,345 @@
 	.add('failBtn', './assets/army/sprites/common/sign_fail.png')
 	.add('redPlane', './assets/army/sprites/common/plane_red.png')
 	.add('lightBluePlane', './assets/army/sprites/common/plane_lightBlue.png')
-  .add('gameBackground', './assets/army/sprites/common/gameBackground.png')
+	.add('gameBackground', './assets/army/sprites/common/gameBackground.png')
 	.add('darkBluePlane', './assets/army/sprites/common/gameBackground.png')
 	.add('playBtn', './assets/army/sprites/en/button_play.png')
+	.add('counts', './assets/army/sprites/common/counts.png')
 	.load(setup)
 	
-  function armySquadron(texture){
-	  const width = 200
-    const perpendicularLine = width * Math.cos(30 * Math.PI / 180)
-	  const originPoint = [app.renderer.view.width / 2, app.renderer.view.height / 2 - perpendicularLine / 2]
-    /*
+	// 游戏业务代码
+	function armySquadron (texture) {
+		if (planeGroup !== undefined && planeGroup.children.length) {
+			app.stage.removeChild(planeGroup)
+		}
+		const width = 200
+		const perpendicularLine = width * Math.cos(30 * Math.PI / 180)
+		const originPoint = [centerX, centerY - perpendicularLine / 2]
+		/*
     * 根据起始顶点坐标，及整个等腰三角形的边长 => 确定三个顶点的坐标
     * 再根据中心线等分，算出每个边上 点 的坐标
     *
     * */
-    const arr = [
-    	// 三个顶点
-	    originPoint,
-      [originPoint[0] - width * Math.sin(30 * Math.PI / 180), originPoint[1] + width * Math.cos(30 * Math.PI / 180)],
-	    [originPoint[0] + width * Math.sin(30 * Math.PI / 180), originPoint[1] + width * Math.cos(30 * Math.PI / 180)],
-      
-      // 第二行
-      [originPoint[0] - perpendicularLine / 4 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4],
-	    [originPoint[0] + perpendicularLine / 4 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4],
-	
-	    // 第三行
-	    [originPoint[0] - perpendicularLine / 4 * 2 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 2],
-	    [originPoint[0] + perpendicularLine / 4 * 2 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 2],
-	    [originPoint[0],  originPoint[1] + perpendicularLine / 4 * 2],
-     
-      // 第四行
-	    [originPoint[0] - perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 3],
-	    [originPoint[0] + perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 3],
-     
-	    [originPoint[0] - perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180) + perpendicularLine / 2  * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 3],
-	    [originPoint[0] - perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180) + perpendicularLine * Math.tan(30 * Math.PI / 180),  originPoint[1] + perpendicularLine / 4 * 3],
-      
-      // 第五行
-	    [originPoint[0] - width * Math.sin(30 * Math.PI / 180) + width / 4,  originPoint[1] + perpendicularLine],
-	    [originPoint[0] - width * Math.sin(30 * Math.PI / 180) + width / 4 * 2,  originPoint[1] + perpendicularLine],
-	    [originPoint[0] - width * Math.sin(30 * Math.PI / 180) + width / 4 * 3,  originPoint[1] + perpendicularLine],
-    ]
-    
-	  const planeGroup = new PIXI.Container()
-   
-	  for(let i=0; i<arr.length; i++){
-		  const plane = new Sprite(new PIXI.Texture(texture))
-		  plane.anchor.set(0.5, 0.5)
-		  plane.scale.set(0.5, 0.5, 0.5)
-		  plane.x = arr[i][0]
+		const arr = [
+			// 三个顶点
+			originPoint,
+			[originPoint[0] - width * Math.sin(30 * Math.PI / 180), originPoint[1] + width * Math.cos(30 * Math.PI / 180)],
+			[originPoint[0] + width * Math.sin(30 * Math.PI / 180), originPoint[1] + width * Math.cos(30 * Math.PI / 180)],
+			
+			// 第二行
+			[originPoint[0] - perpendicularLine / 4 * Math.tan(30 * Math.PI / 180), originPoint[1] + perpendicularLine / 4],
+			[originPoint[0] + perpendicularLine / 4 * Math.tan(30 * Math.PI / 180), originPoint[1] + perpendicularLine / 4],
+			
+			// 第三行
+			[originPoint[0] - perpendicularLine / 4 * 2 * Math.tan(30 * Math.PI / 180), originPoint[1] + perpendicularLine / 4 * 2],
+			[originPoint[0] + perpendicularLine / 4 * 2 * Math.tan(30 * Math.PI / 180), originPoint[1] + perpendicularLine / 4 * 2],
+			[originPoint[0], originPoint[1] + perpendicularLine / 4 * 2],
+			
+			// 第四行
+			[originPoint[0] - perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180), originPoint[1] + perpendicularLine / 4 * 3],
+			[originPoint[0] + perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180), originPoint[1] + perpendicularLine / 4 * 3],
+			
+			[originPoint[0] - perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180) + perpendicularLine / 2 * Math.tan(30 * Math.PI / 180), originPoint[1] + perpendicularLine / 4 * 3],
+			[originPoint[0] - perpendicularLine / 4 * 3 * Math.tan(30 * Math.PI / 180) + perpendicularLine * Math.tan(30 * Math.PI / 180), originPoint[1] + perpendicularLine / 4 * 3],
+			
+			// 第五行
+			[originPoint[0] - width * Math.sin(30 * Math.PI / 180) + width / 4, originPoint[1] + perpendicularLine],
+			[originPoint[0] - width * Math.sin(30 * Math.PI / 180) + width / 4 * 2, originPoint[1] + perpendicularLine],
+			[originPoint[0] - width * Math.sin(30 * Math.PI / 180) + width / 4 * 3, originPoint[1] + perpendicularLine]
+		]
+		
+		planeGroup = new PIXI.Container()
+		const planeArr = []
+		for (let i = 0; i < arr.length; i++) {
+			const plane = new Sprite(new PIXI.Texture(texture))
+			planeArr.push(plane)
+			plane.anchor.set(0.5, 0.5)
+			plane.scale.set(0.5, 0.5, 0.5)
+			plane.x = arr[i][0]
 			plane.y = arr[i][1]
 			planeGroup.addChild(plane)
-    }
-	  planeGroup.pivot.set(app.renderer.view.width / 2, app.renderer.view.height / 2)
-	  planeGroup.x = app.renderer.view.width / 2
-	  planeGroup.y = app.renderer.view.height / 2
-	  planeGroup.angle = 180
-	  app.stage.addChild(planeGroup)
-  }
-  
+		}
+		planeGroup.pivot.set(centerX, centerY)
+		planeGroup.x = centerX
+		planeGroup.y = centerY
+		
+		const containerAngle = Math.floor(angles.length * Math.random())
+		planeGroup.angle = angles[containerAngle]
+		
+		planeAngle = Math.floor(angles.length * Math.random())
+		planeArr[0].angle = angles[planeAngle]
+		switch ((angles[planeAngle] + angles[containerAngle]) % 360) {
+			case 0:
+				correctAnswer = 'ArrowUp'
+				break
+			case 90:
+				correctAnswer = 'ArrowRight'
+				break
+			case 180:
+				correctAnswer = 'ArrowDown'
+				break
+			case 270:
+				correctAnswer = 'ArrowLeft'
+				break
+		}
+		app.stage.addChild(planeGroup)
+	}
+	
+	// 游戏开始倒计时
+	function renderCount (sprites) {
+		const three = sprites[2]
+		const two = sprites[1]
+		const one = sprites[0]
+		
+		const countAnimate = (obj, callback) => {
+			obj.visible = true
+			const scales = {x: obj.scale.x, y: obj.scale.y}
+			const tween = new TWEEN.Tween(scales)
+			
+			tween.to({
+				x: 0.5,
+				y: 0.5
+			}, 1000)
+			.onUpdate(result => {
+				obj.scale.set(result.x, result.y)
+			})
+			.onComplete(() => {
+				app.stage.removeChild(obj)
+				callback && callback()
+			})
+			return tween
+		}
+		const threeStart = countAnimate(three)
+		const twoStart = countAnimate(two)
+		const oneStart = countAnimate(one, () => {
+			armySquadron(redPlaneTexture)
+			checkHint()
+		})
+		
+		threeStart.chain(twoStart)
+		twoStart.chain(oneStart)
+		
+		threeStart.start()
+	}
+	
+	// 游戏计时及计分
+	function renderToolbar (remains) {
+		const statue = new PIXI.Graphics()
+		
+	}
+	
+	// 错误检查提示
+	function checkHint () {
+		const keyboard = new Keyboard()
+		keyboard.pressHandler = key => {
+			if (key === correctAnswer) {
+				armySquadron(redPlaneTexture)
+				console.log('正确')
+			} else {
+				armySquadron(redPlaneTexture)
+				console.log('错误')
+			}
+		}
+		console.log(keyboard)
+		keyboard.subscribe()
+	}
+	
+	// 基于键盘操作的逻辑
+	function keyboardHandler (value) {
+		let key = {}
+		key.value = value
+		key.isDown = false
+		key.isUp = true
+		key.press = undefined
+		key.release = undefined
+		
+		// downHandler
+		key.downHandler = event => {
+			if (event.key === key.value) {
+				if (key.isUp && key.press) key.press()
+				key.isDown = true
+				key.isUp = false
+				event.preventDefault()
+			}
+		}
+		
+		// upHandler
+		key.upHandler = event => {
+			if (event.key === key.value) {
+				if (key.isDown && key.release) key.release()
+				key.isDown = false
+				key.isUp = true
+				event.preventDefault()
+			}
+		}
+		
+		// attach event listeners
+		const downListener = key.downHandler.bind(key)
+		const upListener = key.upHandler.bind(key)
+		
+		window.addEventListener('keydown', downListener, false)
+		window.addEventListener('keyup', upListener, false)
+		
+		// detach event listeners
+		key.unsubscribe = () => {
+			window.removeEventListener('keydown', downListener)
+			window.removeEventListener('keyup', upListener)
+		}
+		
+		return key
+	}
+	
+	// 被动监听键盘的操作
+	class Keyboard {
+		constructor () {
+			this.pressHandler = undefined
+		}
+		
+		subscribe () {
+			window.addEventListener('keydown', e => {
+				this.pressHandler && this.pressHandler(e.key)
+				e.preventDefault()
+			}, false)
+		}
+		
+		destroy () {
+			const self = this
+			window.removeEventListener('keydown', self.pressHandler, false)
+		}
+	}
+	
 	function setup () {
 		const textureCache = PIXI.utils.TextureCache
-		const {startScene, playBtn, introScene, gameBackground, redPlane} = textureCache
-  
+		const {startScene, playBtn, introScene, gameBackground, redPlane, counts} = textureCache
+		
 		scene1 = new Sprite(new PIXI.Texture(startScene))
-    scene2 = new Sprite(new PIXI.Texture(introScene))
-  
+		scene2 = new Sprite(new PIXI.Texture(introScene))
+		
 		scene1.x = transform.x
 		scene2.x = introTransform.posX
-  
+		
 		playBtnTexture = new PIXI.Texture(playBtn)
 		playBtnTexture.frame = new PIXI.Rectangle(0, 55, 150, 55)
-		playBtnTexture.requiresUpdate = true
-  
+		
 		playBtnActiveTexture = new PIXI.Texture(playBtn)
 		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 0, 150, 55)
-  
+		
 		const playButton = new Sprite(playBtnTexture)
 		
-		playButton.x = (app.renderer.view.width - playButton.width) / 2
-		playButton.y = app.renderer.view.height - 80
+		playButton.x = (centerX * 2 - playButton.width) / 2
+		playButton.y = centerY * 2 - 80
 		
 		playButton.interactive = true
 		playButton.buttonMode = true
-  
+		
 		playButton.on('pointerdown', playHandler)
 		playButton.on('pointerup', playUpHandler)
 		
 		app.stage.addChild(scene1)
 		app.stage.addChild(scene2)
 		app.stage.addChild(playButton)
-    
-    // gameContent
-    let gameBg = new Sprite(new PIXI.Texture(gameBackground))
-    game = new PIXI.Container()
-    game.x = gameTransform.x
-    game.addChild(gameBg)
-    app.stage.addChild(game)
-    
-		armySquadron(new PIXI.Texture(redPlane))
+		
+		// gameContent
+		let gameBg = new Sprite(new PIXI.Texture(gameBackground))
+		game = new PIXI.Container()
+		game.x = gameTransform.x
+		game.addChild(gameBg)
+		app.stage.addChild(game)
+		redPlaneTexture = new PIXI.Texture(redPlane)
+		
+		// armySquadron(new PIXI.Texture(redPlane))
+		
+		const countOneTexture = new PIXI.Texture(counts)
+		countOneTexture.frame = new PIXI.Rectangle(0, 0, 200, 200)
+		countOne = new Sprite(countOneTexture)
+		countSet.push(countOne)
+		
+		const countTwoTexture = new PIXI.Texture(counts)
+		countTwoTexture.frame = new PIXI.Rectangle(200, 0, 200, 200)
+		countTwo = new Sprite(countTwoTexture)
+		countSet.push(countTwo)
+		
+		const countThreeTexture = new PIXI.Texture(counts)
+		countThreeTexture.frame = new PIXI.Rectangle(400, 0, 200, 200)
+		countThree = new Sprite(countThreeTexture)
+		countSet.push(countThree)
+		
+		for (let item of countSet) {
+			item.anchor.set(0.5, 0.5)
+			item.scale.set(0.3)
+			item.x = centerX
+			item.y = centerY
+			item.visible = false
+			app.stage.addChild(item)
+		}
 	}
 	
 	function playHandler () {
 		let self = this
 		self.texture = playBtnActiveTexture
-    if (currentScene === 0){
-	    const tween = new TWEEN.Tween(transform)
-	    .to({
-		    x: app.renderer.view.width
-	    }, 500)
-	    .onUpdate(updateScene1Handler)
-	    .onComplete(() => {
-		    currentScene = 1
-	    })
-	
-	    const introScene = new TWEEN.Tween(introTransform)
-	    .to({
-		    posX: 0
-	    }, 500)
-	    .onUpdate(updateScene2Handler)
-	
-	    tween.start()
-	    introScene.start()
-	
-	    function updateScene1Handler(object){
-		    scene1.x = object.x
-	    }
-	
-	    function updateScene2Handler(object){
-		    scene2.x = object.posX
-	    }
-    }
-    if (currentScene === 1){
-	    const tween = new TWEEN.Tween(gameTransform)
-	    .to({
-		    x: 0
-	    }, 500)
-	    .onUpdate(obj => {
-		    game.x = obj.x
-      })
-	    const introTrans = new TWEEN.Tween(introTransform)
-	    .to({
-		    posX: app.renderer.view.width
-	    }, 500)
-	    .onUpdate(obj => {
-		    scene2.x = obj.posX
-      })
-      
-	    tween.start()
-	    introTrans.start()
-    }
+		if (currentScene === 0) {
+			const tween = new TWEEN.Tween(transform)
+			.to({
+				x: centerX * 2
+			}, 500)
+			.onUpdate(updateScene1Handler)
+			.onComplete(() => {
+				currentScene = 1
+			})
+			
+			const introScene = new TWEEN.Tween(introTransform)
+			.to({
+				posX: 0
+			}, 500)
+			.onUpdate(updateScene2Handler)
+			
+			tween.start()
+			introScene.start()
+			
+			function updateScene1Handler (object) {
+				scene1.x = object.x
+			}
+			
+			function updateScene2Handler (object) {
+				scene2.x = object.posX
+			}
+		}
+		if (currentScene === 1) {
+			self.alpha = 0
+			const tween = new TWEEN.Tween(gameTransform)
+			.to({
+				x: 0
+			}, 500)
+			.onUpdate(obj => {
+				game.x = obj.x
+			})
+			const introTrans = new TWEEN.Tween(introTransform)
+			.to({
+				posX: centerX * 2
+			}, 500)
+			.onUpdate(obj => {
+				scene2.x = obj.posX
+			})
+			.onComplete(() => {
+				renderCount(countSet)
+			})
+			
+			tween.start()
+			introTrans.start()
+		}
 	}
 	
-	function playUpHandler(){
+	function playUpHandler () {
 		this.texture = playBtnTexture
-  }
+	}
 	
 	animate()
-  
-  function animate(){
-		requestAnimationFrame(animate)
-    TWEEN.update()
-  }
 	
+	function animate () {
+		requestAnimationFrame(animate)
+		TWEEN.update()
+	}
+
 </script>
 </body>
 </html>
