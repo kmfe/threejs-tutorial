@@ -8,6 +8,7 @@
   <title>pixi.js tutorial</title>
   <script src='./lib/tween.umd.js'></script>
   <script src='./lib/pixi.min.js'></script>
+  <script src='./lib/pixi-sound.js'></script>
   <style>
     * {
       margin: 0;
@@ -102,6 +103,26 @@
 		transparent: true
 	}
 	const app = new PIXI.Application(options)
+	let clickSound, successSound, errorSound
+	
+	// 声音
+	const manifest = {
+		success: './assets/sound/success.mp3',
+		click: './assets/sound/click.mp3',
+		error: './assets/sound/error.mp3'
+	}
+	
+	// add to PIXI loader
+  PIXI.sound.volumeAll = 100
+	for (let resource in manifest) {
+		PIXI.Loader.shared.add(resource, manifest[resource])
+	}
+	// preload the sounds
+	PIXI.Loader.shared.load(function (loader, resources) {
+		clickSound = resources['click'].sound
+		successSound = resources['success'].sound
+		errorSound = resources['error'].sound
+	})
 	
 	const playground = document.querySelector('.playground')
 	playground.appendChild(app.view)
@@ -110,12 +131,7 @@
 	const loader = new PIXI.Loader()
 	const Sprite = PIXI.Sprite
 	let currentScene = 0
-	let playBtnActiveTexture = null
-	let playBtnTexture = null
-	let redPlaneTexture = null
-	let scene1 = null
-	let scene2 = null
-	let game = null
+	let playBtnActiveTexture, playBtnTexture, redPlaneTexture, scene1, scene2, game, correctBtn, failBtn
 	let countSet = []
 	let countOne, countTwo, countThree
 	let correctAnswer = 'none'
@@ -136,8 +152,8 @@
 	loader
 	.add('startScene', './assets/army/sprites/en/title_screen.png')
 	.add('introScene', './assets/army/sprites/en/instructions.png')
-	.add('correctBtn', './assets/army/sprites/common/sign_ok.png')
-	.add('failBtn', './assets/army/sprites/common/sign_fail.png')
+	.add('correctImg', './assets/army/sprites/common/sign_ok.png')
+	.add('failImg', './assets/army/sprites/common/sign_fail.png')
 	.add('redPlane', './assets/army/sprites/common/plane_red.png')
 	.add('lightBluePlane', './assets/army/sprites/common/plane_lightBlue.png')
 	.add('gameBackground', './assets/army/sprites/common/gameBackground.png')
@@ -270,16 +286,43 @@
 	// 错误检查提示
 	function checkHint () {
 		const keyboard = new Keyboard()
-		keyboard.pressHandler = key => {
-			if (key === correctAnswer) {
+		const hint = sprite => {
+			const transform = {
+				alpha: sprite.alpha,
+				x: sprite.scale.x,
+				y: sprite.scale.y
+			}
+			let tween = new TWEEN.Tween(transform)
+			.to({
+				x: 0.8,
+				y: 0.8,
+				alpha: 1
+			}, 200)
+			.onUpdate(result => {
+				sprite.scale.set(result.x, result.y)
+				sprite.alpha = result.alpha
+			})
+			.onComplete(() => {
+				sprite.alpha = 0
+				sprite.scale.set(0.4, 0.4)
+			})
+			tween.start()
+		}
+		
+		keyboard.pressHandler = e => {
+			if (e.key === correctAnswer) {
+				hint(correctBtn)
+				successSound.play()
 				armySquadron(redPlaneTexture)
-				console.log('正确')
-			} else {
+				e.preventDefault()
+			} else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && e.key !== correctAnswer) {
+				hint(failBtn)
+				errorSound.play()
 				armySquadron(redPlaneTexture)
-				console.log('错误')
+				console.log('fail')
+				e.preventDefault()
 			}
 		}
-		console.log(keyboard)
 		keyboard.subscribe()
 	}
 	
@@ -336,8 +379,7 @@
 		
 		subscribe () {
 			window.addEventListener('keydown', e => {
-				this.pressHandler && this.pressHandler(e.key)
-				e.preventDefault()
+				this.pressHandler && this.pressHandler(e)
 			}, false)
 		}
 		
@@ -349,7 +391,7 @@
 	
 	function setup () {
 		const textureCache = PIXI.utils.TextureCache
-		const {startScene, playBtn, introScene, gameBackground, redPlane, counts} = textureCache
+		const {startScene, playBtn, introScene, gameBackground, redPlane, counts, correctImg, failImg} = textureCache
 		
 		scene1 = new Sprite(new PIXI.Texture(startScene))
 		scene2 = new Sprite(new PIXI.Texture(introScene))
@@ -411,10 +453,29 @@
 			item.visible = false
 			app.stage.addChild(item)
 		}
+		
+		// correct fail hint
+		correctBtn = new Sprite(new PIXI.Texture(correctImg))
+		correctBtn.anchor.set(0.5)
+		correctBtn.y = centerY - correctBtn.height / 2
+		correctBtn.x = 80
+		correctBtn.scale.set(0.5, 0.5)
+		correctBtn.alpha = 0
+		
+		failBtn = new Sprite(new PIXI.Texture(failImg))
+		failBtn.anchor.set(0.5)
+		failBtn.y = centerY - correctBtn.height / 2
+		failBtn.x = 80
+		failBtn.scale.set(0.5, 0.5)
+		failBtn.alpha = 0
+		
+		app.stage.addChild(correctBtn)
+		app.stage.addChild(failBtn)
 	}
 	
 	function playHandler () {
 		let self = this
+		clickSound.play()
 		self.texture = playBtnActiveTexture
 		if (currentScene === 0) {
 			const tween = new TWEEN.Tween(transform)
@@ -478,6 +539,7 @@
 		requestAnimationFrame(animate)
 		TWEEN.update()
 	}
+
 
 </script>
 </body>
