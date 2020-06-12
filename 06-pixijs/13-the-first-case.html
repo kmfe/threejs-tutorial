@@ -100,29 +100,32 @@
 	const options = {
 		width: 615,
 		height: 505,
-		transparent: true
+		transparent: false,
+		backgroundColor: 0XEEEEEE
 	}
 	const app = new PIXI.Application(options)
 	let clickSound, successSound, errorSound
 	
-	// 声音
-	const manifest = {
-		success: './assets/sound/success.mp3',
-		click: './assets/sound/click.mp3',
-		error: './assets/sound/error.mp3'
+	function initSound () {
+		// 声音
+		const manifest = {
+			success: './assets/sound/success.mp3',
+			click: './assets/sound/click.mp3',
+			error: './assets/sound/error.mp3'
+		}
+		
+		// add to PIXI loader
+		PIXI.sound.volumeAll = 100
+		for (let resource in manifest) {
+			PIXI.Loader.shared.add(resource, manifest[resource])
+		}
+		// preload the sounds
+		PIXI.Loader.shared.load(function (loader, resources) {
+			clickSound = resources['click'].sound
+			successSound = resources['success'].sound
+			errorSound = resources['error'].sound
+		})
 	}
-	
-	// add to PIXI loader
-  PIXI.sound.volumeAll = 100
-	for (let resource in manifest) {
-		PIXI.Loader.shared.add(resource, manifest[resource])
-	}
-	// preload the sounds
-	PIXI.Loader.shared.load(function (loader, resources) {
-		clickSound = resources['click'].sound
-		successSound = resources['success'].sound
-		errorSound = resources['error'].sound
-	})
 	
 	const playground = document.querySelector('.playground')
 	playground.appendChild(app.view)
@@ -136,6 +139,8 @@
 	let countOne, countTwo, countThree
 	let correctAnswer = 'none'
 	let planeGroup = undefined
+	let counterInterval = null
+	let keyboard = null
 	
 	const angles = [0, 90, 180, 270]
 	
@@ -162,10 +167,15 @@
 	.add('counts', './assets/army/sprites/common/counts.png')
 	.load(setup)
 	
+	// 补零
+	function zeroFill (num) {
+		return num < 10 ? '0' + num : num
+	}
+	
 	// 游戏业务代码
 	function armySquadron (texture) {
 		if (planeGroup !== undefined && planeGroup.children.length) {
-			app.stage.removeChild(planeGroup)
+			game.removeChild(planeGroup)
 		}
 		const width = 200
 		const perpendicularLine = width * Math.cos(30 * Math.PI / 180)
@@ -237,7 +247,7 @@
 				correctAnswer = 'ArrowLeft'
 				break
 		}
-		app.stage.addChild(planeGroup)
+		game.addChild(planeGroup)
 	}
 	
 	// 游戏开始倒计时
@@ -268,6 +278,7 @@
 		const twoStart = countAnimate(two)
 		const oneStart = countAnimate(one, () => {
 			armySquadron(redPlaneTexture)
+			renderToolbar(10)
 			checkHint()
 		})
 		
@@ -279,13 +290,106 @@
 	
 	// 游戏计时及计分
 	function renderToolbar (remains) {
+		const toolbars = new PIXI.Container()
 		const statue = new PIXI.Graphics()
+		let time = remains
+		let remainTime = null
+		statue.beginFill(0X000000, 0.5)
+		statue.drawRect(0, 0, centerX * 2, 40)
+		statue.endFill()
+		toolbars.addChild(statue)
+		let textStyle = new PIXI.TextStyle({
+			fontFamily: 'PingFang SC Regular',
+			fontSize: 18,
+			fill: '#FFFFFF',
+			stroke: '#cd0000',
+			align: 'center',
+			lineHeight: 40,
+			textBaseline: 'middle'
+		})
+		game.addChild(toolbars)
 		
+		const renderText = () => {
+			remainTime = new PIXI.Text(`Remaining time: 00:${zeroFill(time)}`, textStyle)
+			remainTime.resolution = 2
+			remainTime.x = centerX - remainTime.width / 2
+			remainTime.y = 5
+			toolbars.addChild(remainTime)
+		}
+		
+		renderText()
+		
+		counterInterval = setInterval(() => {
+			remainTime && toolbars.removeChild(remainTime)
+			if (time === 0) {
+				gameOverHandler()
+			}
+			if (time > 0) {
+				time--
+			}
+			renderText()
+		}, 1000)
 	}
 	
-	// 错误检查提示
+	// 游戏结束逻辑
+	function gameOverHandler () {
+		clearInterval(counterInterval)
+		keyboard.destroy()
+		const tween = new TWEEN.Tween(game.position)
+		.to({
+			x: centerX * 2
+		})
+		.onUpdate(result => {
+			game.x = result.x
+		})
+		.onComplete(() => {
+			app.stage.removeChild(game)
+			const gameOverText = new PIXI.Text('GAME OVER', {
+				fontSize: 48,
+				fill: 0XEA432B,
+				fontWeight: 800
+			})
+			const alpha = {
+				val: 0
+			}
+			gameOverText.y = centerY - gameOverText.height / 2
+			gameOverText.x = centerX - gameOverText.width / 2
+			gameOverText.alpha = alpha.val
+			app.stage.addChild(gameOverText)
+			
+			const alphaTween = new TWEEN.Tween(alpha)
+			.to({
+				val: 1
+			})
+			.onUpdate(result => {
+				gameOverText.alpha = result.val
+			})
+			alphaTween.start()
+		})
+		tween.start()
+	}
+	
+	// 游戏暂停逻辑
+	function gamePauseHandler () {}
+	
+	// 游戏重启逻辑
+	function gameRestartHandler () {
+		
+  }
+	
+	// 关闭游戏音效
+	function gameMuteHandler () {
+	
+	}
+	
+	// 游戏数据统计，需要统计 正确数/总数，反应时间
+	function gameDataCollect () {
+	
+	}
+	
+	// 游戏正误提示
 	function checkHint () {
-		const keyboard = new Keyboard()
+		keyboard = new Keyboard()
 		const hint = sprite => {
 			const transform = {
 				alpha: sprite.alpha,
@@ -319,7 +423,6 @@
 				hint(failBtn)
 				errorSound.play()
 				armySquadron(redPlaneTexture)
-				console.log('fail')
 				e.preventDefault()
 			}
 		}
@@ -378,18 +481,18 @@
 		}
 		
 		subscribe () {
-			window.addEventListener('keydown', e => {
-				this.pressHandler && this.pressHandler(e)
-			}, false)
+			const self = this
+			window.addEventListener('keydown', self.pressHandler, false)
 		}
 		
 		destroy () {
 			const self = this
-			window.removeEventListener('keydown', self.pressHandler, false)
+			window.removeEventListener('keydown', self.pressHandler)
 		}
 	}
 	
 	function setup () {
+		initSound()
 		const textureCache = PIXI.utils.TextureCache
 		const {startScene, playBtn, introScene, gameBackground, redPlane, counts, correctImg, failImg} = textureCache
 		
@@ -539,7 +642,6 @@
 		requestAnimationFrame(animate)
 		TWEEN.update()
 	}
-
 
 </script>
 </body>
