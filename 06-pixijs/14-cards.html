@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>pixi.js tutorial</title>
+  <script src='./lib/tween.umd.js'></script>
+  <script src='./lib/pixi.min.js'></script>
+  <script src='./lib/pixi-sound.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+      'Noto Color Emoji';
+    }
+    
+    ul, li {
+      list-style: none;
+    }
+    
+    html, body {
+    }
+    
+    .playground canvas {
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .game-title {
+      text-align: center;
+      font-size: 24px;
+      line-height: 2;
+    }
+    
+    .game-info {
+      margin: 30px auto;
+      width: 80%;
+      line-height: 1.2;
+    }
+    
+    .game-info section {
+      margin-bottom: 20px;
+    }
+    
+    .game-info__title {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<h1 class='game-title'>Cards</h1>
+<div class='playground'></div>
+<div class='game-info'>
+  <section>
+    <h3 class='game-info__title'>Training focus</h3>
+    <div class='game-info__desc'>
+      <ul>
+        <li>Attention concentration</li>
+        <li>Reaction speed</li>
+      </ul>
+    </div>
+  </section>
+  <section>
+    <h3 class='game-info__title'>Principles of the training</h3>
+    <div class='game-info__desc'>
+      <ul>
+        <li>
+          Army squadron improves spatial orientation and the ability to distinguish similar stimuli.
+        </li>
+        <li>
+          It is necessary to focus attention on the main fighter and to determine its direction correctly while
+          neglecting the flight direction of the other fighters.
+        </li>
+        <li>
+          Working in a time limit improves the response speed.
+        </li>
+      </ul>
+    </div>
+  </section>
+  <section>
+    <h3 class='game-info__title'>How to play this game</h3>
+    <div class='game-info__desc'>
+      <p>
+        The game shows triangles formed by fighters. The goal of the game is to determine the direction of the leading
+        fighter by pressing the corresponding arrows.
+      </p>
+      <img src='./assets/army/gameHelper/games_help/urci_1_trn.png' alt=''>
+      <img src='./assets/army/gameHelper/games_help/urci_2_trn.png' alt=''>
+      <img src='./assets/army/gameHelper/games_help/urci_3_trn.png' alt=''>
+      <img src='./assets/army/gameHelper/games_help/keyb_arrow_left_trn.png' alt=''>
+      <img src='./assets/army/gameHelper/games_help/keyb_arrow_right_trn.png' alt=''>
+    </div>
+  </section>
+</div>
+<script>
+	const options = {
+		width: 615,
+		height: 505,
+		transparent: false,
+		backgroundColor: 0XEEEEEE
+	}
+	const app = new PIXI.Application(options)
+	let clickSound, successSound, errorSound
+	
+	function initSound () {
+		// 声音
+		const manifest = {
+			success: './assets/sound/success.mp3',
+			click: './assets/sound/click.mp3',
+			error: './assets/sound/error.mp3'
+		}
+		
+		// add to PIXI loader
+		PIXI.sound.volumeAll = 100
+		for (let resource in manifest) {
+			PIXI.Loader.shared.add(resource, manifest[resource])
+		}
+		// preload the sounds
+		PIXI.Loader.shared.load(function (loader, resources) {
+			clickSound = resources['click'].sound
+			successSound = resources['success'].sound
+			errorSound = resources['error'].sound
+		})
+	}
+	
+	const playground = document.querySelector('.playground')
+	playground.appendChild(app.view)
+	
+	const centerX = app.renderer.view.width / 2
+	const centerY = app.renderer.view.height / 2
+	const loader = new PIXI.Loader()
+	const Sprite = PIXI.Sprite
+	const Texture = PIXI.Texture
+	let currentScene = 0
+	let playBtnActiveTexture, playBtnTexture, playButton,
+		emptyCardSprite,
+		scene1, scene2, game,
+		correctBtn, failBtn,
+		countOne, countTwo, countThree, counterInterval, countSet = [],
+		pokerContainer, pokerGroupTexture
+	
+	let transform = {
+		x: 0
+	}
+	let introTransform = {
+		posX: -centerX * 2
+	}
+	let gameTransform = {
+		x: -centerX * 2
+	}
+	
+	// 加载图片转化成纹理
+	loader
+	.add('startScene', './assets/cards/en/title_screen.png')
+	.add('introScene', './assets/cards/en/instructions.png')
+	.add('correctImg', './assets/cards/common/sign_ok.png')
+	.add('failImg', './assets/cards/common/sign_fail.png')
+	
+	.add('emptyCard', './assets/cards/common/empty_card.png')
+	.add('poker1Texture', './assets/cards/common/images/1.png')
+	.add('poker2Texture', './assets/cards/common/images/2.png')
+	.add('poker3Texture', './assets/cards/common/images/3.png')
+	.add('poker4Texture', './assets/cards/common/images/4.png')
+	.add('poker5Texture', './assets/cards/common/images/5.png')
+	.add('poker6Texture', './assets/cards/common/images/6.png')
+	
+	.add('gameBackground', './assets/cards/common/gameBackground.png')
+	.add('playBtn', './assets/cards/en/button_play.png')
+	.add('counts', './assets/cards/common/counts.png')
+	.load(setup)
+	
+	// 补零
+	function zeroFill (num) {
+		return num < 10 ? '0' + num : num
+	}
+	
+	// 游戏业务代码
+	function renderPokerCards () {
+		/*
+		* 展示区为 目标纸牌 targetPoker，每次随机一张牌为目标纸牌，位置为 左右居中，距上80px
+		* 列表区域展示，三张纸牌，其中一张为targetPoker, 另外任意随机两张，左右居中，距下20px
+		* 点击列表区 targetPoker, 显示正确，否则显示错误
+		*
+		* statueBar 区域展示 75s的倒计时，及正确数
+		* */
+		if (pokerContainer !== undefined && pokerContainer.children.length) {
+			game.removeChild(pokerContainer)
+		}
+		
+		const pokerLen = pokerGroupTexture.length
+		
+		pokerContainer = new PIXI.Container()
+		
+		// 设置 targetPoker
+		const targetRandom = Math.floor(pokerLen * Math.random())
+		const targetPoker = new Sprite(pokerGroupTexture[targetRandom])
+		targetPoker.name = 'target'
+		targetPoker.anchor.set(0.5)
+		targetPoker.scale.set(0.78)
+		targetPoker.x = centerX
+		targetPoker.y = 175
+		pokerContainer.addChild(targetPoker)
+		
+		// 生成列表poker
+		const randomPos = [centerX, centerX - 160, centerX + 160]
+		const fakeTarget = new Sprite(pokerGroupTexture[targetRandom])
+		fakeTarget.name = 'target'
+		const randomPoker = [fakeTarget]
+		
+		// poker 中增加了多个sprite, 移除最后两个
+		// 之前 i< 2; 发现偶尔会出现同样的poker, 或者 只有1个poker
+		// 干脆全部循环一遍，截取三个数据即可
+		let prevRandom = undefined
+		let i = 0
+		while (randomPoker.length < 3) {
+			i++
+			const random = Math.floor(pokerLen * Math.random())
+			if (random !== targetRandom && random !== prevRandom) {
+				let poker = new Sprite(pokerGroupTexture[random])
+				poker.name = 'poker' + i
+				randomPoker.push(poker)
+				prevRandom = random
+				console.log(poker.name, 'name-')
+			}
+		}
+  
+		
+		function shuffleArray (array) {
+			for (let i = array.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[array[i], array[j]] = [array[j], array[i]]
+			}
+			return array
+		}
+		
+		// 设置列表poker 位置
+		const shuffleArr = shuffleArray(randomPoker)
+		for (let i = 0; i < shuffleArr.length; i++) {
+			const poker = shuffleArr[i]
+			poker.anchor.set(0.5)
+			poker.scale.set(0.6)
+			poker.y = centerY * 2 - poker.height / 2 - 20
+			poker.x = randomPos[i]
+			poker.interactive = true
+			poker.buttonMode = true
+			
+			poker.on('pointerdown', e => {
+				checkHint(e.target.name)
+			}, false)
+			
+			pokerContainer.addChild(poker)
+		}
+		
+		// 添加
+		game.addChild(pokerContainer)
+	}
+	
+	// 游戏开始倒计时
+	function renderCount (sprites) {
+		const three = sprites[2]
+		const two = sprites[1]
+		const one = sprites[0]
+		
+		const countAnimate = (obj, callback) => {
+			obj.visible = true
+			const scales = {x: obj.scale.x, y: obj.scale.y}
+			const tween = new TWEEN.Tween(scales)
+			
+			tween.to({
+				x: 0.5,
+				y: 0.5
+			}, 1000)
+			.onUpdate(result => {
+				obj.scale.set(result.x, result.y)
+			})
+			.onComplete(() => {
+				app.stage.removeChild(obj)
+				callback && callback()
+			})
+			return tween
+		}
+		const threeStart = countAnimate(three)
+		const twoStart = countAnimate(two)
+		const oneStart = countAnimate(one, () => {
+			renderPokerCards()
+			renderToolbar(40)
+			checkHint()
+		})
+		
+		threeStart.chain(twoStart)
+		twoStart.chain(oneStart)
+		
+		threeStart.start()
+	}
+	
+	// 游戏计时及计分
+	function renderToolbar (remains) {
+		const toolbars = new PIXI.Container()
+		const statue = new PIXI.Graphics()
+		let time = remains
+		let remainTime = null
+		statue.beginFill(0X000000, 0.5)
+		statue.drawRect(0, 0, centerX * 2, 40)
+		statue.endFill()
+		toolbars.addChild(statue)
+		let textStyle = new PIXI.TextStyle({
+			fontFamily: 'PingFang SC Regular',
+			fontSize: 18,
+			fill: '#FFFFFF',
+			stroke: '#cd0000',
+			align: 'center',
+			lineHeight: 40,
+			textBaseline: 'middle'
+		})
+		game.addChild(toolbars)
+		
+		const renderText = () => {
+			remainTime = new PIXI.Text(`Remaining time: 00:${zeroFill(time)}`, textStyle)
+			remainTime.resolution = 2
+			remainTime.x = centerX - remainTime.width / 2
+			remainTime.y = 5
+			toolbars.addChild(remainTime)
+		}
+		
+		renderText()
+		
+		counterInterval = setInterval(() => {
+			remainTime && toolbars.removeChild(remainTime)
+			if (time === 0) {
+				gameOverHandler()
+			}
+			if (time > 0) {
+				time--
+			}
+			renderText()
+		}, 1000)
+	}
+	
+	// 游戏结束逻辑
+	function gameOverHandler () {
+		clearInterval(counterInterval)
+		const tween = new TWEEN.Tween(game.position)
+		.to({
+			x: centerX * 2
+		})
+		.onUpdate(result => {
+			game.x = result.x
+		})
+		.onComplete(() => {
+			app.stage.removeChild(game)
+			const gameOverText = new PIXI.Text('GAME OVER', {
+				fontSize: 48,
+				fill: 0XEA432B,
+				fontWeight: 800
+			})
+			const alpha = {
+				val: 0
+			}
+			gameOverText.y = centerY - gameOverText.height / 2
+			gameOverText.x = centerX - gameOverText.width / 2
+			gameOverText.alpha = alpha.val
+			app.stage.addChild(gameOverText)
+			
+			const alphaTween = new TWEEN.Tween(alpha)
+			.to({
+				val: 1
+			})
+			.onUpdate(result => {
+				gameOverText.alpha = result.val
+			})
+			alphaTween.start()
+		})
+		tween.start()
+	}
+	
+	// 游戏暂停逻辑
+	function gamePauseHandler () {}
+	
+	// 游戏重启逻辑
+	function gameRestartHandler () {
+	
+	}
+	
+	// 关闭游戏音效
+	function gameMuteHandler () {
+	
+	}
+	
+	// 游戏数据统计，需要统计 正确数/总数，反应时间
+	function gameDataCollect () {
+	
+	}
+	
+	// 游戏正误提示
+	function checkHint (name) {
+		if (!name) return
+		const hint = sprite => {
+			const transform = {
+				alpha: sprite.alpha,
+				x: sprite.scale.x,
+				y: sprite.scale.y
+			}
+			let tween = new TWEEN.Tween(transform)
+			.to({
+				x: 0.8,
+				y: 0.8,
+				alpha: 1
+			}, 200)
+			.onUpdate(result => {
+				sprite.scale.set(result.x, result.y)
+				sprite.alpha = result.alpha
+			})
+			.onComplete(() => {
+				sprite.alpha = 0
+				sprite.scale.set(0.4, 0.4)
+			})
+			tween.start()
+		}
+		
+		if (name !== 'target') {
+			hint(failBtn)
+			errorSound.play()
+			renderPokerCards()
+		} else if (name === 'target') {
+			hint(correctBtn)
+			successSound.play()
+			renderPokerCards()
+		}
+	}
+	
+	// 初始化多个游戏场景, start -> introduce -> ready
+	function setup () {
+		initSound()
+		const textureCache = PIXI.utils.TextureCache
+		const {
+			startScene,
+			playBtn,
+			introScene,
+			gameBackground,
+			counts,
+			correctImg,
+			failImg,
+			emptyCard,
+			poker1Texture,
+			poker2Texture,
+			poker3Texture,
+			poker4Texture,
+			poker5Texture,
+			poker6Texture
+		} = textureCache
+		
+		scene1 = new Sprite(new Texture(startScene))
+		scene2 = new Sprite(new Texture(introScene))
+		
+		pokerGroupTexture = [
+			new Texture(poker1Texture),
+			new Texture(poker2Texture),
+			new Texture(poker3Texture),
+			new Texture(poker4Texture),
+			new Texture(poker5Texture),
+			new Texture(poker6Texture)
+		]
+		
+		scene1.x = transform.x
+		scene2.x = introTransform.posX
+		
+		playBtnTexture = new Texture(playBtn)
+		playBtnTexture.frame = new PIXI.Rectangle(0, 55, 150, 55)
+		
+		playBtnActiveTexture = new Texture(playBtn)
+		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 0, 150, 55)
+		
+		playButton = new Sprite(playBtnTexture)
+		
+		playButton.x = (centerX * 2 - playButton.width) / 2
+		playButton.y = centerY * 2 - 80
+		
+		playButton.interactive = true
+		playButton.buttonMode = true
+		
+		playButton.on('pointerdown', playHandler)
+		playButton.on('pointerup', playUpHandler)
+		
+		app.stage.addChild(scene1)
+		app.stage.addChild(scene2)
+		app.stage.addChild(playButton)
+		
+		// gameContent
+		let gameBg = new Sprite(new PIXI.Texture(gameBackground))
+		emptyCardSprite = new Sprite(new PIXI.Texture(emptyCard))
+		emptyCardSprite.anchor.set(0.5)
+		emptyCardSprite.x = centerX
+		emptyCardSprite.y = 180
+		
+		game = new PIXI.Container()
+		game.x = gameTransform.x
+		game.addChild(gameBg)
+		game.addChild(emptyCardSprite)
+		app.stage.addChild(game)
+		
+		const countOneTexture = new PIXI.Texture(counts)
+		countOneTexture.frame = new PIXI.Rectangle(0, 0, 200, 200)
+		countOne = new Sprite(countOneTexture)
+		countSet.push(countOne)
+		
+		const countTwoTexture = new PIXI.Texture(counts)
+		countTwoTexture.frame = new PIXI.Rectangle(200, 0, 200, 200)
+		countTwo = new Sprite(countTwoTexture)
+		countSet.push(countTwo)
+		
+		const countThreeTexture = new PIXI.Texture(counts)
+		countThreeTexture.frame = new PIXI.Rectangle(400, 0, 200, 200)
+		countThree = new Sprite(countThreeTexture)
+		countSet.push(countThree)
+		
+		for (let item of countSet) {
+			item.anchor.set(0.5, 0.5)
+			item.scale.set(0.3)
+			item.x = centerX
+			item.y = centerY
+			item.visible = false
+			app.stage.addChild(item)
+		}
+		
+		// correct fail hint
+		correctBtn = new Sprite(new PIXI.Texture(correctImg))
+		correctBtn.anchor.set(0.5)
+		correctBtn.y = centerY - correctBtn.height / 2
+		correctBtn.x = 80
+		correctBtn.scale.set(0.5, 0.5)
+		correctBtn.alpha = 0
+		
+		failBtn = new Sprite(new PIXI.Texture(failImg))
+		failBtn.anchor.set(0.5)
+		failBtn.y = centerY - correctBtn.height / 2
+		failBtn.x = 80
+		failBtn.scale.set(0.5, 0.5)
+		failBtn.alpha = 0
+		
+		app.stage.addChild(correctBtn)
+		app.stage.addChild(failBtn)
+	}
+	
+	function playHandler (e) {
+		e.stopPropagation()
+		let self = this
+		clickSound.play()
+		self.texture = playBtnActiveTexture
+		if (currentScene === 0) {
+			const tween = new TWEEN.Tween(transform)
+			.to({
+				x: centerX * 2
+			}, 500)
+			.onUpdate(updateScene1Handler)
+			.onComplete(() => {
+				currentScene = 1
+			})
+			
+			const introScene = new TWEEN.Tween(introTransform)
+			.to({
+				posX: 0
+			}, 500)
+			.onUpdate(updateScene2Handler)
+			
+			tween.start()
+			introScene.start()
+			
+			function updateScene1Handler (object) {
+				scene1.x = object.x
+			}
+			
+			function updateScene2Handler (object) {
+				scene2.x = object.posX
+			}
+		}
+		if (currentScene === 1) {
+			self.alpha = 0
+			const tween = new TWEEN.Tween(gameTransform)
+			.to({
+				x: 0
+			}, 500)
+			.onUpdate(obj => {
+				game.x = obj.x
+			})
+			const introTrans = new TWEEN.Tween(introTransform)
+			.to({
+				posX: centerX * 2
+			}, 500)
+			.onUpdate(obj => {
+				scene2.x = obj.posX
+			})
+			.onComplete(() => {
+				app.stage.removeChild(playButton)
+				renderCount(countSet)
+			})
+			
+			tween.start()
+			introTrans.start()
+		}
+	}
+	
+	function playUpHandler (e) {
+		e.stopPropagation()
+		this.texture = playBtnTexture
+	}
+	
+	animate()
+	
+	function animate () {
+		requestAnimationFrame(animate)
+		TWEEN.update()
+	}
+
+</script>
+</body>
+</html>
