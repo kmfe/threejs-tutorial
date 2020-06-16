@@ -52,7 +52,7 @@
   </style>
 </head>
 <body>
-<h1 class='game-title'>Cards</h1>
+<h1 class='game-title'>November Fallss</h1>
 <div class='playground'></div>
 <div class='game-info'>
   <section>
@@ -60,8 +60,8 @@
     <div class='game-info__desc'>
       <ul>
         <li>Short-term memory</li>
-        <li>Attention</li>
-        <li>Spatial orientation</li>
+        <li>Concentration</li>
+        <li>Attention distribution</li>
         <li>Reaction speed</li>
       </ul>
     </div>
@@ -71,7 +71,15 @@
     <div class='game-info__desc'>
       <ul>
         <li>
-          Players train the visual memory by remembering certain shapes. By mapping their layouts, they also practice spatial orientation and imagination.
+          The game trains concentration on individual elements and it also develops executive functions, such as
+          decision-making efficiency, correct answer feedback and awareness of rule changes.
+        </li>
+        <li>
+          The game also supports the development of short-term memory because the hints disappear during the training,
+          so the player has to remember the complicated rules.
+        </li>
+        <li>
+          Working in a time limit improves the response speed.
         </li>
       </ul>
     </div>
@@ -80,9 +88,22 @@
     <h3 class='game-info__title'>How to play this game</h3>
     <div class='game-info__desc'>
       <p>
-        Your task is to select the card from the bottom line that is identical with the card on the top. You will receive a new card after every correct answer. Try to find as many identical cards within the time limit as possible.
+        The aim of this game is to classify correctly the falling leaves according to the given instructions.
+        **Orange leaf** - Decide if **the letter** inside the leaf is **a vowel**.
+        **Yellow leaf** - Decide if **the number** inside the leaf is **odd**.
       </p>
-      <img src='https://www.mentem.eu/static-155/img/games_help/karty_help.jpg' alt='' />
+      <p>
+        
+        <img src="./assets/novermber-falls/listopad_brown_4B_trn.png" alt="4B" />
+        Color of the leaf is orange. The goal is to decide whether the letter is a vowel.
+        B is not a vowel, so the correct answer is NO (**the left arrow**).
+      </p>
+      <p>
+        <img src='./assets/novermber-falls/listopad_green_3A_trn.png' alt='3A' />
+        This time the leaf is yellow. The goal is to determine if the number is odd. Number 3 is odd,
+        therefore the correct answer is YES (**right arrow**).
+        Pay attention: a wrong answer as well as letting the leaf fall down leads to minus points.
+      </p>
     </div>
   </section>
 </div>
@@ -125,13 +146,15 @@
 	const loader = new PIXI.Loader()
 	const Sprite = PIXI.Sprite
 	const Texture = PIXI.Texture
+	
 	let currentScene = 0
+	
 	let playBtnActiveTexture, playBtnTexture, playButton,
-		emptyCardSprite,
-		scene1, scene2, game,
+		welcomeScene, introScene, gameScene,
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
-		pokerContainer, pokerGroupTexture
+		leafContainer, greenLeafTexture, brownLeafTexture, leafGroup,
+		dropTween
 	
 	let transform = {
 		x: 0
@@ -145,22 +168,17 @@
 	
 	// 加载图片转化成纹理
 	loader
-	.add('startScene', './assets/cards/en/title_screen.png')
-	.add('introScene', './assets/cards/en/instructions.png')
-	.add('correctImg', './assets/cards/common/sign_ok.png')
+	.add('welcome', './assets/novermber-falls/en/title_screen.png')
+	.add('intro', './assets/novermber-falls/en/instructions.png')
+	.add('correctImg', './assets/novermber-falls/common/sign_ok.png')
 	.add('failImg', './assets/cards/common/sign_fail.png')
 	
-	.add('emptyCard', './assets/cards/common/empty_card.png')
-	.add('poker1Texture', './assets/cards/common/images/1.png')
-	.add('poker2Texture', './assets/cards/common/images/2.png')
-	.add('poker3Texture', './assets/cards/common/images/3.png')
-	.add('poker4Texture', './assets/cards/common/images/4.png')
-	.add('poker5Texture', './assets/cards/common/images/5.png')
-	.add('poker6Texture', './assets/cards/common/images/6.png')
+	.add('brownLeafImg', './assets/novermber-falls/common/leafBrown.png')
+	.add('greenLeafImg', './assets/novermber-falls/common/leafGreen.png')
 	
-	.add('gameBackground', './assets/cards/common/gameBackground.png')
-	.add('playBtn', './assets/cards/en/button_play.png')
-	.add('counts', './assets/cards/common/counts.png')
+	.add('gameBackground', './assets/novermber-falls/common/gameBackground.png')
+	.add('playBtn', './assets/novermber-falls/en/button_play.png')
+	.add('counts', './assets/novermber-falls/common/counts.png')
 	.load(setup)
 	
 	// 补零
@@ -168,85 +186,117 @@
 		return num < 10 ? '0' + num : num
 	}
 	
+	function getRangeNum (min, max) {
+		return Math.floor(Math.random() * (max - min)) + min
+	}
+	
 	// 游戏业务代码
 	function renderPokerCards () {
 		/*
-		* 展示区为 目标纸牌 targetPoker，每次随机一张牌为目标纸牌，位置为 左右居中，距上80px
-		* 列表区域展示，三张纸牌，其中一张为targetPoker, 另外任意随机两张，左右居中，距下20px
-		* 点击列表区 targetPoker, 显示正确，否则显示错误
-		*
-		* statueBar 区域展示 75s的倒计时，及正确数
+		* 展示区始终有只有一片叶子
+		* 叶子区域由字母 + 数字组成
+		* 黄色的叶子-> 要求用户区分叶子内容是否为 奇数，
+		* 金色的叶子-> 要求用户区分叶子内容是否为 元音 a|o|e|i|u
 		* */
-		if (pokerContainer !== undefined && pokerContainer.children.length) {
-			game.removeChild(pokerContainer)
+		if (leafContainer !== undefined && leafContainer.children.length) {
+			gameScene.removeChild(leafContainer)
+		}
+		leafContainer = new PIXI.Container()
+		
+		const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'O', 'P', 'Q', 'U', 'Z']
+		const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+		
+		const greenLeaf = new Sprite(greenLeafTexture)
+		const brownLeaf = new Sprite(brownLeafTexture)
+		leafGroup = [greenLeaf, brownLeaf]
+		
+		const halfWidth = greenLeaf.width / 2
+		const halfHeight = greenLeaf.height / 2
+		const dropDuration = 10
+		
+		// 初始化位置
+		const landscape = getRangeNum(halfWidth, centerX * 2 - halfWidth * 2)
+		const portrait = 60 + halfHeight
+		
+		// 添加叶子，确定叶子种类，配置绘制方法
+		const leafType = getRangeNum(0, leafGroup.length)
+		const currentLeaf = leafGroup[leafType]
+		
+		currentLeaf.anchor.set(0.5)
+		currentLeaf.scale.set(0.8)
+		currentLeaf.x = landscape
+		currentLeaf.y = portrait
+		
+		// 添加叶子中内容
+		const letter = letters[getRangeNum(0, letters.length)]
+		const number = numbers[getRangeNum(0, numbers.length)]
+		const textForGreen = letter + '' + number
+		const textForBrown = number + '' + letter
+		
+		const textStyleForGreen = {
+			fill: '#FFFFFF',
+			stroke: '#D6B300',
+			fontWeight: 500,
+			strokeThickness: 2
+		}
+		const textStyleForBrown = {
+			fill: '#FFFFFF',
+			stroke: '#DE5700',
+			fontWeight: 500,
+			strokeThickness: 2
 		}
 		
-		const pokerLen = pokerGroupTexture.length
+		let leafContent = ''
+		let leafStyle = null
 		
-		pokerContainer = new PIXI.Container()
-		
-		// 设置 targetPoker
-		const targetRandom = Math.floor(pokerLen * Math.random())
-		const targetPoker = new Sprite(pokerGroupTexture[targetRandom])
-		targetPoker.name = 'target'
-		targetPoker.anchor.set(0.5)
-		targetPoker.scale.set(0.78)
-		targetPoker.x = centerX
-		targetPoker.y = 175
-		pokerContainer.addChild(targetPoker)
-		
-		// 生成列表poker
-		const randomPos = [centerX, centerX - 160, centerX + 160]
-		const fakeTarget = new Sprite(pokerGroupTexture[targetRandom])
-		fakeTarget.name = 'target'
-		const randomPoker = [fakeTarget]
-		
-		// poker 中增加了多个sprite, 移除最后两个
-		// 之前 i< 2; 发现偶尔会出现同样的poker, 或者 只有1个poker
-		// 干脆全部循环一遍，截取三个数据即可
-		let prevRandom = undefined
-		let i = 0
-		while (randomPoker.length < 3) {
-			i++
-			const random = Math.floor(pokerLen * Math.random())
-			if (random !== targetRandom && random !== prevRandom) {
-				let poker = new Sprite(pokerGroupTexture[random])
-				poker.name = 'poker' + i
-				randomPoker.push(poker)
-				prevRandom = random
-				console.log(poker.name, 'name-')
+		if (leafType === 0) {
+			leafContent = textForGreen
+			leafStyle = textStyleForGreen
+			if (number % 2 !== 0) {
+				correctAnswer = 'odd'
+			}
+		} else {
+			leafContent = textForBrown
+			leafStyle = textStyleForBrown
+			if (['A', 'O', 'I', 'O', 'U'].includes(letter)) {
+				correctAnswer = 'vowel'
 			}
 		}
-  
 		
-		function shuffleArray (array) {
-			for (let i = array.length - 1; i > 0; i--) {
-				const j = Math.floor(Math.random() * (i + 1));
-				[array[i], array[j]] = [array[j], array[i]]
-			}
-			return array
+		const textSprite = new PIXI.Text(leafContent, leafStyle)
+		textSprite.anchor.set(0.5)
+		textSprite.y = currentLeaf.y
+		textSprite.x = currentLeaf.x
+		
+		// 添加选项
+		leafContainer.addChild(currentLeaf)
+		leafContainer.addChild(textSprite)
+		leafContainer.width = currentLeaf.width
+		leafContainer.height = currentLeaf.height
+		
+		console.log(leafContainer.position, currentLeaf.position)
+		
+		// 开始运动
+		const transform = {
+			y: leafContainer.y,
+			alpha: 1
 		}
+		dropTween = new TWEEN.Tween(transform)
+		dropTween.to({
+			y: centerY * 2 - halfHeight - currentLeaf.y,
+			alpha: 0
+		}, dropDuration * 1000)
+		.onUpdate(result => {
+			leafContainer.y = result.y
+			leafContainer.alpha = result.alpha
+		})
+		.onComplete(() => {
+			gameScene.removeChild(leafContainer)
+		})
 		
-		// 设置列表poker 位置
-		const shuffleArr = shuffleArray(randomPoker)
-		for (let i = 0; i < shuffleArr.length; i++) {
-			const poker = shuffleArr[i]
-			poker.anchor.set(0.5)
-			poker.scale.set(0.6)
-			poker.y = centerY * 2 - poker.height / 2 - 20
-			poker.x = randomPos[i]
-			poker.interactive = true
-			poker.buttonMode = true
-			
-			poker.on('pointerdown', e => {
-				checkHint(e.target.name)
-			}, false)
-			
-			pokerContainer.addChild(poker)
-		}
-		
-		// 添加
-		game.addChild(pokerContainer)
+		dropTween.start()
+		// 添加精灵
+		gameScene.addChild(leafContainer)
 	}
 	
 	// 游戏开始倒计时
@@ -306,7 +356,7 @@
 			lineHeight: 40,
 			textBaseline: 'middle'
 		})
-		game.addChild(toolbars)
+		gameScene.addChild(toolbars)
 		
 		const renderText = () => {
 			remainTime = new PIXI.Text(`Remaining time: 00:${zeroFill(time)}`, textStyle)
@@ -333,15 +383,15 @@
 	// 游戏结束逻辑
 	function gameOverHandler () {
 		clearInterval(counterInterval)
-		const tween = new TWEEN.Tween(game.position)
+		const tween = new TWEEN.Tween(gameScene.position)
 		.to({
 			x: centerX * 2
 		})
 		.onUpdate(result => {
-			game.x = result.x
+			gameScene.x = result.x
 		})
 		.onComplete(() => {
-			app.stage.removeChild(game)
+			app.stage.removeChild(gameScene)
 			const gameOverText = new PIXI.Text('GAME OVER', {
 				fontSize: 48,
 				fill: 0XEA432B,
@@ -427,36 +477,22 @@
 		initSound()
 		const textureCache = PIXI.utils.TextureCache
 		const {
-			startScene,
+			welcome,
 			playBtn,
-			introScene,
+			intro,
 			gameBackground,
 			counts,
 			correctImg,
 			failImg,
-			emptyCard,
-			poker1Texture,
-			poker2Texture,
-			poker3Texture,
-			poker4Texture,
-			poker5Texture,
-			poker6Texture
+			brownLeafImg,
+			greenLeafImg
 		} = textureCache
 		
-		scene1 = new Sprite(new Texture(startScene))
-		scene2 = new Sprite(new Texture(introScene))
+		welcomeScene = new Sprite(new Texture(welcome))
+		introScene = new Sprite(new Texture(intro))
 		
-		pokerGroupTexture = [
-			new Texture(poker1Texture),
-			new Texture(poker2Texture),
-			new Texture(poker3Texture),
-			new Texture(poker4Texture),
-			new Texture(poker5Texture),
-			new Texture(poker6Texture)
-		]
-		
-		scene1.x = transform.x
-		scene2.x = introTransform.posX
+		welcomeScene.x = transform.x
+		introScene.x = introTransform.posX
 		
 		playBtnTexture = new Texture(playBtn)
 		playBtnTexture.frame = new PIXI.Rectangle(0, 55, 150, 55)
@@ -475,22 +511,19 @@
 		playButton.on('pointerdown', playHandler)
 		playButton.on('pointerup', playUpHandler)
 		
-		app.stage.addChild(scene1)
-		app.stage.addChild(scene2)
+		app.stage.addChild(welcomeScene)
+		app.stage.addChild(introScene)
 		app.stage.addChild(playButton)
 		
 		// gameContent
-		let gameBg = new Sprite(new PIXI.Texture(gameBackground))
-		emptyCardSprite = new Sprite(new PIXI.Texture(emptyCard))
-		emptyCardSprite.anchor.set(0.5)
-		emptyCardSprite.x = centerX
-		emptyCardSprite.y = 180
+		let gameBg = new Sprite(new Texture(gameBackground))
+		greenLeafTexture = new Texture(greenLeafImg)
+		brownLeafTexture = new Texture(brownLeafImg)
 		
-		game = new PIXI.Container()
-		game.x = gameTransform.x
-		game.addChild(gameBg)
-		game.addChild(emptyCardSprite)
-		app.stage.addChild(game)
+		gameScene = new PIXI.Container()
+		gameScene.x = gameTransform.x
+		gameScene.addChild(gameBg)
+		app.stage.addChild(gameScene)
 		
 		const countOneTexture = new PIXI.Texture(counts)
 		countOneTexture.frame = new PIXI.Rectangle(0, 0, 200, 200)
@@ -521,14 +554,14 @@
 		correctBtn.anchor.set(0.5)
 		correctBtn.y = centerY - correctBtn.height / 2
 		correctBtn.x = 80
-		correctBtn.scale.set(0.5, 0.5)
+		correctBtn.scale.set(0.5)
 		correctBtn.alpha = 0
 		
 		failBtn = new Sprite(new PIXI.Texture(failImg))
 		failBtn.anchor.set(0.5)
 		failBtn.y = centerY - correctBtn.height / 2
 		failBtn.x = 80
-		failBtn.scale.set(0.5, 0.5)
+		failBtn.scale.set(0.5)
 		failBtn.alpha = 0
 		
 		app.stage.addChild(correctBtn)
@@ -550,21 +583,21 @@
 				currentScene = 1
 			})
 			
-			const introScene = new TWEEN.Tween(introTransform)
+			const introSceneTween = new TWEEN.Tween(introTransform)
 			.to({
 				posX: 0
 			}, 500)
 			.onUpdate(updateScene2Handler)
 			
 			tween.start()
-			introScene.start()
+			introSceneTween.start()
 			
 			function updateScene1Handler (object) {
-				scene1.x = object.x
+				welcomeScene.x = object.x
 			}
 			
 			function updateScene2Handler (object) {
-				scene2.x = object.posX
+				introScene.x = object.posX
 			}
 		}
 		if (currentScene === 1) {
@@ -574,14 +607,14 @@
 				x: 0
 			}, 500)
 			.onUpdate(obj => {
-				game.x = obj.x
+				gameScene.x = obj.x
 			})
 			const introTrans = new TWEEN.Tween(introTransform)
 			.to({
 				posX: centerX * 2
 			}, 500)
 			.onUpdate(obj => {
-				scene2.x = obj.posX
+				introScene.x = obj.posX
 			})
 			.onComplete(() => {
 				app.stage.removeChild(playButton)
