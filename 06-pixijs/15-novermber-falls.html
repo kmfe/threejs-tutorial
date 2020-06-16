@@ -154,7 +154,8 @@
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
 		leafContainer, greenLeafTexture, brownLeafTexture, leafGroup,
-		dropTween
+		dropTween,
+		yesBtn, nopeBtn
 	
 	let transform = {
 		x: 0
@@ -178,6 +179,7 @@
 	
 	.add('gameBackground', './assets/novermber-falls/common/gameBackground.png')
 	.add('playBtn', './assets/novermber-falls/en/button_play.png')
+  .add('answerArrow', './assets/novermber-falls/common/arrowRight.png')
 	.add('counts', './assets/novermber-falls/common/counts.png')
 	.load(setup)
 	
@@ -236,13 +238,13 @@
 		const textStyleForGreen = {
 			fill: '#FFFFFF',
 			stroke: '#D6B300',
-			fontWeight: 500,
+			fontWeight: 800,
 			strokeThickness: 2
 		}
 		const textStyleForBrown = {
 			fill: '#FFFFFF',
 			stroke: '#DE5700',
-			fontWeight: 500,
+			fontWeight: 800,
 			strokeThickness: 2
 		}
 		
@@ -253,13 +255,13 @@
 			leafContent = textForGreen
 			leafStyle = textStyleForGreen
 			if (number % 2 !== 0) {
-				correctAnswer = 'odd'
+				correctAnswer = true
 			}
 		} else {
 			leafContent = textForBrown
 			leafStyle = textStyleForBrown
 			if (['A', 'O', 'I', 'O', 'U'].includes(letter)) {
-				correctAnswer = 'vowel'
+				correctAnswer = true
 			}
 		}
 		
@@ -268,15 +270,12 @@
 		textSprite.y = currentLeaf.y
 		textSprite.x = currentLeaf.x
 		
-		// 添加选项
 		leafContainer.addChild(currentLeaf)
 		leafContainer.addChild(textSprite)
 		leafContainer.width = currentLeaf.width
 		leafContainer.height = currentLeaf.height
 		
-		console.log(leafContainer.position, currentLeaf.position)
-		
-		// 开始运动
+		// 添加叶子运动
 		const transform = {
 			y: leafContainer.y,
 			alpha: 1
@@ -295,8 +294,22 @@
 		})
 		
 		dropTween.start()
-		// 添加精灵
+		
+		// 添加container
 		gameScene.addChild(leafContainer)
+		
+		// 添加操作按钮等
+		const greenQues = 'Is number odd?'
+		const brownQues = 'Is letter vowel?'
+		
+		const questionSprite = new PIXI.Text(greenQues)
+		questionSprite.anchor.set(0.5)
+		questionSprite.x = centerX
+		questionSprite.y = centerY + 120
+		gameScene.addChild(questionSprite)
+		
+		yesBtn = 'k'
+		
 	}
 	
 	// 游戏开始倒计时
@@ -485,7 +498,8 @@
 			correctImg,
 			failImg,
 			brownLeafImg,
-			greenLeafImg
+			greenLeafImg,
+			answerArrow
 		} = textureCache
 		
 		welcomeScene = new Sprite(new Texture(welcome))
@@ -499,7 +513,10 @@
 		
 		playBtnActiveTexture = new Texture(playBtn)
 		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 0, 150, 55)
-		
+    
+		// todo
+    let yesTexture = ''
+    
 		playButton = new Sprite(playBtnTexture)
 		
 		playButton.x = (centerX * 2 - playButton.width) / 2
