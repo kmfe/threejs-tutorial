@@ -154,8 +154,8 @@
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
 		leafContainer, greenLeafTexture, brownLeafTexture, leafGroup,
-		dropTween,
-		yesBtn, nopeBtn
+		yesBtn, nopeBtn, activeSelectTexture, selectTexture,
+		controlGroup, correctAnswer = 'none'
 	
 	let transform = {
 		x: 0
@@ -179,7 +179,7 @@
 	
 	.add('gameBackground', './assets/novermber-falls/common/gameBackground.png')
 	.add('playBtn', './assets/novermber-falls/en/button_play.png')
-  .add('answerArrow', './assets/novermber-falls/common/arrowRight.png')
+	.add('answerArrow', './assets/novermber-falls/common/arrowRight.png')
 	.add('counts', './assets/novermber-falls/common/counts.png')
 	.load(setup)
 	
@@ -193,7 +193,8 @@
 	}
 	
 	// 游戏业务代码
-	function renderPokerCards () {
+	function renderGameLogic () {
+		correctAnswer = 'none'
 		/*
 		* 展示区始终有只有一片叶子
 		* 叶子区域由字母 + 数字组成
@@ -202,6 +203,10 @@
 		* */
 		if (leafContainer !== undefined && leafContainer.children.length) {
 			gameScene.removeChild(leafContainer)
+		}
+		
+		if (controlGroup !== undefined && controlGroup.children.length) {
+			gameScene.removeChild(controlGroup)
 		}
 		leafContainer = new PIXI.Container()
 		
@@ -217,7 +222,7 @@
 		const dropDuration = 10
 		
 		// 初始化位置
-		const landscape = getRangeNum(halfWidth, centerX * 2 - halfWidth * 2)
+		const landscape = getRangeNum(halfWidth, centerX * 2 - halfWidth)
 		const portrait = 60 + halfHeight
 		
 		// 添加叶子，确定叶子种类，配置绘制方法
@@ -225,6 +230,7 @@
 		const currentLeaf = leafGroup[leafType]
 		
 		currentLeaf.anchor.set(0.5)
+		currentLeaf.name = `leaf-${leafType}`
 		currentLeaf.scale.set(0.8)
 		currentLeaf.x = landscape
 		currentLeaf.y = portrait
@@ -232,6 +238,7 @@
 		// 添加叶子中内容
 		const letter = letters[getRangeNum(0, letters.length)]
 		const number = numbers[getRangeNum(0, numbers.length)]
+		
 		const textForGreen = letter + '' + number
 		const textForBrown = number + '' + letter
 		
@@ -248,24 +255,27 @@
 			strokeThickness: 2
 		}
 		
+		const greenQues = 'Is number odd?'
+		const brownQues = 'Is letter vowel?'
+		
 		let leafContent = ''
 		let leafStyle = null
+		let leafQes = ''
 		
 		if (leafType === 0) {
 			leafContent = textForGreen
 			leafStyle = textStyleForGreen
-			if (number % 2 !== 0) {
-				correctAnswer = true
-			}
+			leafQes = greenQues
+			correctAnswer = number % 2 !== 0 ? 'yes' : 'no'
 		} else {
 			leafContent = textForBrown
 			leafStyle = textStyleForBrown
-			if (['A', 'O', 'I', 'O', 'U'].includes(letter)) {
-				correctAnswer = true
-			}
+			leafQes = brownQues
+			correctAnswer = ['A', 'O', 'I', 'O', 'U'].includes(letter) ? 'yes' : 'no'
 		}
 		
 		const textSprite = new PIXI.Text(leafContent, leafStyle)
+		textSprite.name = 'leafContent'
 		textSprite.anchor.set(0.5)
 		textSprite.y = currentLeaf.y
 		textSprite.x = currentLeaf.x
@@ -280,36 +290,88 @@
 			y: leafContainer.y,
 			alpha: 1
 		}
-		dropTween = new TWEEN.Tween(transform)
+		let dropTween = new TWEEN.Tween(transform)
 		dropTween.to({
 			y: centerY * 2 - halfHeight - currentLeaf.y,
-			alpha: 0
+			alpha: 0.2
 		}, dropDuration * 1000)
 		.onUpdate(result => {
 			leafContainer.y = result.y
 			leafContainer.alpha = result.alpha
 		})
+		.onStop(() => {
+			// todo tween的实例会很多，会多次执行onComplete
+			TWEEN.removeAll()
+			gameScene.removeChild(leafContainer)
+			renderGameLogic()
+		})
 		.onComplete(() => {
 			gameScene.removeChild(leafContainer)
+			renderGameLogic()
 		})
-		
 		dropTween.start()
 		
 		// 添加container
 		gameScene.addChild(leafContainer)
 		
 		// 添加操作按钮等
-		const greenQues = 'Is number odd?'
-		const brownQues = 'Is letter vowel?'
+		controlGroup = new PIXI.Container()
 		
-		const questionSprite = new PIXI.Text(greenQues)
+		const btnHover = btn => {
+			btn.on('pointerover', () => {
+				btn.texture = activeSelectTexture
+			})
+			btn.on('pointerout', () => {
+				btn.texture = selectTexture
+			})
+			btn.on('pointerdown', e => {
+				checkHint(e.target.name)
+				dropTween.stop()
+			})
+		}
+		
+		yesBtn = new Sprite(selectTexture)
+		yesBtn.interactive = true
+		yesBtn.buttonMode = true
+		yesBtn.name = 'yes'
+		yesBtn.anchor.set(0.5)
+		yesBtn.rotation = -Math.PI
+		yesBtn.scale.set(0.9)
+		yesBtn.x = centerX - 40
+		yesBtn.y = centerY + 190
+		btnHover(yesBtn)
+		
+		const yesText = new PIXI.Text('Yes', {fontSize: 18})
+		yesText.anchor.set(0.5)
+		yesText.x = centerX - 86
+		yesText.y = centerY + 192
+		controlGroup.addChild(yesBtn)
+		controlGroup.addChild(yesText)
+		
+		nopeBtn = new Sprite(selectTexture)
+		nopeBtn.interactive = true
+		nopeBtn.buttonMode = true
+		nopeBtn.name = 'no'
+		nopeBtn.anchor.set(0.5)
+		nopeBtn.scale.set(0.9)
+		nopeBtn.x = centerX + 40
+		nopeBtn.y = centerY + 190
+		btnHover(nopeBtn)
+		
+		const nopeText = new PIXI.Text('No', {fontSize: 18})
+		nopeText.anchor.set(0.5)
+		nopeText.x = centerX + 86
+		nopeText.y = centerY + 192
+		controlGroup.addChild(nopeBtn)
+		controlGroup.addChild(nopeText)
+		
+		const questionSprite = new PIXI.Text(leafQes)
 		questionSprite.anchor.set(0.5)
 		questionSprite.x = centerX
-		questionSprite.y = centerY + 120
-		gameScene.addChild(questionSprite)
+		questionSprite.y = centerY + 140
+		controlGroup.addChild(questionSprite)
 		
-		yesBtn = 'k'
-		
+		gameScene.addChild(controlGroup)
 	}
 	
 	// 游戏开始倒计时
@@ -339,7 +401,7 @@
 		const threeStart = countAnimate(three)
 		const twoStart = countAnimate(two)
 		const oneStart = countAnimate(one, () => {
-			renderPokerCards()
+			renderGameLogic()
 			renderToolbar(40)
 			checkHint()
 		})
@@ -474,15 +536,14 @@
 			tween.start()
 		}
 		
-		if (name !== 'target') {
+		if (name !== correctAnswer) {
 			hint(failBtn)
 			errorSound.play()
-			renderPokerCards()
-		} else if (name === 'target') {
+		} else if (name === correctAnswer) {
 			hint(correctBtn)
 			successSound.play()
-			renderPokerCards()
 		}
+		renderGameLogic()
 	}
 	
 	// 初始化多个游戏场景, start -> introduce -> ready
@@ -513,12 +574,14 @@
 		
 		playBtnActiveTexture = new Texture(playBtn)
 		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 0, 150, 55)
-    
-		// todo
-    let yesTexture = ''
-    
-		playButton = new Sprite(playBtnTexture)
 		
+		selectTexture = new Texture(answerArrow)
+		selectTexture.frame = new PIXI.Rectangle(0, 0, 55, 55)
+		
+		activeSelectTexture = new Texture(answerArrow)
+		activeSelectTexture.frame = new PIXI.Rectangle(55, 0, 55, 55)
+		
+		playButton = new Sprite(playBtnTexture)
 		playButton.x = (centerX * 2 - playButton.width) / 2
 		playButton.y = centerY * 2 - 80
 		
