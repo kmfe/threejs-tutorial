@@ -7,7 +7,7 @@
   <meta http-equiv='X-UA-Compatible' content='ie=edge'>
   <title>pixi.js tutorial</title>
   <script src='./lib/tween.umd.js'></script>
-  <script src='./lib/pixi.min.js'></script>
+  <script src='./lib/pixi.js'></script>
   <script src='./lib/pixi-sound.js'></script>
   <style>
     * {
@@ -52,16 +52,16 @@
   </style>
 </head>
 <body>
-<h1 class='game-title'>November Fallss</h1>
+<h1 class='game-title'>Rotate memory matrix</h1>
 <div class='playground'></div>
 <div class='game-info'>
   <section>
     <h3 class='game-info__title'>Training focus</h3>
     <div class='game-info__desc'>
       <ul>
-        <li>Short-term memory</li>
-        <li>Concentration</li>
-        <li>Attention distribution</li>
+        <li>Spatial orientation</li>
+        <li>Short-term visual memory</li>
+        <li>Attention span</li>
         <li>Reaction speed</li>
       </ul>
     </div>
@@ -71,15 +71,18 @@
     <div class='game-info__desc'>
       <ul>
         <li>
-          The game trains concentration on individual elements and it also develops executive functions, such as
-          decision-making efficiency, correct answer feedback and awareness of rule changes.
+          The game trains attention, short-term memory and spatial orientation. With a time-limited option, the
+          difficulty increases.
         </li>
         <li>
-          The game also supports the development of short-term memory because the hints disappear during the training,
-          so the player has to remember the complicated rules.
+          First, it is necessary to visually "scan" the entire square and detect all the marked boxes, which requires a
+          high degree of attention.
         </li>
         <li>
-          Working in a time limit improves the response speed.
+          Fixing the position of highlighted boxes and re-marking them in an empty square develops memory.
+        </li>
+        <li>
+          Specifying squares in a rotated square supports the development of spatial imagination and orientation.
         </li>
       </ul>
     </div>
@@ -88,21 +91,17 @@
     <h3 class='game-info__title'>How to play this game</h3>
     <div class='game-info__desc'>
       <p>
-        The aim of this game is to classify correctly the falling leaves according to the given instructions.
-        **Orange leaf** - Decide if **the letter** inside the leaf is **a vowel**.
-        **Yellow leaf** - Decide if **the number** inside the leaf is **odd**.
-      </p>
-      <p>
+        Your task is to remember the positions of all colored squares in the matrix. After they disappear, mark the
+        positions on which the colored squares were located. Be careful: the matrix turns around after the squares
+        disappear.
         
-        <img src="./assets/novermber-falls/listopad_brown_4B_trn.png" alt="4B" />
-        Color of the leaf is orange. The goal is to decide whether the letter is a vowel.
-        B is not a vowel, so the correct answer is NO (**the left arrow**).
-      </p>
-      <p>
-        <img src='./assets/novermber-falls/listopad_green_3A_trn.png' alt='3A' />
-        This time the leaf is yellow. The goal is to determine if the number is odd. Number 3 is odd,
-        therefore the correct answer is YES (**right arrow**).
-        Pay attention: a wrong answer as well as letting the leaf fall down leads to minus points.
+        <img src='./assets/rotate-matrix/roto_pole_help_trn.png' alt=''>
+        
+        You earn points for each correct position. Once you have correctly marked all the positions in that round, you
+        will get a bonus.
+        
+        After each successful round, the difficulty increases. On the contrary, after a round that is unsuccessful
+        (i.e., one in which you place the squares incorrectly twice), the difficulty will be reduced.
       </p>
     </div>
   </section>
@@ -116,13 +115,17 @@
 	}
 	const app = new PIXI.Application(options)
 	let clickSound, successSound, errorSound
+	const countTime = 1000
+	let angle = 30
 	
 	function initSound () {
 		// 声音
 		const manifest = {
 			success: './assets/sound/success.mp3',
 			click: './assets/sound/click.mp3',
-			error: './assets/sound/error.mp3'
+			error: './assets/sound/error.mp3',
+			levelwon: './assets/sound/levelwon.mp3',
+			flip: './assets/sound/flip.mp3'
 		}
 		
 		// add to PIXI loader
@@ -153,9 +156,10 @@
 		welcomeScene, introScene, gameScene,
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
-		leafContainer, greenLeafTexture, brownLeafTexture, leafGroup,
-		yesBtn, nopeBtn, activeSelectTexture, selectTexture,
-		controlGroup, correctAnswer = 'none'
+		correctAnswer = [], correctAnswerSprites = [], clickRightCount = 0, clickWrongCount = 0,
+		textureCache,
+		level = 1, matrix = [], boxGroup,
+		rightBoxTexture, wrongBoxTexture, orangeBoxTexture
 	
 	let transform = {
 		x: 0
@@ -169,18 +173,20 @@
 	
 	// 加载图片转化成纹理
 	loader
-	.add('welcome', './assets/novermber-falls/en/title_screen.png')
-	.add('intro', './assets/novermber-falls/en/instructions.png')
-	.add('correctImg', './assets/novermber-falls/common/sign_ok.png')
-	.add('failImg', './assets/cards/common/sign_fail.png')
+	.add('welcome', './assets/rotate-matrix/en/title_screen.png')
+	.add('intro', './assets/rotate-matrix/en/instructions.png')
+	.add('correctImg', './assets/rotate-matrix/common/sign_ok.png')
+	.add('failImg', './assets/rotate-matrix/common/sign_fail.png')
 	
-	.add('brownLeafImg', './assets/novermber-falls/common/leafBrown.png')
-	.add('greenLeafImg', './assets/novermber-falls/common/leafGreen.png')
+	.add('rectBackgroundImg', './assets/rotate-matrix/common/rectBackground.png')
+	.add('rectGrayImg', './assets/rotate-matrix/common/rectGray.png')
+	.add('rectGreenImg', './assets/rotate-matrix/common/rectGreen.png')
+	.add('rectOrangeImg', './assets/rotate-matrix/common/rectOrange.png')
+	.add('rectRedImg', './assets/rotate-matrix/common/rectRed.png')
 	
-	.add('gameBackground', './assets/novermber-falls/common/gameBackground.png')
-	.add('playBtn', './assets/novermber-falls/en/button_play.png')
-	.add('answerArrow', './assets/novermber-falls/common/arrowRight.png')
-	.add('counts', './assets/novermber-falls/common/counts.png')
+	.add('gameBackground', './assets/rotate-matrix/common/gameBackground.png')
+	.add('playBtn', './assets/rotate-matrix/en/button_play.png')
+	.add('counts', './assets/rotate-matrix/common/counts.png')
 	.load(setup)
 	
 	// 补零
@@ -193,194 +199,171 @@
 	}
 	
 	// 游戏业务代码
+	// todo flip 效果极差
 	function renderGameLogic () {
-		correctAnswer = 'none'
+		console.log(level, '当前关数')
 		/*
-		* 展示区始终有只有一片叶子
-		* 叶子区域由字母 + 数字组成
-		* 黄色的叶子-> 要求用户区分叶子内容是否为 奇数，
-		* 金色的叶子-> 要求用户区分叶子内容是否为 元音 a|o|e|i|u
+		* 闯关游戏, 12次操作机会，无时间限制，测试闯关数
+		* box = 1, 2 时，1次成功晋级，box > 2, 2次成功晋级
+		*
+		* box = 1, 矩形大小为 2x2
+		* box = 2，矩形大小为 3x3
+		* box = 3，矩形大小为 4x3
+		* box = 4，矩形大小为 4x3
+		* box = 5，矩形大小为 4x4
+		* box = 6，矩形大小为 5x4
+		* box = 7，矩形大小为 5x4
+		* box = 8，矩形大小为 5x5
+		*
+		* 随机出现level数量的box，在level1 ~ level7 均clockwise旋转30°，level8↑，逆时针旋转45°
+		* 点击刚出现的box，判断正误
+		*
 		* */
-		if (leafContainer !== undefined && leafContainer.children.length) {
-			gameScene.removeChild(leafContainer)
+		let matrixStructure = [
+			{row: 2, col: 2},
+			{row: 3, col: 3},
+			{row: 4, col: 3},
+			{row: 4, col: 3},
+			{row: 4, col: 4},
+			{row: 5, col: 4},
+			{row: 5, col: 4},
+			{row: 5, col: 5}
+		]
+		level > 8 && (level = 8)
+		let currentMatrix = matrixStructure[level - 1]
+		let num = 0
+		for (let i = 0; i < currentMatrix.row; i++) {
+			matrix[i] = []
+			for (let j = 0; j < currentMatrix.col; j++) {
+				num++
+				matrix[i].push(num)
+			}
 		}
 		
-		if (controlGroup !== undefined && controlGroup.children.length) {
-			gameScene.removeChild(controlGroup)
-		}
-		leafContainer = new PIXI.Container()
-		
-		const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'O', 'P', 'Q', 'U', 'Z']
-		const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-		
-		const greenLeaf = new Sprite(greenLeafTexture)
-		const brownLeaf = new Sprite(brownLeafTexture)
-		leafGroup = [greenLeaf, brownLeaf]
-		
-		const halfWidth = greenLeaf.width / 2
-		const halfHeight = greenLeaf.height / 2
-		const dropDuration = 10
-		
-		// 初始化位置
-		const landscape = getRangeNum(halfWidth, centerX * 2 - halfWidth)
-		const portrait = 60 + halfHeight
-		
-		// 添加叶子，确定叶子种类，配置绘制方法
-		const leafType = getRangeNum(0, leafGroup.length)
-		const currentLeaf = leafGroup[leafType]
-		
-		currentLeaf.anchor.set(0.5)
-		currentLeaf.name = `leaf-${leafType}`
-		currentLeaf.scale.set(0.8)
-		currentLeaf.x = landscape
-		currentLeaf.y = portrait
-		
-		// 添加叶子中内容
-		const letter = letters[getRangeNum(0, letters.length)]
-		const number = numbers[getRangeNum(0, numbers.length)]
-		
-		const textForGreen = letter + '' + number
-		const textForBrown = number + '' + letter
-		
-		const textStyleForGreen = {
-			fill: '#FFFFFF',
-			stroke: '#D6B300',
-			fontWeight: 800,
-			strokeThickness: 2
-		}
-		const textStyleForBrown = {
-			fill: '#FFFFFF',
-			stroke: '#DE5700',
-			fontWeight: 800,
-			strokeThickness: 2
+		correctAnswer.length = 0
+		correctAnswerSprites.length = 0
+		clickRightCount = 0
+		clickWrongCount = 0
+		if (boxGroup !== undefined && boxGroup.children.length) {
+			gameScene.removeChild(boxGroup)
 		}
 		
-		const greenQues = 'Is number odd?'
-		const brownQues = 'Is letter vowel?'
+		// 初始化所有sprite 及 container
+		boxGroup = new PIXI.Container()
+		const foundation = new Sprite(textureCache['rectBackgroundImg'])
+		const grayBox = new Sprite(textureCache['rectGrayImg'])
+		rightBoxTexture = textureCache['rectGreenImg']
+		wrongBoxTexture = textureCache['rectRedImg']
+		orangeBoxTexture = textureCache['rectOrangeImg']
 		
-		let leafContent = ''
-		let leafStyle = null
-		let leafQes = ''
+		const grayTexture = textureCache['rectGrayImg']
 		
-		if (leafType === 0) {
-			leafContent = textForGreen
-			leafStyle = textStyleForGreen
-			leafQes = greenQues
-			correctAnswer = number % 2 !== 0 ? 'yes' : 'no'
-		} else {
-			leafContent = textForBrown
-			leafStyle = textStyleForBrown
-			leafQes = brownQues
-			correctAnswer = ['A', 'O', 'I', 'O', 'U'].includes(letter) ? 'yes' : 'no'
+		foundation.anchor.set(0.5)
+		foundation.x = centerX
+		foundation.y = centerY
+		
+		// 展示矩阵
+		let squares = []
+		
+		const flipTime = 300
+		
+		const rect = matrix.flat()
+		const row = matrix[0].length
+		const col = matrix.length
+		
+		// 起始点的x,y 轴
+		foundation.height = row * grayBox.height + 20
+		foundation.width = col * grayBox.width + 20
+		boxGroup.addChild(foundation)
+		
+		for (let i = 0; i < matrix.length; i++) {
+			for (let j = 0; j < matrix[i].length; j++) {
+				let gray = new Sprite(textureCache['rectGrayImg'])
+				let startX = centerX - (col - 1) * gray.width / 2
+				let startY = centerY - (row - 1) * gray.height / 2
+				gray.name = `${i}-${j}`
+				gray.anchor.set(0.5)
+				gray.x = startX + gray.width * i
+				gray.y = startY + gray.height * j
+				boxGroup.addChild(gray)
+				squares.push(gray)
+			}
 		}
 		
-		const textSprite = new PIXI.Text(leafContent, leafStyle)
-		textSprite.name = 'leafContent'
-		textSprite.anchor.set(0.5)
-		textSprite.y = currentLeaf.y
-		textSprite.x = currentLeaf.x
+		boxGroup.pivot.set(centerX, centerY)
+		boxGroup.x = centerX
+		boxGroup.y = centerY
 		
-		leafContainer.addChild(currentLeaf)
-		leafContainer.addChild(textSprite)
-		leafContainer.width = currentLeaf.width
-		leafContainer.height = currentLeaf.height
+		gameScene.addChild(boxGroup)
 		
-		// 添加叶子运动
-		const transform = {
-			y: leafContainer.y,
-			alpha: 1
+		// foundation 旋转动画
+		const foundationAngle = {
+			angle: 0
 		}
-		let dropTween = new TWEEN.Tween(transform)
-		dropTween.to({
-			y: centerY * 2 - halfHeight - currentLeaf.y,
-			alpha: 0.2
-		}, dropDuration * 1000)
+		const foundationTween = new TWEEN.Tween(foundationAngle)
+		.to({
+			angle
+		}, flipTime)
 		.onUpdate(result => {
-			leafContainer.y = result.y
-			leafContainer.alpha = result.alpha
+			boxGroup.angle = result.angle
 		})
-		.onStop(() => {
-			// todo tween的实例会很多，会多次执行onComplete
-			TWEEN.removeAll()
-			gameScene.removeChild(leafContainer)
-			renderGameLogic()
-		})
-		.onComplete(() => {
-			gameScene.removeChild(leafContainer)
-			renderGameLogic()
-		})
-		dropTween.start()
 		
-		// 添加container
-		gameScene.addChild(leafContainer)
-		
-		// 添加操作按钮等
-		controlGroup = new PIXI.Container()
-		
-		const btnHover = btn => {
-			btn.on('pointerover', () => {
-				btn.texture = activeSelectTexture
-			})
-			btn.on('pointerout', () => {
-				btn.texture = selectTexture
-			})
-			btn.on('pointerdown', e => {
-				checkHint(e.target.name)
-				dropTween.stop()
-			})
+		// 根据level 确定正确答案数量及name
+		let scaleTransform = {
+			x: 1
+		}
+		while (correctAnswer.length < level) {
+			let index = getRangeNum(0, squares.length)
+			let temp = squares[index]
+			if (!correctAnswer.includes(squares[index].name)) {
+				correctAnswer.push(squares[index].name)
+				correctAnswerSprites.push(squares[index])
+				let scaleTween = new TWEEN.Tween(scaleTransform)
+				.delay(300)
+				.to({
+					x: -1
+				}, flipTime)
+				.onUpdate(result => {
+					temp.scale.x = result.x
+				})
+				.onComplete(() => {
+					temp.texture = orangeBoxTexture
+				})
+				
+				let resetScale = new TWEEN.Tween(scaleTransform)
+				.delay(2000)
+				.to({
+					x: 1
+				}, flipTime)
+				.onUpdate(result => {
+					temp.scale.x = result.x
+					temp.texture = grayTexture
+				})
+				
+				scaleTween.chain(resetScale)
+				resetScale.chain(foundationTween)
+				scaleTween.start()
+			}
 		}
 		
-		yesBtn = new Sprite(selectTexture)
-		yesBtn.interactive = true
-		yesBtn.buttonMode = true
-		yesBtn.name = 'yes'
-		yesBtn.anchor.set(0.5)
-		yesBtn.rotation = -Math.PI
-		yesBtn.scale.set(0.9)
-		yesBtn.x = centerX - 40
-		yesBtn.y = centerY + 190
-		btnHover(yesBtn)
-		
-		const yesText = new PIXI.Text('Yes', {fontSize: 18})
-		yesText.anchor.set(0.5)
-		yesText.x = centerX - 86
-		yesText.y = centerY + 192
-		controlGroup.addChild(yesBtn)
-		controlGroup.addChild(yesText)
-		
-		nopeBtn = new Sprite(selectTexture)
-		nopeBtn.interactive = true
-		nopeBtn.buttonMode = true
-		nopeBtn.name = 'no'
-		nopeBtn.anchor.set(0.5)
-		nopeBtn.scale.set(0.9)
-		nopeBtn.x = centerX + 40
-		nopeBtn.y = centerY + 190
-		btnHover(nopeBtn)
-		
-		const nopeText = new PIXI.Text('No', {fontSize: 18})
-		nopeText.anchor.set(0.5)
-		nopeText.x = centerX + 86
-		nopeText.y = centerY + 192
-		controlGroup.addChild(nopeBtn)
-		controlGroup.addChild(nopeText)
-		
-		const questionSprite = new PIXI.Text(leafQes)
-		questionSprite.anchor.set(0.5)
-		questionSprite.x = centerX
-		questionSprite.y = centerY + 140
-		controlGroup.addChild(questionSprite)
-		
-		gameScene.addChild(controlGroup)
+		for (let item of squares) {
+			item.interactive = true
+			item.buttonMode = true
+			item.on('pointerdown', () => {
+				checkHint(item)
+			})
+		}
 	}
 	
 	// 游戏开始倒计时
 	function renderCount (sprites) {
+		console.log('renderCount')
 		const three = sprites[2]
 		const two = sprites[1]
 		const one = sprites[0]
 		
 		const countAnimate = (obj, callback) => {
+			console.log(obj, 'countAnimate')
 			obj.visible = true
 			const scales = {x: obj.scale.x, y: obj.scale.y}
 			const tween = new TWEEN.Tween(scales)
@@ -388,7 +371,7 @@
 			tween.to({
 				x: 0.5,
 				y: 0.5
-			}, 1000)
+			}, countTime)
 			.onUpdate(result => {
 				obj.scale.set(result.x, result.y)
 			})
@@ -401,10 +384,12 @@
 		const threeStart = countAnimate(three)
 		const twoStart = countAnimate(two)
 		const oneStart = countAnimate(one, () => {
-			console.log('wtf, onstart')
 			renderGameLogic()
-			renderToolbar(40)
+			renderToolbar(400)
 			checkHint()
+			TWEEN.remove(threeStart)
+			TWEEN.remove(twoStart)
+			TWEEN.remove(oneStart)
 		})
 		
 		threeStart.chain(twoStart)
@@ -493,64 +478,55 @@
 		tween.start()
 	}
 	
-	// 游戏暂停逻辑
-	function gamePauseHandler () {}
-	
-	// 游戏重启逻辑
-	function gameRestartHandler () {
-	
-	}
-	
-	// 关闭游戏音效
-	function gameMuteHandler () {
-	
-	}
-	
-	// 游戏数据统计，需要统计 正确数/总数，反应时间
-	function gameDataCollect () {
-	
-	}
-	
 	// 游戏正误提示
-	function checkHint (name) {
-		if (!name) return
-		const hint = sprite => {
-			const transform = {
-				alpha: sprite.alpha,
-				x: sprite.scale.x,
-				y: sprite.scale.y
+	
+	// 错误正确判断 及计数
+	
+	function checkHint (square) {
+		console.log(correctAnswer, '移除之前')
+		if (!square) return
+		const getIndexByName = name => {
+			let index
+			for (let i = 0; i < correctAnswer.length; i++) {
+				if (correctAnswer[i] === name) {
+					index = i
+					break
+				}
 			}
-			let tween = new TWEEN.Tween(transform)
-			.to({
-				x: 0.8,
-				y: 0.8,
-				alpha: 1
-			}, 200)
-			.onUpdate(result => {
-				sprite.scale.set(result.x, result.y)
-				sprite.alpha = result.alpha
-			})
-			.onComplete(() => {
-				sprite.alpha = 0
-				sprite.scale.set(0.4, 0.4)
-			})
-			tween.start()
+			return index
 		}
-		
-		if (name !== correctAnswer) {
-			hint(failBtn)
-			errorSound.play()
-		} else if (name === correctAnswer) {
-			hint(correctBtn)
+		if (correctAnswer.includes(square.name)) {
+			// 回答正确
+			square.texture = rightBoxTexture
 			successSound.play()
+			clickRightCount++
+			correctAnswer.splice(getIndexByName(square.name), 1)
+			if (clickRightCount === level) {
+				level++
+				renderGameLogic()
+			}
+		} else {
+			// 回答错误
+			square.texture = wrongBoxTexture
+			errorSound.play()
+			clickWrongCount++
+			if (clickWrongCount === 3) {
+				level--
+				for (let i = 0; i < correctAnswer.length; i++) {
+					let sprite = boxGroup.getChildByName(correctAnswer[i])
+					sprite.texture = orangeBoxTexture
+				}
+				renderGameLogic()
+			}
 		}
-		renderGameLogic()
+		square.removeAllListeners()
+		console.log(square)
 	}
 	
 	// 初始化多个游戏场景, start -> introduce -> ready
 	function setup () {
 		initSound()
-		const textureCache = PIXI.utils.TextureCache
+		textureCache = PIXI.utils.TextureCache
 		const {
 			welcome,
 			playBtn,
@@ -558,11 +534,10 @@
 			gameBackground,
 			counts,
 			correctImg,
-			failImg,
-			brownLeafImg,
-			greenLeafImg,
-			answerArrow
+			failImg
 		} = textureCache
+		
+		// 游戏元素
 		
 		welcomeScene = new Sprite(new Texture(welcome))
 		introScene = new Sprite(new Texture(intro))
@@ -571,16 +546,10 @@
 		introScene.x = introTransform.posX
 		
 		playBtnTexture = new Texture(playBtn)
-		playBtnTexture.frame = new PIXI.Rectangle(0, 55, 150, 55)
+		playBtnTexture.frame = new PIXI.Rectangle(0, 0, 200, 53)
 		
 		playBtnActiveTexture = new Texture(playBtn)
-		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 0, 150, 55)
-		
-		selectTexture = new Texture(answerArrow)
-		selectTexture.frame = new PIXI.Rectangle(0, 0, 55, 55)
-		
-		activeSelectTexture = new Texture(answerArrow)
-		activeSelectTexture.frame = new PIXI.Rectangle(55, 0, 55, 55)
+		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 53, 200, 53)
 		
 		playButton = new Sprite(playBtnTexture)
 		playButton.x = (centerX * 2 - playButton.width) / 2
@@ -598,8 +567,6 @@
 		
 		// gameContent
 		let gameBg = new Sprite(new Texture(gameBackground))
-		greenLeafTexture = new Texture(greenLeafImg)
-		brownLeafTexture = new Texture(brownLeafImg)
 		
 		gameScene = new PIXI.Container()
 		gameScene.x = gameTransform.x

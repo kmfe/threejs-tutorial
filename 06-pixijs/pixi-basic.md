@@ -82,7 +82,10 @@ sprite.anchor.set(x, y)
 从雪碧图中截取来创建精灵的纹理
 
 ```javascript
-let texture = TextureCache['images/tileset.png']
+// 直接创建texture
+// let texture = new PIXI.loader.resources[imgAlias].texture
+
+let texture = new PIXI.TextureCache['images/tileset.png']
 
 // 创建rectangle 截取区域
 // Rectangle(x, y, width, height)
