@@ -114,7 +114,7 @@
 		backgroundColor: 0XEEEEEE
 	}
 	const app = new PIXI.Application(options)
-	let clickSound, successSound, errorSound
+	let clickSound, successSound, errorSound, flipSound
 	const countTime = 1000
 	let angle = 30
 	
@@ -138,6 +138,7 @@
 			clickSound = resources['click'].sound
 			successSound = resources['success'].sound
 			errorSound = resources['error'].sound
+			flipSound = resources['flip'].sound
 		})
 	}
 	
@@ -200,6 +201,7 @@
 	
 	// 游戏业务代码
 	// todo flip 效果极差
+	// todo 完成关卡细节，level > 2之后，每次通关需要完成两次
 	function renderGameLogic () {
 		console.log(level, '当前关数')
 		/*
@@ -324,10 +326,13 @@
 					x: -1
 				}, flipTime)
 				.onUpdate(result => {
+					if (result.x < 0) {
+						temp.texture = orangeBoxTexture
+					}
 					temp.scale.x = result.x
 				})
 				.onComplete(() => {
-					temp.texture = orangeBoxTexture
+					// temp.texture = orangeBoxTexture
 				})
 				
 				let resetScale = new TWEEN.Tween(scaleTransform)
@@ -336,10 +341,14 @@
 					x: 1
 				}, flipTime)
 				.onUpdate(result => {
+					if (result.x > 0) {
+						temp.texture = grayTexture
+					}
 					temp.scale.x = result.x
-					temp.texture = grayTexture
 				})
-				
+				.onComplete(() => {
+					flipSound.play()
+				})
 				scaleTween.chain(resetScale)
 				resetScale.chain(foundationTween)
 				scaleTween.start()
