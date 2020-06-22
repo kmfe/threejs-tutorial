@@ -195,20 +195,29 @@
   * */
 	
 	function renderGameLogic () {
-		const cardBack = textureCache['cardBack']
 		cardGroup = new PIXI.Container()
+		const cardBack = textureCache['cardBack']
+		
+		// 必须先定义container的大小，位置，再定义子元素的大小位置 ！！！！
+		
+		
+  
+		
 		for (let i = 0; i < 8; i++) {
-			const card = new PIXI.Sprite(cardBack)
-			card.anchor.set(0.5)
-			card.x = (i % 5) * 90
-			card.y = Math.floor(i / 5) * 90
+			let card = new Sprite(cardBack)
+			card.scale.set(0.8)
+			card.x = (i % 4) * 90
+			card.y = Math.floor(i / 4) * 90
 			cardGroup.addChild(card)
 		}
-		cardGroup.pivot.x = cardGroup.width / 2
-		cardGroup.pivot.y = cardGroup.height / 2
+		
 		cardGroup.x = app.screen.width / 2
 		cardGroup.y = app.screen.height / 2
-    app.stage.addChild(cardGroup)
+		
+		cardGroup.pivot.x = cardGroup.width / 2
+		cardGroup.pivot.y = cardGroup.height / 2
+		app.stage.addChild(cardGroup)
+		
 	}
 	
 	// 游戏开始倒计时
