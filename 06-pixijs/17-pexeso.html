@@ -52,7 +52,7 @@
   </style>
 </head>
 <body>
-<h1 class='game-title'>Rotate memory matrix</h1>
+<h1 class='game-title'>Pexeso</h1>
 <div class='playground'></div>
 <div class='game-info'>
   <section>
@@ -137,10 +137,12 @@
 		welcomeScene, introScene, gameScene,
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
-		correctAnswer = [], correctAnswerSprites = [], clickRightCount = 0, clickWrongCount = 0,
+		correctAnswerNum = 0,
 		textureCache,
-		level = 1, matrix = [], cardGroup,
-		rightBoxTexture, wrongBoxTexture, orangeBoxTexture
+		level = 1, cardGroup,
+		lowLevelFlipTime = 5000,
+		highLevelFlipTime = 10000,
+		flipInterval = null
 	
 	let transform = {
 		x: 0
@@ -159,15 +161,15 @@
 	.add('correctImg', './assets/pexeso/common/sign_ok.png')
 	.add('failImg', './assets/pexeso/common/sign_fail.png')
 	
-	.add('karta01', './assets/pexeso/common/karta01.png')
-	.add('karta02', './assets/pexeso/common/karta02.png')
-	.add('karta03', './assets/pexeso/common/karta03.png')
-	.add('karta04', './assets/pexeso/common/karta04.png')
-	.add('karta05', './assets/pexeso/common/karta05.png')
-	.add('karta06', './assets/pexeso/common/karta06.png')
-	.add('karta07', './assets/pexeso/common/karta07.png')
-	.add('karta08', './assets/pexeso/common/karta08.png')
-	.add('karta09', './assets/pexeso/common/karta09.png')
+	.add('karta1', './assets/pexeso/common/karta01.png')
+	.add('karta2', './assets/pexeso/common/karta02.png')
+	.add('karta3', './assets/pexeso/common/karta03.png')
+	.add('karta4', './assets/pexeso/common/karta04.png')
+	.add('karta5', './assets/pexeso/common/karta05.png')
+	.add('karta6', './assets/pexeso/common/karta06.png')
+	.add('karta7', './assets/pexeso/common/karta07.png')
+	.add('karta8', './assets/pexeso/common/karta08.png')
+	.add('karta9', './assets/pexeso/common/karta09.png')
 	.add('karta10', './assets/pexeso/common/karta10.png')
 	.add('karta11', './assets/pexeso/common/karta11.png')
 	.add('cardBack', './assets/pexeso/common/karta_zadek.png')
@@ -187,31 +189,183 @@
 		return Math.floor(Math.random() * (max - min)) + min
 	}
 	
+	// shuffle array，数组混淆
+	function shuffle (array) {
+		for (let i = array.length - 1; i > 0; i--) {
+			let j = Math.floor(Math.random() * (i + 1));
+			[array[i], array[j]] = [array[j], array[i]]
+		}
+	}
+	
 	// 游戏业务代码
-	/*
-  * pexeso 业务逻辑：
-  * 目标是：两次点击选中相同symbol的卡片，否则重新选择
-  *
-  * */
+	// 目标是：两次点击选中相同symbol的卡片，否则重新选择
 	
 	function renderGameLogic () {
+		if (cardGroup !== undefined && cardGroup.children.length) {
+			gameScene.removeChild(cardGroup)
+			if (flipInterval) clearTimeout(flipInterval)
+			correctAnswerNum = 0
+		}
+		
+		const row = level + 1 > 4 ? 4 : level + 1
+		const col = 4
+		const cards = []
+		for (let i = 1; i <= 11; i++) {
+			cards.push(textureCache['karta' + i])
+		}
 		cardGroup = new PIXI.Container()
 		const cardBack = textureCache['cardBack']
+		const cardsGrid = row * col
 		
-		for (let i = 0; i < 8; i++) {
-			let card = new Sprite(cardBack)
-			card.scale.set(0.8)
-			card.x = (i % 4) * 90
-			card.y = Math.floor(i / 4) * 90
-			cardGroup.addChild(card)
+		// 生成grid
+		const cardsGridSprites = []
+		const currentCards = []
+		while (cardsGridSprites.length < cardsGrid / 2) {
+			let temp = getRangeNum(0, cards.length)
+			if (!cardsGridSprites.includes(temp)) {
+				cardsGridSprites.push(temp)
+			}
 		}
+		
+		cardsGridSprites.push(...cardsGridSprites)
+		
+		shuffle(cardsGridSprites)
+		
+		let scale = {
+			x: 0.8
+		}
+		
+		for (let i = 0; i < cardsGridSprites.length; i++) {
+			let card = new Sprite(cards[cardsGridSprites[i]])
+			card.anchor.set(0.5)
+			card.name = cardsGridSprites[i]
+			card.scale.set(scale.x, 0.8, 0.8)
+			card.x = (i % col) * 80 + card.width / 2
+			card.y = Math.floor(i / col) * 80 + card.height / 2
+			cardGroup.addChild(card)
+			currentCards.push({
+				sprite: card,
+				texture: cards[cardsGridSprites[i]],
+				process: false
+			})
+		}
+		
+		let prevCard = {
+			uid: '',
+			sprite: null,
+			process: false
+		}
+		
+		/*
+		* 当点击动作开始之后，必须在一次对比完成之后才能进行下一次操作
+		* 对比正确 -> 进入下一次
+		* 对比错误 -> 等待1s之后，重新翻转后，可进行下一次对比
+		* 对比期间，禁用操作
+		* */
+		
+		flipInterval = setTimeout(() => {
+			for (let i = 0; i < currentCards.length; i++) {
+				const flipBack = new TWEEN.Tween(scale)
+				.to({
+					x: -0.8
+				}, 400)
+				.onUpdate(result => {
+					currentCards[i].sprite.scale.set(result.x, 0.8, 0.8)
+					if (result.x < 0) {
+						currentCards[i].sprite.texture = cardBack
+					}
+				})
+				.onComplete(() => {
+					currentCards[i].sprite.interactive = true
+					currentCards[i].sprite.buttonMode = true
+					currentCards[i].sprite.on('pointerdown', e => {
+						if (prevCard.process || !e.target) return
+						prevCard.process = true
+						currentCards[i].process = true
+						let target = e.target
+						currentCards[i].sprite.interactive = false
+						currentCards[i].sprite.buttonMode = false
+						flipSound.play()
+						
+						// 点击翻转
+						new TWEEN.Tween(currentCards[i].sprite.scale)
+						.to({
+							x: 0.8
+						}, 400)
+						.onUpdate(result => {
+							currentCards[i].sprite.scale.set(result.x, 0.8, 0.8)
+							if (result.x > 0) {
+								currentCards[i].sprite.texture = currentCards[i].texture
+							}
+						})
+						.onComplete(() => {
+							if (prevCard.uid === '') {
+								prevCard = {
+									uid: target.name,
+									sprite: currentCards[i].sprite,
+									process: false
+								}
+							} else {
+								if (prevCard.uid !== target.name) {
+									// 点击卡片不正确后，0.5s后翻转，可重新选取card
+									errorSound.play()
+									setTimeout(() => {
+										new TWEEN.Tween(currentCards[i].sprite.scale)
+										.to({
+											x: -0.8
+										}, 400)
+										.onUpdate(result => {
+											currentCards[i].sprite.scale.set(result.x, 0.8, 0.8)
+											prevCard.sprite.scale.set(result.x, 0.8, 0.8)
+											if (result.x < 0) {
+												currentCards[i].sprite.texture = cardBack
+												prevCard.sprite.texture = cardBack
+											}
+										})
+										.onComplete(() => {
+											currentCards[i].sprite.interactive = true
+											currentCards[i].sprite.buttonMode = true
+											
+											prevCard.sprite.interactive = true
+											prevCard.sprite.buttonMode = true
+											currentCards[i].process = false
+											prevCard = {
+												uid: '',
+												sprite: null,
+												process: false
+											}
+										})
+										.start()
+									}, 2000)
+								} else {
+									correctAnswerNum += 2
+									successSound.play()
+									if (correctAnswerNum === currentCards.length) {
+										level++
+										renderGameLogic()
+									}
+									prevCard = {
+										uid: '',
+										sprite: null,
+										process: false
+									}
+									currentCards[i].process = false
+								}
+							}
+						})
+						.start()
+					})
+				})
+				flipBack.start()
+			}
+		}, level < 2 ? lowLevelFlipTime : highLevelFlipTime)
 		
 		cardGroup.x = app.screen.width / 2
 		cardGroup.y = app.screen.height / 2
 		
 		cardGroup.pivot.x = cardGroup.width / 2
 		cardGroup.pivot.y = cardGroup.height / 2
-		app.stage.addChild(cardGroup)
+		gameScene.addChild(cardGroup)
 		
 	}
 	
@@ -245,7 +399,6 @@
 		const oneStart = countAnimate(one, () => {
 			renderGameLogic()
 			renderToolbar(400)
-			checkHint()
 			TWEEN.remove(threeStart)
 			TWEEN.remove(twoStart)
 			TWEEN.remove(oneStart)
@@ -335,14 +488,6 @@
 			alphaTween.start()
 		})
 		tween.start()
-	}
-	
-	// 游戏正误提示
-	
-	// 错误正确判断 及计数
-	
-	function checkHint (square) {
-		if (!square) return
 	}
 	
 	// 初始化多个游戏场景, start -> introduce -> ready

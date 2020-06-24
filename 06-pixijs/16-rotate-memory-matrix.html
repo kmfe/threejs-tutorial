@@ -395,7 +395,6 @@
 		const oneStart = countAnimate(one, () => {
 			renderGameLogic()
 			renderToolbar(400)
-			checkHint()
 			TWEEN.remove(threeStart)
 			TWEEN.remove(twoStart)
 			TWEEN.remove(oneStart)
@@ -492,7 +491,6 @@
 	// 错误正确判断 及计数
 	
 	function checkHint (square) {
-		console.log(correctAnswer, '移除之前')
 		if (!square) return
 		const getIndexByName = name => {
 			let index
@@ -529,7 +527,6 @@
 			}
 		}
 		square.removeAllListeners()
-		console.log(square)
 	}
 	
 	// 初始化多个游戏场景, start -> introduce -> ready

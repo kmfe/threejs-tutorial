@@ -401,10 +401,8 @@
 		const threeStart = countAnimate(three)
 		const twoStart = countAnimate(two)
 		const oneStart = countAnimate(one, () => {
-			console.log('wtf, onstart')
 			renderGameLogic()
 			renderToolbar(40)
-			checkHint()
 		})
 		
 		threeStart.chain(twoStart)
