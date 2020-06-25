@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>pixi.js tutorial</title>
+  <script src='./lib/tween.umd.js'></script>
+  <script src='./lib/pixi.js'></script>
+  <script src='./lib/pixi-sound.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+      'Noto Color Emoji';
+    }
+    
+    ul, li {
+      list-style: none;
+    }
+    
+    html, body {
+    }
+    
+    .playground canvas {
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .game-title {
+      text-align: center;
+      font-size: 24px;
+      line-height: 2;
+    }
+    
+    .game-info {
+      margin: 30px auto;
+      width: 80%;
+      line-height: 1.2;
+    }
+    
+    .game-info section {
+      margin-bottom: 20px;
+    }
+    
+    .game-info__title {
+      margin-bottom: 10px;
+    }
+    
+    .mb10 {
+      padding: 10px 0;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+<h1 class='game-title'>Upstream</h1>
+<div class='playground'></div>
+<div class='game-info'>
+  <section>
+    <h3 class='game-info__title'>Training focus</h3>
+    <div class='game-info__desc'>
+      <ul>
+        <li>Short-term visual memory</li>
+        <li>Concentration</li>
+        <li>Executive functions</li>
+        <li>Reaction speed</li>
+      </ul>
+    </div>
+  </section>
+  <section>
+    <h3 class='game-info__title'>Principles of the training</h3>
+    <div class='game-info__desc'>
+      <ul>
+        <li>
+          The Upstream game trains multiple components of attention. Changes in the instructions demand switching
+          attention and concentration of attention.
+        </li>
+        <li>
+          At the same time, the division of attention between several elements is trained.
+        </li>
+      </ul>
+    </div>
+  </section>
+  <section>
+    <h3 class='game-info__title'>How to play this game</h3>
+    <div class='game-info__desc'>
+      <p class='mb10'>
+        The goal of the game is to determine the direction and the movement of each leaf.
+      </p>
+      <p class='mb10'>
+        <img src='./assets/upstream/game_help/protiproudu_blue_trn.png' alt=''>
+        <img src='./assets/upstream/game_help/keyb_arrows_right_depressed_trn.png' alt=''>
+        If the leaf is blue, press the arrow corresponding to the orientation of the leaf.
+      </p>
+      <p class='mb10'>
+        <img src='./assets/upstream/game_help/protiproudu_yellow_trn.png' alt=''>
+        <img src='./assets/upstream/game_help/keyb_arrows_down_depressed_trn.png' alt=''>
+        If the leaf is orange, press the arrow corresponding to the movement of the leaf.
+      </p>
+      <p class='mb10'>
+        <img src='./assets/upstream/game_help/protiproudu_brown_trn.png' alt=''>
+        <img src='./assets/upstream/game_help/keyb_arrows_leaf_conditional_depressed_trn.png' alt=''>
+        If the leaf is brown, press the arrow corresponding to the rule of the previous leaf.
+      </p>
+    </div>
+  </section>
+</div>
+<script>
+	const options = {
+		width: 615,
+		height: 505,
+		transparent: false,
+		backgroundColor: 0XEEEEEE
+	}
+	const app = new PIXI.Application(options)
+	let clickSound, successSound, errorSound, flipSound
+	const countTime = 1000
+	let angle = 30
+	
+	function initSound () {
+		// 声音
+		const manifest = {
+			success: './assets/sound/success.mp3',
+			click: './assets/sound/click.mp3',
+			error: './assets/sound/error.mp3',
+			levelwon: './assets/sound/levelwon.mp3',
+			flip: './assets/sound/flip.mp3'
+		}
+		
+		// add to PIXI loader
+		PIXI.sound.volumeAll = 100
+		for (let resource in manifest) {
+			PIXI.Loader.shared.add(resource, manifest[resource])
+		}
+		// preload the sounds
+		PIXI.Loader.shared.load(function (loader, resources) {
+			clickSound = resources['click'].sound
+			successSound = resources['success'].sound
+			errorSound = resources['error'].sound
+			flipSound = resources['flip'].sound
+		})
+	}
+	
+	const playground = document.querySelector('.playground')
+	playground.appendChild(app.view)
+	
+	const centerX = app.renderer.view.width / 2
+	const centerY = app.renderer.view.height / 2
+	const loader = new PIXI.Loader()
+	const Sprite = PIXI.Sprite
+	const Texture = PIXI.Texture
+	
+	let currentScene = 0
+	
+	let playBtnActiveTexture, playBtnTexture, playButton,
+		welcomeScene, introScene, gameScene,
+		correctBtn, failBtn,
+		countOne, countTwo, countThree, counterInterval, countSet = [],
+		textureCache,
+		level = 1, leafGroup
+	
+	const directions = {
+		left: 90,
+		down: 180,
+		right: 270,
+		up: 0
+	}
+	const motion = {
+		left: {
+			x: 5,
+			y: 0
+		},
+		down: {
+			x: 0,
+			y: 5
+		},
+		right: {
+			x: -5,
+			y: 0
+		},
+		up: {
+			x: 0,
+			y: -5
+		}
+	}
+	
+	let transform = {
+		x: 0
+	}
+	let introTransform = {
+		posX: -centerX * 2
+	}
+	let gameTransform = {
+		x: -centerX * 2
+	}
+	
+	// 加载图片转化成纹理
+	loader
+	.add('welcome', './assets/upstream/en/title_screen.png')
+	.add('intro', './assets/upstream/en/instructions.png')
+	.add('correctImg', './assets/upstream/common/sign_ok.png')
+	.add('failImg', './assets/upstream/common/sign_fail.png')
+	
+	.add('leafBlue', './assets/upstream/common/leafBlue.png')
+	.add('leafBrown', './assets/upstream/common/leafBrown.png')
+	.add('leafYellow', './assets/upstream/common/leafYellow.png')
+	
+	.add('gameBackground', './assets/upstream/common/gameBackground.png')
+	.add('playBtn', './assets/upstream/en/button_play.png')
+	.add('counts', './assets/upstream/common/counts.png')
+	.load(setup)
+	
+	// 补零
+	function zeroFill (num) {
+		return num < 10 ? '0' + num : num
+	}
+	
+	// 不包含最大值，用于在取数组中任意数
+	function getRangeNum (min, max) {
+		return Math.floor(Math.random() * (max - min)) + min
+	}
+	
+	// shuffle array，数组混淆
+	function shuffle (array) {
+		for (let i = array.length - 1; i > 0; i--) {
+			let j = Math.floor(Math.random() * (i + 1));
+			[array[i], array[j]] = [array[j], array[i]]
+		}
+	}
+	
+	// 游戏业务代码
+	
+	/*
+	* 每次渲染，生成占满屏幕的不同方向的叶子，每次生成不同的运动方向，持续运动
+	* 黄色的叶子，请标识运动方向
+	* 绿色的叶子，请标识叶子方向
+	* 棕色的叶子，请按照上一个叶子的规则标识
+	* 在倒计时内，尽量完成正确的操作，记录正确率和反应时间
+	* */
+	
+	function renderGameLogic () {
+		if (leafGroup !== undefined && leafGroup.children.length) {
+			gameScene.removeChild(leafGroup)
+		}
+		
+		leafGroup = new PIXI.Container()
+		
+		gameScene.addChild(leafGroup)
+	}
+	
+	// 游戏开始倒计时
+	function renderCount (sprites) {
+		const three = sprites[2]
+		const two = sprites[1]
+		const one = sprites[0]
+		
+		const countAnimate = (obj, callback) => {
+			console.log(obj, 'countAnimate')
+			obj.visible = true
+			const scales = {x: obj.scale.x, y: obj.scale.y}
+			const tween = new TWEEN.Tween(scales)
+			
+			tween.to({
+				x: 0.5,
+				y: 0.5
+			}, countTime)
+			.onUpdate(result => {
+				obj.scale.set(result.x, result.y)
+			})
+			.onComplete(() => {
+				app.stage.removeChild(obj)
+				callback && callback()
+			})
+			return tween
+		}
+		const threeStart = countAnimate(three)
+		const twoStart = countAnimate(two)
+		const oneStart = countAnimate(one, () => {
+			renderGameLogic()
+			renderToolbar(400)
+			TWEEN.remove(threeStart)
+			TWEEN.remove(twoStart)
+			TWEEN.remove(oneStart)
+		})
+		
+		threeStart.chain(twoStart)
+		twoStart.chain(oneStart)
+		
+		threeStart.start()
+	}
+	
+	// 游戏计时及计分
+	function renderToolbar (remains) {
+		const toolbars = new PIXI.Container()
+		const statue = new PIXI.Graphics()
+		let time = remains
+		let remainTime = null
+		statue.beginFill(0X000000, 0.5)
+		statue.drawRect(0, 0, centerX * 2, 40)
+		statue.endFill()
+		toolbars.addChild(statue)
+		let textStyle = new PIXI.TextStyle({
+			fontFamily: 'PingFang SC Regular',
+			fontSize: 18,
+			fill: '#FFFFFF',
+			stroke: '#cd0000',
+			align: 'center',
+			lineHeight: 40,
+			textBaseline: 'middle'
+		})
+		gameScene.addChild(toolbars)
+		
+		const renderText = () => {
+			remainTime = new PIXI.Text(`Remaining time: 00:${zeroFill(time)}`, textStyle)
+			remainTime.resolution = 2
+			remainTime.x = centerX - remainTime.width / 2
+			remainTime.y = 5
+			toolbars.addChild(remainTime)
+		}
+		
+		renderText()
+		
+		counterInterval = setInterval(() => {
+			remainTime && toolbars.removeChild(remainTime)
+			if (time === 0) {
+				gameOverHandler()
+			}
+			if (time > 0) {
+				time--
+			}
+			renderText()
+		}, 1000)
+	}
+	
+	// 游戏结束逻辑
+	function gameOverHandler () {
+		clearInterval(counterInterval)
+		const tween = new TWEEN.Tween(gameScene.position)
+		.to({
+			x: centerX * 2
+		})
+		.onUpdate(result => {
+			gameScene.x = result.x
+		})
+		.onComplete(() => {
+			app.stage.removeChild(gameScene)
+			const gameOverText = new PIXI.Text('GAME OVER', {
+				fontSize: 48,
+				fill: 0XEA432B,
+				fontWeight: 800
+			})
+			const alpha = {
+				val: 0
+			}
+			gameOverText.y = centerY - gameOverText.height / 2
+			gameOverText.x = centerX - gameOverText.width / 2
+			gameOverText.alpha = alpha.val
+			app.stage.addChild(gameOverText)
+			
+			const alphaTween = new TWEEN.Tween(alpha)
+			.to({
+				val: 1
+			})
+			.onUpdate(result => {
+				gameOverText.alpha = result.val
+			})
+			alphaTween.start()
+		})
+		tween.start()
+	}
+	
+	// 初始化多个游戏场景, start -> introduce -> ready
+	function setup () {
+		initSound()
+		textureCache = PIXI.utils.TextureCache
+		const {
+			welcome,
+			playBtn,
+			intro,
+			gameBackground,
+			counts,
+			correctImg,
+			failImg
+		} = textureCache
+		
+		// 游戏元素
+		
+		welcomeScene = new Sprite(new Texture(welcome))
+		introScene = new Sprite(new Texture(intro))
+		
+		welcomeScene.x = transform.x
+		introScene.x = introTransform.posX
+		
+		playBtnTexture = new Texture(playBtn)
+		playBtnTexture.frame = new PIXI.Rectangle(0, 0, 150, 55)
+		
+		playBtnActiveTexture = new Texture(playBtn)
+		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 55, 150, 55)
+		
+		playButton = new Sprite(playBtnTexture)
+		playButton.x = (centerX * 2 - playButton.width) / 2
+		playButton.y = centerY * 2 - 80
+		
+		playButton.interactive = true
+		playButton.buttonMode = true
+		
+		playButton.on('pointerdown', playHandler)
+		playButton.on('pointerup', playUpHandler)
+		
+		app.stage.addChild(welcomeScene)
+		app.stage.addChild(introScene)
+		app.stage.addChild(playButton)
+		
+		// gameContent
+		let gameBg = new Sprite(new Texture(gameBackground))
+		
+		gameScene = new PIXI.Container()
+		gameScene.x = gameTransform.x
+		gameScene.addChild(gameBg)
+		app.stage.addChild(gameScene)
+		
+		const countOneTexture = new PIXI.Texture(counts)
+		countOneTexture.frame = new PIXI.Rectangle(0, 0, 200, 200)
+		countOne = new Sprite(countOneTexture)
+		countSet.push(countOne)
+		
+		const countTwoTexture = new PIXI.Texture(counts)
+		countTwoTexture.frame = new PIXI.Rectangle(200, 0, 200, 200)
+		countTwo = new Sprite(countTwoTexture)
+		countSet.push(countTwo)
+		
+		const countThreeTexture = new PIXI.Texture(counts)
+		countThreeTexture.frame = new PIXI.Rectangle(400, 0, 200, 200)
+		countThree = new Sprite(countThreeTexture)
+		countSet.push(countThree)
+		
+		for (let item of countSet) {
+			item.anchor.set(0.5, 0.5)
+			item.scale.set(0.3)
+			item.x = centerX
+			item.y = centerY
+			item.visible = false
+			app.stage.addChild(item)
+		}
+		
+		// correct fail hint
+		correctBtn = new Sprite(new PIXI.Texture(correctImg))
+		correctBtn.anchor.set(0.5)
+		correctBtn.y = centerY - correctBtn.height / 2
+		correctBtn.x = 80
+		correctBtn.scale.set(0.5)
+		correctBtn.alpha = 0
+		
+		failBtn = new Sprite(new PIXI.Texture(failImg))
+		failBtn.anchor.set(0.5)
+		failBtn.y = centerY - correctBtn.height / 2
+		failBtn.x = 80
+		failBtn.scale.set(0.5)
+		failBtn.alpha = 0
+		
+		app.stage.addChild(correctBtn)
+		app.stage.addChild(failBtn)
+	}
+	
+	function playHandler (e) {
+		e.stopPropagation()
+		let self = this
+		clickSound.play()
+		self.texture = playBtnActiveTexture
+		if (currentScene === 0) {
+			const tween = new TWEEN.Tween(transform)
+			.to({
+				x: centerX * 2
+			}, 500)
+			.onUpdate(updateScene1Handler)
+			.onComplete(() => {
+				currentScene = 1
+			})
+			
+			const introSceneTween = new TWEEN.Tween(introTransform)
+			.to({
+				posX: 0
+			}, 500)
+			.onUpdate(updateScene2Handler)
+			
+			tween.start()
+			introSceneTween.start()
+			
+			function updateScene1Handler (object) {
+				welcomeScene.x = object.x
+			}
+			
+			function updateScene2Handler (object) {
+				introScene.x = object.posX
+			}
+		}
+		if (currentScene === 1) {
+			self.alpha = 0
+			const tween = new TWEEN.Tween(gameTransform)
+			.to({
+				x: 0
+			}, 500)
+			.onUpdate(obj => {
+				gameScene.x = obj.x
+			})
+			const introTrans = new TWEEN.Tween(introTransform)
+			.to({
+				posX: centerX * 2
+			}, 500)
+			.onUpdate(obj => {
+				introScene.x = obj.posX
+			})
+			.onComplete(() => {
+				app.stage.removeChild(playButton)
+				renderCount(countSet)
+			})
+			
+			tween.start()
+			introTrans.start()
+		}
+	}
+	
+	function playUpHandler (e) {
+		e.stopPropagation()
+		this.texture = playBtnTexture
+	}
+	
+	animate()
+	
+	function animate () {
+		requestAnimationFrame(animate)
+		TWEEN.update()
+	}
+
+</script>
+</body>
+</html>
