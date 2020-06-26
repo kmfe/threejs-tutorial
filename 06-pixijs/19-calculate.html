@@ -58,17 +58,19 @@
   </style>
 </head>
 <body>
-<h1 class='game-title'>Upstream</h1>
+<h1 class='game-title'>Frantic-calculation</h1>
 <div class='playground'></div>
 <div class='game-info'>
   <section>
     <h3 class='game-info__title'>Training focus</h3>
     <div class='game-info__desc'>
       <ul>
-        <li>Short-term visual memory</li>
         <li>Concentration</li>
+        <li>Attention span</li>
+        <li>Mathematical skills</li>
+        <li>Long-term and working memory</li>
+        <li>Speed</li>
         <li>Executive functions</li>
-        <li>Reaction speed</li>
       </ul>
     </div>
   </section>
@@ -77,11 +79,12 @@
     <div class='game-info__desc'>
       <ul>
         <li>
-          The Upstream game trains multiple components of attention. Changes in the instructions demand switching
-          attention and concentration of attention.
+          The game improves concentration on one element and at the same time increases the attention span needed for
+          several tasks. Recalling of automated numerical responses develops mathematical skills and long-term memory.
+          Solving priority tasks and verifying the accuracy of the results support executive functions.
         </li>
         <li>
-          At the same time, the division of attention between several elements is trained.
+          Working in a time limit improves the response speed.
         </li>
       </ul>
     </div>
@@ -90,22 +93,13 @@
     <h3 class='game-info__title'>How to play this game</h3>
     <div class='game-info__desc'>
       <p class='mb10'>
-        The goal of the game is to determine the direction and the movement of each leaf.
+        The main goal of this game is to compute easy mathematical equations displayed inside falling lava stones. You
+        can enter the results by using the numerical keyboard or by clicking on the numbers displayed in the game.
       </p>
       <p class='mb10'>
-        <img src='./assets/upstream/game_help/protiproudu_blue_trn.png' alt=''>
-        <img src='./assets/upstream/game_help/keyb_arrows_right_depressed_trn.png' alt=''>
-        If the leaf is blue, press the arrow corresponding to the orientation of the leaf.
-      </p>
-      <p class='mb10'>
-        <img src='./assets/upstream/game_help/protiproudu_yellow_trn.png' alt=''>
-        <img src='./assets/upstream/game_help/keyb_arrows_down_depressed_trn.png' alt=''>
-        If the leaf is orange, press the arrow corresponding to the movement of the leaf.
-      </p>
-      <p class='mb10'>
-        <img src='./assets/upstream/game_help/protiproudu_brown_trn.png' alt=''>
-        <img src='./assets/upstream/game_help/keyb_arrows_leaf_conditional_depressed_trn.png' alt=''>
-        If the leaf is brown, press the arrow corresponding to the rule of the previous leaf.
+        The number and speed of the falling stones increases. Therefore, take the advantage of the blue ice stones that
+        help you to get rid of all the other falling lava stones. When you compute the equation inside of the blue
+        stones, you get extra bonus points.
       </p>
     </div>
   </section>
@@ -162,33 +156,9 @@
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
 		textureCache,
-		level = 1, leafGroup
+		level = 1, lives = 3, computedGroup
 	
-	const directions = {
-		left: 90,
-		down: 180,
-		right: 270,
-		up: 0
-	}
-	const motion = {
-		left: {
-			x: 5,
-			y: 0
-		},
-		down: {
-			x: 0,
-			y: 5
-		},
-		right: {
-			x: -5,
-			y: 0
-		},
-		up: {
-			x: 0,
-			y: -5
-		}
-	}
-	
+	// welcome, introduce scene animate params
 	let transform = {
 		x: 0
 	}
@@ -201,18 +171,26 @@
 	
 	// 加载图片转化成纹理
 	loader
-	.add('welcome', './assets/upstream/en/title_screen.png')
-	.add('intro', './assets/upstream/en/instructions.png')
-	.add('correctImg', './assets/upstream/common/sign_ok.png')
-	.add('failImg', './assets/upstream/common/sign_fail.png')
+	.add('welcome', './assets/calc/en/title_screen.png')
+	.add('intro', './assets/calc/en/instructions.png')
+	.add('correctImg', './assets/calc/common/sign_ok.png')
+	.add('failImg', './assets/calc/common/sign_fail.png')
 	
-	.add('leafBlue', './assets/upstream/common/leafBlue.png')
-	.add('leafBrown', './assets/upstream/common/leafBrown.png')
-	.add('leafYellow', './assets/upstream/common/leafYellow.png')
+	.add('fire_drop', './assets/calc/common/fire_drop.png')
+	.add('ice_drop', './assets/calc/common/ice_drop.png')
+	.add('lava', './assets/calc/common/lava.png')
 	
-	.add('gameBackground', './assets/upstream/common/gameBackground.png')
-	.add('playBtn', './assets/upstream/en/button_play.png')
-	.add('counts', './assets/upstream/common/counts.png')
+	.add('calculator0', './assets/calc/common/calculator0.png')
+	.add('calculatorNum', './assets/calc/common/calculator1-9.png')
+	.add('calculatorBackground', './assets/calc/common/calculatorBackground.png')
+	.add('calculatorButtonGrid', './assets/calc/common/calculatorButtonGrid.png')
+	.add('calculatorBack', './assets/calc/en/calculatorBack.png')
+	.add('calculatorDel', './assets/calc/en/calculatorDel.png')
+	.add('calculatorEnter', './assets/calc/common/calculatorEnter.png')
+	
+	.add('gameBackground', './assets/calc/common/gameBackground.png')
+	.add('playBtn', './assets/calc/en/button_play.png')
+	.add('counts', './assets/calc/common/counts.png')
 	.load(setup)
 	
 	// 补零
@@ -234,23 +212,149 @@
 	}
 	
 	// 游戏业务代码
-	
-	/*
-	* 每次渲染，生成占满屏幕的不同方向的叶子，每次生成不同的运动方向，持续运动
-	* 黄色的叶子，请标识运动方向
-	* 绿色的叶子，请标识叶子方向
-	* 棕色的叶子，请按照上一个叶子的规则标识
-	* 在倒计时内，尽量完成正确的操作，记录正确率和反应时间
-	* */
-	
+	// 生成computedItem，键盘输入 或 右侧模拟数字键盘输入后 enter 键，检测答案正确性
+	// 生成当前游戏状态，remain lives以及当前level
 	function renderGameLogic () {
-		if (leafGroup !== undefined && leafGroup.children.length) {
-			gameScene.removeChild(leafGroup)
+		if (computedGroup !== undefined && computedGroup.children.length) {
+			gameScene.removeChild(computedGroup)
 		}
+		computedGroup = new PIXI.Container()
 		
-		leafGroup = new PIXI.Container()
+		// 渲染模拟计算器
+		const calculatorGroup = new PIXI.Container()
+		const {
+			calculatorBackground,
+			calculatorButtonGrid,
+			calculator0,
+			calculatorNum,
+			calculatorBack,
+			calculatorEnter,
+			calculatorDel
+		} = textureCache
 		
-		gameScene.addChild(leafGroup)
+		calculatorGroup.pivot.x = calculatorGroup.width / 2
+		calculatorGroup.pivot.y = calculatorGroup.height / 2
+		
+		calculatorGroup.x = centerX * 2 - 170
+		calculatorGroup.y = 100
+		
+		app.stage.addChild(calculatorGroup)
+		
+		const calculatorBackSprite = new Sprite(new Texture(calculatorBackground))
+		const calculatorGridSprite = new Sprite(new Texture(calculatorButtonGrid))
+		
+		calculatorGridSprite.x = 11
+		calculatorGridSprite.y = 86
+		
+		calculatorGroup.addChild(calculatorBackSprite)
+		calculatorGroup.addChild(calculatorGridSprite)
+		
+		let number1Texture = new PIXI.Texture(calculatorNum)
+		number1Texture.frame = new PIXI.Rectangle(0, 0, 31, 31)
+		const num1 = new Sprite(number1Texture)
+		num1.x = 12
+		num1.y = 87
+		
+		let number2Texture = new PIXI.Texture(calculatorNum)
+		number2Texture.frame = new PIXI.Rectangle(64, 0, 31, 31)
+		const num2 = new Sprite(number2Texture)
+		num2.x = 45
+		num2.y = 87
+		
+		let number3Texture = new PIXI.Texture(calculatorNum)
+		number3Texture.frame = new PIXI.Rectangle(128, 0, 31, 31)
+		const num3 = new Sprite(number3Texture)
+		num3.x = 77
+		num3.y = 87
+		
+		let number4Texture = new PIXI.Texture(calculatorNum)
+		number4Texture.frame = new PIXI.Rectangle(192, 0, 31, 31)
+		const num4 = new Sprite(number4Texture)
+		num4.x = 12
+		num4.y = 121
+		
+		let number5Texture = new PIXI.Texture(calculatorNum)
+		number5Texture.frame = new PIXI.Rectangle(256, 0, 31, 31)
+		const num5 = new Sprite(number5Texture)
+		num5.x = 45
+		num5.y = 121
+		
+		let number6Texture = new PIXI.Texture(calculatorNum)
+		number6Texture.frame = new PIXI.Rectangle(32, 32, 31, 31)
+		const num6 = new Sprite(number6Texture)
+		num6.x = 77
+		num6.y = 121
+		
+		let number7Texture = new PIXI.Texture(calculatorNum)
+		number7Texture.frame = new PIXI.Rectangle(96, 32, 31, 31)
+		const num7 = new Sprite(number7Texture)
+		num7.x = 12
+		num7.y = 154
+		
+		let number8Texture = new PIXI.Texture(calculatorNum)
+		number8Texture.frame = new PIXI.Rectangle(160, 32, 31, 31)
+		const num8 = new Sprite(number8Texture)
+		num8.x = 45
+		num8.y = 154
+		
+		let number9Texture = new PIXI.Texture(calculatorNum)
+		number9Texture.frame = new PIXI.Rectangle(224, 32, 31, 31)
+		const num9 = new Sprite(number9Texture)
+		num9.x = 77
+		num9.y = 154
+		
+		let number0Texture = new PIXI.Texture(calculator0)
+		number0Texture.frame = new PIXI.Rectangle(0, 0, 64, 32)
+		const num0 = new Sprite(number0Texture)
+		num0.x = 12
+		num0.y = 187
+		
+		let numberBack = new PIXI.Texture(calculatorBack)
+		numberBack.frame = new PIXI.Rectangle(0, 0, 32, 32)
+		const numBack = new Sprite(numberBack)
+		numBack.x = 77
+		numBack.y = 187
+		calculatorGroup.addChild(numBack)
+		
+		let numberDel = new PIXI.Texture(calculatorDel)
+		numberDel.frame = new PIXI.Rectangle(0, 0, 36, 65)
+		const numDel = new Sprite(numberDel)
+		numDel.x = 110
+		numDel.y = 87
+		calculatorGroup.addChild(numDel)
+		
+		let numberEnter = new PIXI.Texture(calculatorEnter)
+		numberEnter.frame = new PIXI.Rectangle(0, 0, 36, 65)
+		const numEnter = new Sprite(numberEnter)
+		numEnter.x = 110
+		numEnter.y = 154
+		calculatorGroup.addChild(numEnter)
+		
+		calculatorGroup.addChild(num0)
+		calculatorGroup.addChild(num1)
+		calculatorGroup.addChild(num2)
+		calculatorGroup.addChild(num3)
+		calculatorGroup.addChild(num4)
+		calculatorGroup.addChild(num5)
+		calculatorGroup.addChild(num6)
+		calculatorGroup.addChild(num7)
+		calculatorGroup.addChild(num8)
+		calculatorGroup.addChild(num9)
+		
+		// 添加当前游戏状态
+		const titleStyle = {
+			fontSize: 24
+    }
+		const liveText = new PIXI.Text('Lives remaining:' + lives, titleStyle)
+		calculatorGroup.addChild(liveText)
+		
+		const levelText = new PIXI.Text('Level:' + level, titleStyle)
+		calculatorGroup.addChild(levelText)
+		
+		const tipsText = new PIXI.Text('Tip: use your numeric pad for faster answers', titleStyle)
+		calculatorGroup.addChild(tipsText)
+  
+		gameScene.addChild(computedGroup)
 	}
 	
 	// 游戏开始倒计时
@@ -508,6 +612,7 @@
 			.onUpdate(obj => {
 				gameScene.x = obj.x
 			})
+			
 			const introTrans = new TWEEN.Tween(introTransform)
 			.to({
 				posX: centerX * 2
