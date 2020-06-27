@@ -346,12 +346,18 @@
 			fontSize: 24
     }
 		const liveText = new PIXI.Text('Lives remaining:' + lives, titleStyle)
+		liveText.x = 200
+		liveText.y = 350
 		calculatorGroup.addChild(liveText)
 		
 		const levelText = new PIXI.Text('Level:' + level, titleStyle)
+		// levelText.x = centerX * 2 - 170
+		// levelText.y = 390
 		calculatorGroup.addChild(levelText)
 		
 		const tipsText = new PIXI.Text('Tip: use your numeric pad for faster answers', titleStyle)
+		// tipsText.x = centerX * 2 - 170
+		// tipsText.y = 430
 		calculatorGroup.addChild(tipsText)
   
 		gameScene.addChild(computedGroup)
