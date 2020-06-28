@@ -169,6 +169,8 @@
 		x: -centerX * 2
 	}
 	
+	const rightPanelWidth = 194
+	
 	// 加载图片转化成纹理
 	loader
 	.add('welcome', './assets/calc/en/title_screen.png')
@@ -181,7 +183,7 @@
 	.add('lava', './assets/calc/common/lava.png')
 	
 	.add('calculator0', './assets/calc/common/calculator0.png')
-	.add('calculatorNum', './assets/calc/common/calculator1-9.png')
+	.add('calculatorNum', './assets/calc/common/calculate1-9.jpg')
 	.add('calculatorBackground', './assets/calc/common/calculatorBackground.png')
 	.add('calculatorButtonGrid', './assets/calc/common/calculatorButtonGrid.png')
 	.add('calculatorBack', './assets/calc/en/calculatorBack.png')
@@ -229,7 +231,8 @@
 			calculatorNum,
 			calculatorBack,
 			calculatorEnter,
-			calculatorDel
+			calculatorDel,
+			lava
 		} = textureCache
 		
 		calculatorGroup.pivot.x = calculatorGroup.width / 2
@@ -248,119 +251,158 @@
 		
 		calculatorGroup.addChild(calculatorBackSprite)
 		calculatorGroup.addChild(calculatorGridSprite)
+		const nums = []
 		
-		let number1Texture = new PIXI.Texture(calculatorNum)
-		number1Texture.frame = new PIXI.Rectangle(0, 0, 31, 31)
-		const num1 = new Sprite(number1Texture)
-		num1.x = 12
-		num1.y = 87
+		// 数字 1~9
+		let numText = 1
+		for (let i = 0; i < 18; i += 2) {
+			let numberTexture = new PIXI.Texture(calculatorNum)
+			numberTexture.frame = new PIXI.Rectangle(i * 32, 0, 31, 31)
+			const num = new Sprite(numberTexture)
+			num.x = 12 + nums.length % 3 * 33
+			num.y = 87 + (nums.length >= 3 && ((nums.length >= 6 ? 2 : 1) * 34))
+			nums.push({
+				normal: numberTexture,
+				sprite: num,
+				value: numText
+			})
+			calculatorGroup.addChild(num)
+			numText++
+		}
 		
-		let number2Texture = new PIXI.Texture(calculatorNum)
-		number2Texture.frame = new PIXI.Rectangle(64, 0, 31, 31)
-		const num2 = new Sprite(number2Texture)
-		num2.x = 45
-		num2.y = 87
+		let j = 0
+		for (let i = 1; i < 18; i += 2) {
+			let numberTexture = new PIXI.Texture(calculatorNum)
+			numberTexture.frame = new PIXI.Rectangle(i * 32, 0, 31, 31)
+			nums[j].active = numberTexture
+			j++
+		}
 		
-		let number3Texture = new PIXI.Texture(calculatorNum)
-		number3Texture.frame = new PIXI.Rectangle(128, 0, 31, 31)
-		const num3 = new Sprite(number3Texture)
-		num3.x = 77
-		num3.y = 87
-		
-		let number4Texture = new PIXI.Texture(calculatorNum)
-		number4Texture.frame = new PIXI.Rectangle(192, 0, 31, 31)
-		const num4 = new Sprite(number4Texture)
-		num4.x = 12
-		num4.y = 121
-		
-		let number5Texture = new PIXI.Texture(calculatorNum)
-		number5Texture.frame = new PIXI.Rectangle(256, 0, 31, 31)
-		const num5 = new Sprite(number5Texture)
-		num5.x = 45
-		num5.y = 121
-		
-		let number6Texture = new PIXI.Texture(calculatorNum)
-		number6Texture.frame = new PIXI.Rectangle(32, 32, 31, 31)
-		const num6 = new Sprite(number6Texture)
-		num6.x = 77
-		num6.y = 121
-		
-		let number7Texture = new PIXI.Texture(calculatorNum)
-		number7Texture.frame = new PIXI.Rectangle(96, 32, 31, 31)
-		const num7 = new Sprite(number7Texture)
-		num7.x = 12
-		num7.y = 154
-		
-		let number8Texture = new PIXI.Texture(calculatorNum)
-		number8Texture.frame = new PIXI.Rectangle(160, 32, 31, 31)
-		const num8 = new Sprite(number8Texture)
-		num8.x = 45
-		num8.y = 154
-		
-		let number9Texture = new PIXI.Texture(calculatorNum)
-		number9Texture.frame = new PIXI.Rectangle(224, 32, 31, 31)
-		const num9 = new Sprite(number9Texture)
-		num9.x = 77
-		num9.y = 154
-		
+		// 数字 0
+		let temp = {}
 		let number0Texture = new PIXI.Texture(calculator0)
 		number0Texture.frame = new PIXI.Rectangle(0, 0, 64, 32)
+		temp.normal = number0Texture
 		const num0 = new Sprite(number0Texture)
 		num0.x = 12
 		num0.y = 187
+		calculatorGroup.addChild(num0)
 		
+		let number0TextureActive = new PIXI.Texture(calculator0)
+		number0TextureActive.frame = new PIXI.Rectangle(64, 0, 64, 32)
+		temp.active = number0TextureActive
+		nums.push({
+			sprite: num0,
+			normal: temp.normal,
+			active: temp.active,
+			value: 0
+		})
+		
+		// 操作按钮 backspace
 		let numberBack = new PIXI.Texture(calculatorBack)
 		numberBack.frame = new PIXI.Rectangle(0, 0, 32, 32)
+		temp.normal = numberBack
 		const numBack = new Sprite(numberBack)
 		numBack.x = 77
 		numBack.y = 187
 		calculatorGroup.addChild(numBack)
 		
+		let numberBackActive = new PIXI.Texture(calculatorBack)
+		numberBackActive.frame = new PIXI.Rectangle(32, 0, 32, 32)
+		temp.active = numberBackActive
+		nums.push({
+			sprite: numBack,
+			normal: temp.normal,
+			active: temp.active,
+			value: 'back'
+		})
+		
+    // 操作按钮 delete
 		let numberDel = new PIXI.Texture(calculatorDel)
 		numberDel.frame = new PIXI.Rectangle(0, 0, 36, 65)
+		temp.normal = numberDel
 		const numDel = new Sprite(numberDel)
 		numDel.x = 110
 		numDel.y = 87
 		calculatorGroup.addChild(numDel)
+  
+		let numberDelActive = new PIXI.Texture(calculatorDel)
+		numberDelActive.frame = new PIXI.Rectangle(36, 0, 36, 65)
+		temp.active = numberDelActive
+		nums.push({
+      sprite: numDel,
+			normal: temp.normal,
+			active: temp.active,
+			value: 'del'
+		})
 		
 		let numberEnter = new PIXI.Texture(calculatorEnter)
 		numberEnter.frame = new PIXI.Rectangle(0, 0, 36, 65)
+		temp.normal = numberEnter
 		const numEnter = new Sprite(numberEnter)
 		numEnter.x = 110
 		numEnter.y = 154
 		calculatorGroup.addChild(numEnter)
+  
+		let numberEnterActive = new PIXI.Texture(calculatorEnter)
+		numberEnterActive.frame = new PIXI.Rectangle(36, 0, 36, 65)
+		temp.active = numberEnterActive
+		nums.push({
+			sprite: numEnter,
+			normal: temp.normal,
+			active: temp.active,
+			value: 'enter'
+		})
 		
-		calculatorGroup.addChild(num0)
-		calculatorGroup.addChild(num1)
-		calculatorGroup.addChild(num2)
-		calculatorGroup.addChild(num3)
-		calculatorGroup.addChild(num4)
-		calculatorGroup.addChild(num5)
-		calculatorGroup.addChild(num6)
-		calculatorGroup.addChild(num7)
-		calculatorGroup.addChild(num8)
-		calculatorGroup.addChild(num9)
+		for (let i = 0; i < nums.length; i++) {
+			nums[i].sprite.interactive = true
+			nums[i].sprite.buttonMode = true
+			
+			nums[i].sprite.on('pointerover', () => {
+				nums[i].sprite.texture = nums[i].active
+			})
+			
+			nums[i].sprite.on('pointerout', () => {
+				nums[i].sprite.texture = nums[i].normal
+			})
+		}
 		
 		// 添加当前游戏状态
 		const titleStyle = {
-			fontSize: 24
-    }
-		const liveText = new PIXI.Text('Lives remaining:' + lives, titleStyle)
-		liveText.x = 200
-		liveText.y = 350
+			fontSize: 18
+		}
+		const liveText = new PIXI.Text('Lives remaining: ' + lives, titleStyle)
+		liveText.x = 4
+		liveText.y = 250
 		calculatorGroup.addChild(liveText)
 		
 		const levelText = new PIXI.Text('Level:' + level, titleStyle)
-		// levelText.x = centerX * 2 - 170
-		// levelText.y = 390
+		levelText.x = 4
+		levelText.y = 272
 		calculatorGroup.addChild(levelText)
 		
-		const tipsText = new PIXI.Text('Tip: use your numeric pad for faster answers', titleStyle)
-		// tipsText.x = centerX * 2 - 170
-		// tipsText.y = 430
+		const tipsTitleText = new PIXI.Text('Tip: ', {fontSize: 16})
+		tipsTitleText.x = 4
+		tipsTitleText.y = 306
+		calculatorGroup.addChild(tipsTitleText)
+		
+		const tipsText = new PIXI.Text('use your numeric pad for faster answers', {
+			fontSize: 14,
+			wordWrap: true,
+			wordWrapWidth: 172
+		})
+		tipsText.x = 4
+		tipsText.y = 326
+		
+		calculatorGroup.addChild(tipsTitleText)
 		calculatorGroup.addChild(tipsText)
-  
+		
 		gameScene.addChild(computedGroup)
+		
+		// 添加底部掉落限制区域
+		const lavaSprite = new Sprite(lava)
+		lavaSprite.y = centerY * 2 - lavaSprite.height
+		gameScene.addChild(lavaSprite)
 	}
 	
 	// 游戏开始倒计时
