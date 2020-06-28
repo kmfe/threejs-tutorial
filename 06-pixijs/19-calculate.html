@@ -232,7 +232,9 @@
 			calculatorBack,
 			calculatorEnter,
 			calculatorDel,
-			lava
+			lava,
+			fire_drop,
+			ice_drop
 		} = textureCache
 		
 		calculatorGroup.pivot.x = calculatorGroup.width / 2
@@ -317,7 +319,7 @@
 			value: 'back'
 		})
 		
-    // 操作按钮 delete
+		// 操作按钮 delete
 		let numberDel = new PIXI.Texture(calculatorDel)
 		numberDel.frame = new PIXI.Rectangle(0, 0, 36, 65)
 		temp.normal = numberDel
@@ -325,12 +327,12 @@
 		numDel.x = 110
 		numDel.y = 87
 		calculatorGroup.addChild(numDel)
-  
+		
 		let numberDelActive = new PIXI.Texture(calculatorDel)
 		numberDelActive.frame = new PIXI.Rectangle(36, 0, 36, 65)
 		temp.active = numberDelActive
 		nums.push({
-      sprite: numDel,
+			sprite: numDel,
 			normal: temp.normal,
 			active: temp.active,
 			value: 'del'
@@ -343,7 +345,7 @@
 		numEnter.x = 110
 		numEnter.y = 154
 		calculatorGroup.addChild(numEnter)
-  
+		
 		let numberEnterActive = new PIXI.Texture(calculatorEnter)
 		numberEnterActive.frame = new PIXI.Rectangle(36, 0, 36, 65)
 		temp.active = numberEnterActive
@@ -403,6 +405,44 @@
 		const lavaSprite = new Sprite(lava)
 		lavaSprite.y = centerY * 2 - lavaSprite.height
 		gameScene.addChild(lavaSprite)
+		
+		// 添加掉落待计算item
+		const smallNumber = [1, 2, 3, 4, 5]
+		const middleNumber = [6, 7, 8, 9, 10]
+		const largeNumber = [9, 10, 11, 12, 13, 14, 15, 16, 17]
+		const operators = [
+			{type: 'plus', text: '+'},
+			{type: 'minus', text: '-'},
+			{type: 'multiple', text: '×'},
+			{type: 'divide', text: '÷'}
+		]
+		const renderDrop = () => {
+			const drop = new Sprite(fire_drop)
+			drop.anchor.set(0.5)
+			drop.x = getRangeNum(drop.width / 2, centerX * 2 - rightPanelWidth - drop.width / 2)
+			drop.y = drop.height / 2 + 10
+			gameScene.addChild(drop)
+			if (level === 1) {
+				const num1 = smallNumber[getRangeNum(0, smallNumber.length)]
+				const num2 = smallNumber[getRangeNum(0, smallNumber.length)]
+				const operator = getRangeNum(0, operators.length)
+        const str = num1 + operators[operator].text + num2
+				const contentText = new PIXI.Text(str, {
+					fontSize: 22,
+					fontWeight: 'bold',
+					breakWords: true,
+					wordWrap: true,
+          lineHeight: 18
+				})
+				console.log(contentText.width, contentText, '--->')
+				contentText.anchor.set(0.5)
+				contentText.y = 28
+				drop.addChild(contentText)
+			}
+		}
+		for (let i = 0; i < 1; i++) {
+			renderDrop()
+		}
 	}
 	
 	// 游戏开始倒计时
@@ -434,7 +474,6 @@
 		const twoStart = countAnimate(two)
 		const oneStart = countAnimate(one, () => {
 			renderGameLogic()
-			renderToolbar(400)
 			TWEEN.remove(threeStart)
 			TWEEN.remove(twoStart)
 			TWEEN.remove(oneStart)
@@ -444,49 +483,6 @@
 		twoStart.chain(oneStart)
 		
 		threeStart.start()
-	}
-	
-	// 游戏计时及计分
-	function renderToolbar (remains) {
-		const toolbars = new PIXI.Container()
-		const statue = new PIXI.Graphics()
-		let time = remains
-		let remainTime = null
-		statue.beginFill(0X000000, 0.5)
-		statue.drawRect(0, 0, centerX * 2, 40)
-		statue.endFill()
-		toolbars.addChild(statue)
-		let textStyle = new PIXI.TextStyle({
-			fontFamily: 'PingFang SC Regular',
-			fontSize: 18,
-			fill: '#FFFFFF',
-			stroke: '#cd0000',
-			align: 'center',
-			lineHeight: 40,
-			textBaseline: 'middle'
-		})
-		gameScene.addChild(toolbars)
-		
-		const renderText = () => {
-			remainTime = new PIXI.Text(`Remaining time: 00:${zeroFill(time)}`, textStyle)
-			remainTime.resolution = 2
-			remainTime.x = centerX - remainTime.width / 2
-			remainTime.y = 5
-			toolbars.addChild(remainTime)
-		}
-		
-		renderText()
-		
-		counterInterval = setInterval(() => {
-			remainTime && toolbars.removeChild(remainTime)
-			if (time === 0) {
-				gameOverHandler()
-			}
-			if (time > 0) {
-				time--
-			}
-			renderText()
-		}, 1000)
 	}
 	
 	// 游戏结束逻辑

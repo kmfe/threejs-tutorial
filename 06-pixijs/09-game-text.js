@@ -21,12 +21,13 @@ let textStyle = new PIXI.TextStyle({
 	dropShadowDistance: 16,
 	
 })
-let msg = new PIXI.Text('Hello PIXI.js', textStyle)
+let msg = new PIXI.Text('大大全安泰大全安泰 全安泰', textStyle)
 msg.x = 100
 msg.y = 100
 msg.style = {
 	wordWrap: true,
-	wordWrapWidth: 160,
+	wordWrapWidth: 10,
+	breakWords: true,
 	align: 'center'
 }
 app.stage.addChild(msg)
