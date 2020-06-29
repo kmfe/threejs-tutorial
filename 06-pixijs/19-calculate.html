@@ -156,7 +156,15 @@
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
 		textureCache,
-		level = 1, lives = 3, computedGroup
+		level = 4, lives = 3, computedGroup, calculatorGroup
+	
+	const operators = [
+		{type: 'plus', text: '+'},
+		{type: 'minus', text: '-'},
+		{type: 'multiple', text: '×'},
+		{type: 'divide', text: '÷'}
+	]
+	let computedItems = []
 	
 	// welcome, introduce scene animate params
 	let transform = {
@@ -213,17 +221,12 @@
 		}
 	}
 	
-	// 游戏业务代码
-	// 生成computedItem，键盘输入 或 右侧模拟数字键盘输入后 enter 键，检测答案正确性
-	// 生成当前游戏状态，remain lives以及当前level
-	function renderGameLogic () {
-		if (computedGroup !== undefined && computedGroup.children.length) {
-			gameScene.removeChild(computedGroup)
+	// 生成虚拟键盘，响应键盘操作
+	function renderFakeKeyboard () {
+		if (calculatorGroup) {
+			gameScene.removeChild(calculatorGroup)
 		}
-		computedGroup = new PIXI.Container()
-		
-		// 渲染模拟计算器
-		const calculatorGroup = new PIXI.Container()
+		calculatorGroup = new PIXI.Container()
 		const {
 			calculatorBackground,
 			calculatorButtonGrid,
@@ -232,9 +235,7 @@
 			calculatorBack,
 			calculatorEnter,
 			calculatorDel,
-			lava,
-			fire_drop,
-			ice_drop
+			lava
 		} = textureCache
 		
 		calculatorGroup.pivot.x = calculatorGroup.width / 2
@@ -355,6 +356,58 @@
 			active: temp.active,
 			value: 'enter'
 		})
+		let inputNum = ''
+		let inputNumSprite = null
+		
+		// 响应键盘操作
+		const delHandler = () => {
+			inputNum = ''
+			inputNumSprite && (calculatorGroup.removeChild(inputNumSprite))
+		}
+		const backHandler = () => {
+			if (inputNum.length) {
+				inputNum = inputNum.substring(0, inputNum.length - 1)
+				inputNumSprite && (calculatorGroup.removeChild(inputNumSprite))
+				inputNumSprite = new PIXI.Text(inputNum, {
+					fontSize: 28,
+					fill: '#EB6B44'
+				})
+				inputNumSprite.y = 32
+				inputNumSprite.x = 140 - inputNumSprite.width
+				calculatorGroup.addChild(inputNumSprite)
+			}
+		}
+		const numHandler = val => {
+			inputNumSprite && (calculatorGroup.removeChild(inputNumSprite))
+			inputNum.length < 8 && (inputNum += val + '')
+			inputNumSprite = new PIXI.Text(inputNum, {
+				fontSize: 28,
+				fill: '#EB6B44'
+			})
+			inputNumSprite.y = 32
+			inputNumSprite.x = 140 - inputNumSprite.width
+			calculatorGroup.addChild(inputNumSprite)
+		}
+		const enterHandler = () => {
+			const isWrong = computedItems.every(item => item.answer !== Number(inputNum))
+			if (isWrong) {
+				errorSound.play()
+			} else {
+				successSound.play()
+				for (let i = 0; i < computedItems.length; i++) {
+					if (computedItems[i].answer === Number(inputNum)) {
+						computedGroup.removeChild(computedGroup.getChildByName(computedItems[i].name))
+						computedItems.splice(i, 1)
+					}
+				}
+				// 检测正确之后再次检测当前待测试的数量，数量较少立即再次渲染
+				if (computedItems.length < 5) {
+					// renderGameLogic()
+				}
+			}
+			inputNum = ''
+			inputNumSprite && (calculatorGroup.removeChild(inputNumSprite))
+		}
 		
 		for (let i = 0; i < nums.length; i++) {
 			nums[i].sprite.interactive = true
@@ -367,7 +420,38 @@
 			nums[i].sprite.on('pointerout', () => {
 				nums[i].sprite.texture = nums[i].normal
 			})
+			
+			nums[i].sprite.on('pointerdown', () => {
+				switch (nums[i].value) {
+					case 'back':
+						backHandler()
+						break
+					case 'enter':
+						enterHandler()
+						break
+					case 'del':
+						delHandler()
+						break
+					default:
+						numHandler(nums[i].value)
+						break
+				}
+			})
 		}
+		
+		window.addEventListener('keydown', e => {
+			const nums = [...new Array(10).keys()]
+			if (nums.includes(Number(e.key))) {
+				e.preventDefault()
+				numHandler(Number(e.key))
+			} else if (e.key === 'Enter') {
+				e.preventDefault()
+				enterHandler()
+			} else if (e.key === 'Backspace') {
+				e.preventDefault()
+				backHandler()
+			}
+		}, false)
 		
 		// 添加当前游戏状态
 		const titleStyle = {
@@ -399,49 +483,148 @@
 		calculatorGroup.addChild(tipsTitleText)
 		calculatorGroup.addChild(tipsText)
 		
-		gameScene.addChild(computedGroup)
-		
 		// 添加底部掉落限制区域
 		const lavaSprite = new Sprite(lava)
 		lavaSprite.y = centerY * 2 - lavaSprite.height
 		gameScene.addChild(lavaSprite)
+	}
+	
+	// 游戏业务代码
+	// 生成computedItem，键盘输入 或 右侧模拟数字键盘输入后 enter 键，检测答案正确性
+	// 生成当前游戏状态，remain lives以及当前level
+	function renderGameLogic () {
+		if (computedGroup !== undefined && computedGroup.children.length) {
+			gameScene.removeChild(computedGroup)
+		}
+		computedGroup = new PIXI.Container()
+		renderFakeKeyboard()
+		
+		const {
+			fire_drop,
+			ice_drop
+		} = textureCache
 		
 		// 添加掉落待计算item
-		const smallNumber = [1, 2, 3, 4, 5]
-		const middleNumber = [6, 7, 8, 9, 10]
-		const largeNumber = [9, 10, 11, 12, 13, 14, 15, 16, 17]
-		const operators = [
-			{type: 'plus', text: '+'},
-			{type: 'minus', text: '-'},
-			{type: 'multiple', text: '×'},
-			{type: 'divide', text: '÷'}
-		]
+		
+		let computedIndex = 0
+		
+		gameScene.addChild(computedGroup)
 		const renderDrop = () => {
 			const drop = new Sprite(fire_drop)
 			drop.anchor.set(0.5)
 			drop.x = getRangeNum(drop.width / 2, centerX * 2 - rightPanelWidth - drop.width / 2)
 			drop.y = drop.height / 2 + 10
-			gameScene.addChild(drop)
-			if (level === 1) {
-				const num1 = smallNumber[getRangeNum(0, smallNumber.length)]
-				const num2 = smallNumber[getRangeNum(0, smallNumber.length)]
-				const operator = getRangeNum(0, operators.length)
-        const str = num1 + operators[operator].text + num2
-				const contentText = new PIXI.Text(str, {
-					fontSize: 22,
-					fontWeight: 'bold',
-					breakWords: true,
-					wordWrap: true,
-          lineHeight: 18
-				})
-				console.log(contentText.width, contentText, '--->')
-				contentText.anchor.set(0.5)
-				contentText.y = 28
-				drop.addChild(contentText)
+			drop.name = 'index-' + computedIndex
+			computedGroup.addChild(drop)
+			
+			// 生成继续条目
+			const operator = operators[getRangeNum(0, operators.length)]
+			let str = ''
+			
+			let firstNum = 0
+			let lastNum = 0
+			
+			switch (operator.type) {
+				case 'minus':
+					if (level > 4) {
+						firstNum = getRangeNum(11, 30)
+						lastNum = getRangeNum(1, 11)
+					} else {
+						firstNum = getRangeNum(6, 11)
+						lastNum = getRangeNum(1, 6)
+					}
+					str = firstNum + operator.text + lastNum
+					computedItems.push({
+						sprite: drop,
+						answer: firstNum - lastNum,
+						visible: true,
+						name: drop.name
+					})
+					break
+				case 'multiple':
+					if (level > 4) {
+						firstNum = getRangeNum(1, 11)
+						lastNum = getRangeNum(1, 11)
+					} else {
+						firstNum = getRangeNum(1, 6)
+						lastNum = getRangeNum(1, 6)
+					}
+					str = firstNum + operator.text + lastNum
+					computedItems.push({
+						sprite: drop,
+						answer: firstNum * lastNum,
+						visible: true,
+						name: drop.name
+					})
+					break
+				case 'divide':
+					if (level > 4) {
+						lastNum = getRangeNum(1, 11)
+						firstNum = lastNum * getRangeNum(1, 6)
+					} else {
+						lastNum = getRangeNum(1, 6)
+						firstNum = lastNum * getRangeNum(1, 6)
+					}
+					str = firstNum + operator.text + lastNum
+					computedItems.push({
+						sprite: drop,
+						answer: firstNum / lastNum,
+						visible: true,
+						name: drop.name
+					})
+					break
+				default:
+					if (level > 5) {
+						lastNum = getRangeNum(1, 30)
+						firstNum = getRangeNum(1, 30)
+					} else {
+						lastNum = getRangeNum(1, 10)
+						firstNum = getRangeNum(1, 10)
+					}
+					str = firstNum + operator.text + lastNum
+					computedItems.push({
+						sprite: drop,
+						answer: firstNum + lastNum,
+						visible: true,
+						name: drop.name
+					})
+					break
 			}
+			
+			const contentText = new PIXI.Text(str, {
+				fontSize: 22,
+				fontWeight: 'bold',
+				breakWords: true,
+				wordWrap: true,
+				lineHeight: 20
+			})
+			
+			contentText.anchor.set(0.5)
+			contentText.y = 28
+			drop.addChild(contentText)
+			computedIndex++
+			
+			const posTransform = {y: drop.position.y}
+			const alpha = {alpha: 0}
+			drop.alpha = alpha.alpha
+			
+			const alphaTween = new TWEEN.Tween(alpha)
+			.to({alpha: 1}, 400)
+			.onUpdate(result => { drop.alpha = result.alpha})
+			
+			const yTween = new TWEEN.Tween(posTransform)
+			.to({y: centerY * 2}, 32000)
+			.onUpdate(result => { drop.y = result.y })
+			.onComplete(() => {
+				gameScene.removeChild(computedGroup)
+				computedItems.length = 0
+			})
+			
+			alphaTween.chain(yTween)
+			alphaTween.start()
 		}
-		for (let i = 0; i < 1; i++) {
-			renderDrop()
+		for (let i = 0; i < level; i++) {
+			setTimeout(renderDrop, i * 2000)
 		}
 	}
 	
