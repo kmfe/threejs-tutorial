@@ -156,7 +156,7 @@
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
 		textureCache,
-		level = 4, lives = 3, computedGroup, calculatorGroup
+		level = 2, lives = 3, computedGroup, calculatorGroup
 	
 	const operators = [
 		{type: 'plus', text: '+'},
@@ -164,7 +164,13 @@
 		{type: 'multiple', text: '×'},
 		{type: 'divide', text: '÷'}
 	]
+	
+	// 所有正在运动的待计算的item
 	let computedItems = []
+	
+	// 每生成一条该值加1，作为该条item的name
+	let computedIndex = 0
+	let keyboardHandler = null
 	
 	// welcome, introduce scene animate params
 	let transform = {
@@ -389,24 +395,27 @@
 			calculatorGroup.addChild(inputNumSprite)
 		}
 		const enterHandler = () => {
+			console.log(computedItems, '计算前', inputNum)
 			const isWrong = computedItems.every(item => item.answer !== Number(inputNum))
 			if (isWrong) {
 				errorSound.play()
 			} else {
 				successSound.play()
-				for (let i = 0; i < computedItems.length; i++) {
+				for (let i = computedItems.length - 1; i >= 0; i--) {
 					if (computedItems[i].answer === Number(inputNum)) {
+						console.log('相等', i)
 						computedGroup.removeChild(computedGroup.getChildByName(computedItems[i].name))
 						computedItems.splice(i, 1)
 					}
 				}
 				// 检测正确之后再次检测当前待测试的数量，数量较少立即再次渲染
-				if (computedItems.length < 5) {
-					// renderGameLogic()
+				if (computedItems.length < level) {
+					renderGameLogic()
 				}
 			}
 			inputNum = ''
 			inputNumSprite && (calculatorGroup.removeChild(inputNumSprite))
+			console.log(computedItems, '计算后')
 		}
 		
 		for (let i = 0; i < nums.length; i++) {
@@ -439,7 +448,7 @@
 			})
 		}
 		
-		window.addEventListener('keydown', e => {
+		keyboardHandler = e => {
 			const nums = [...new Array(10).keys()]
 			if (nums.includes(Number(e.key))) {
 				e.preventDefault()
@@ -451,7 +460,9 @@
 				e.preventDefault()
 				backHandler()
 			}
-		}, false)
+		}
+		
+		window.addEventListener('keydown', keyboardHandler, false)
 		
 		// 添加当前游戏状态
 		const titleStyle = {
@@ -493,9 +504,11 @@
 	// 生成computedItem，键盘输入 或 右侧模拟数字键盘输入后 enter 键，检测答案正确性
 	// 生成当前游戏状态，remain lives以及当前level
 	function renderGameLogic () {
-		if (computedGroup !== undefined && computedGroup.children.length) {
-			gameScene.removeChild(computedGroup)
-		}
+		if (computedItems.length > level) return
+		keyboardHandler && window.removeEventListener('keydown', keyboardHandler, false)
+		// if (computedGroup !== undefined && computedGroup.children.length) {
+		// 	gameScene.removeChild(computedGroup)
+		// }
 		computedGroup = new PIXI.Container()
 		renderFakeKeyboard()
 		
@@ -506,15 +519,19 @@
 		
 		// 添加掉落待计算item
 		
-		let computedIndex = 0
-		
 		gameScene.addChild(computedGroup)
 		const renderDrop = () => {
 			const drop = new Sprite(fire_drop)
-			drop.anchor.set(0.5)
-			drop.x = getRangeNum(drop.width / 2, centerX * 2 - rightPanelWidth - drop.width / 2)
-			drop.y = drop.height / 2 + 10
-			drop.name = 'index-' + computedIndex
+			const iceDrop = new Sprite(ice_drop)
+			const drops = [drop, iceDrop]
+			
+			for (let i = 0; i < drops.length; i++) {
+				drops[i].anchor.set(0.5)
+				drops[i].x = getRangeNum(drop.width / 2, centerX * 2 - rightPanelWidth - drop.width / 2)
+				drops[i].y = drop.height / 2 + 10
+				drops[i].name = 'index-' + computedIndex
+			}
+			
 			computedGroup.addChild(drop)
 			
 			// 生成继续条目
@@ -613,7 +630,7 @@
 			.onUpdate(result => { drop.alpha = result.alpha})
 			
 			const yTween = new TWEEN.Tween(posTransform)
-			.to({y: centerY * 2}, 32000)
+			.to({y: centerY * 2}, 620000)
 			.onUpdate(result => { drop.y = result.y })
 			.onComplete(() => {
 				gameScene.removeChild(computedGroup)
@@ -624,8 +641,9 @@
 			alphaTween.start()
 		}
 		for (let i = 0; i < level; i++) {
-			setTimeout(renderDrop, i * 2000)
+			renderDrop()
 		}
+		
 	}
 	
 	// 游戏开始倒计时
