@@ -112,7 +112,7 @@
 		backgroundColor: 0XEEEEEE
 	}
 	const app = new PIXI.Application(options)
-	let clickSound, successSound, errorSound, flipSound
+	let clickSound, successSound, errorSound, flipSound, explosionSound
 	const countTime = 1000
 	let angle = 30
 	
@@ -123,7 +123,8 @@
 			click: './assets/sound/click.mp3',
 			error: './assets/sound/error.mp3',
 			levelwon: './assets/sound/levelwon.mp3',
-			flip: './assets/sound/flip.mp3'
+			flip: './assets/sound/flip.mp3',
+			explosion: './assets/sound/explosion.mp3'
 		}
 		
 		// add to PIXI loader
@@ -137,6 +138,7 @@
 			successSound = resources['success'].sound
 			errorSound = resources['error'].sound
 			flipSound = resources['flip'].sound
+			explosionSound = resources['explosion'].sound
 		})
 	}
 	
@@ -168,8 +170,13 @@
 	// 所有正在运动的待计算的item
 	let computedItems = []
 	
+	// 间隔生成item
+	let intervalRender = null
+	
 	// 每生成一条该值加1，作为该条item的name
 	let computedIndex = 0
+	
+	// 封装键盘操作函数
 	let keyboardHandler = null
 	
 	// welcome, introduce scene animate params
@@ -384,6 +391,7 @@
 			}
 		}
 		const numHandler = val => {
+			console.log(computedItems, computedGroup, '每次看哈', inputNum)
 			inputNumSprite && (calculatorGroup.removeChild(inputNumSprite))
 			inputNum.length < 8 && (inputNum += val + '')
 			inputNumSprite = new PIXI.Text(inputNum, {
@@ -395,19 +403,39 @@
 			calculatorGroup.addChild(inputNumSprite)
 		}
 		const enterHandler = () => {
-			console.log(computedItems, '计算前', inputNum)
+			console.log(computedItems, '输入后 计算前', inputNum)
+			// let correctArr = []
 			const isWrong = computedItems.every(item => item.answer !== Number(inputNum))
 			if (isWrong) {
 				errorSound.play()
 			} else {
 				successSound.play()
+				
 				for (let i = computedItems.length - 1; i >= 0; i--) {
 					if (computedItems[i].answer === Number(inputNum)) {
-						console.log('相等', i)
-						computedGroup.removeChild(computedGroup.getChildByName(computedItems[i].name))
+						let delSprite = computedGroup.getChildByName(computedItems[i].name)
+						TWEEN.remove(computedItems[i].dropTween)
+						computedGroup.removeChild(delSprite)
 						computedItems.splice(i, 1)
 					}
 				}
+				
+				// for (let i = 0; i < computedItems.length; i++) {
+				// 	if (computedItems[i].answer === Number(inputNum)) {
+				// 		console.log(computedItems[i], Number(inputNum), '相等')
+				// 		correctArr.push({
+				// 			index: i,
+				// 			name: computedItems[i].name
+				// 		})
+				// 	}
+				// }
+				
+				// for (let i = 0; i < correctArr.length; i++) {
+				// 	computedItems.splice(correctArr[i].index, 1)
+				// 	computedGroup.removeChild(computedGroup.getChildByName(correctArr[i].name))
+				// }
+				
+				console.log(computedGroup, '计算后 删除了子精灵')
 				// 检测正确之后再次检测当前待测试的数量，数量较少立即再次渲染
 				if (computedItems.length < level) {
 					renderGameLogic()
@@ -506,12 +534,12 @@
 	function renderGameLogic () {
 		if (computedItems.length > level) return
 		keyboardHandler && window.removeEventListener('keydown', keyboardHandler, false)
-		// if (computedGroup !== undefined && computedGroup.children.length) {
-		// 	gameScene.removeChild(computedGroup)
-		// }
-		computedGroup = new PIXI.Container()
-		renderFakeKeyboard()
 		
+		if (!computedGroup) {
+			computedGroup = new PIXI.Container()
+			gameScene.addChild(computedGroup)
+		}
+		renderFakeKeyboard()
 		const {
 			fire_drop,
 			ice_drop
@@ -519,11 +547,11 @@
 		
 		// 添加掉落待计算item
 		
-		gameScene.addChild(computedGroup)
 		const renderDrop = () => {
 			const drop = new Sprite(fire_drop)
 			const iceDrop = new Sprite(ice_drop)
 			const drops = [drop, iceDrop]
+			let tempComputedItem = {}
 			
 			for (let i = 0; i < drops.length; i++) {
 				drops[i].anchor.set(0.5)
@@ -551,12 +579,12 @@
 						lastNum = getRangeNum(1, 6)
 					}
 					str = firstNum + operator.text + lastNum
-					computedItems.push({
+					tempComputedItem = {
 						sprite: drop,
 						answer: firstNum - lastNum,
 						visible: true,
 						name: drop.name
-					})
+					}
 					break
 				case 'multiple':
 					if (level > 4) {
@@ -567,12 +595,12 @@
 						lastNum = getRangeNum(1, 6)
 					}
 					str = firstNum + operator.text + lastNum
-					computedItems.push({
+					tempComputedItem = {
 						sprite: drop,
 						answer: firstNum * lastNum,
 						visible: true,
 						name: drop.name
-					})
+					}
 					break
 				case 'divide':
 					if (level > 4) {
@@ -583,12 +611,12 @@
 						firstNum = lastNum * getRangeNum(1, 6)
 					}
 					str = firstNum + operator.text + lastNum
-					computedItems.push({
+					tempComputedItem = {
 						sprite: drop,
 						answer: firstNum / lastNum,
 						visible: true,
 						name: drop.name
-					})
+					}
 					break
 				default:
 					if (level > 5) {
@@ -599,12 +627,12 @@
 						firstNum = getRangeNum(1, 10)
 					}
 					str = firstNum + operator.text + lastNum
-					computedItems.push({
+					tempComputedItem = {
 						sprite: drop,
 						answer: firstNum + lastNum,
 						visible: true,
 						name: drop.name
-					})
+					}
 					break
 			}
 			
@@ -626,22 +654,34 @@
 			drop.alpha = alpha.alpha
 			
 			const alphaTween = new TWEEN.Tween(alpha)
-			.to({alpha: 1}, 400)
+			.to({alpha: 1}, 200)
 			.onUpdate(result => { drop.alpha = result.alpha})
 			
-			const yTween = new TWEEN.Tween(posTransform)
-			.to({y: centerY * 2}, 620000)
+			// 每个drop单独添加动画，在某个drop 结束时全部清除，
+			// 某个computedItem 回答正确时，清除tween
+			tempComputedItem.dropTween = new TWEEN.Tween(posTransform)
+			.to({y: centerY * 2}, 20000)
 			.onUpdate(result => { drop.y = result.y })
 			.onComplete(() => {
-				gameScene.removeChild(computedGroup)
+				explosionSound.play()
+				intervalRender && clearTimeout(intervalRender)
+				computedGroup.removeChildren()
+				TWEEN.removeAll()
 				computedItems.length = 0
+				// 生命值减1，并开始下一轮游戏
+				lives--
+        if(lives <= 0) gameOverHandler()
+				setTimeout(renderDrop, 1000)
 			})
 			
-			alphaTween.chain(yTween)
+			alphaTween.chain(tempComputedItem.dropTween)
 			alphaTween.start()
+			
+			computedItems.push(tempComputedItem)
 		}
+		
 		for (let i = 0; i < level; i++) {
-			renderDrop()
+			intervalRender = setTimeout(renderDrop, i * 1600)
 		}
 		
 	}
