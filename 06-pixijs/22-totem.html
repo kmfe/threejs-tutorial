@@ -65,9 +65,12 @@
     <h3 class='game-info__title'>Training focus</h3>
     <div class='game-info__desc'>
       <ul>
-        <li>Ultrashort-term memory</li>
+        <li>Concentration</li>
         <li>Attention span</li>
+        <li>Mathematical skills</li>
+        <li>Long-term and working memory</li>
         <li>Speed</li>
+        <li>Executive functions</li>
       </ul>
     </div>
   </section>
@@ -76,16 +79,12 @@
     <div class='game-info__desc'>
       <ul>
         <li>
-          The game practices an ultra-short-term memory because it involves storing previous images in mind. Determining
-          whether the previous object is identical with the new one requires a high degree of attention and its
-          switching.
+          The game improves concentration on one element and at the same time increases the attention span needed for
+          several tasks. Recalling of automated numerical responses develops mathematical skills and long-term memory.
+          Solving priority tasks and verifying the accuracy of the results support executive functions.
         </li>
         <li>
-          The game also develops the ability to differentiate various stimuli by color and shape as well as it improves
-          the decision speed.
-        </li>
-        <li>
-          Working in a time limit helps the growth of response speed.
+          Working in a time limit improves the response speed.
         </li>
       </ul>
     </div>
@@ -94,11 +93,13 @@
     <h3 class='game-info__title'>How to play this game</h3>
     <div class='game-info__desc'>
       <p class='mb10'>
-        Goal of this game is to identify the resemblance of the shapes and colors of two objects in the shortest
-        possible time.
-        At the beginning of the game you will see the first object. After hitting the button PLAY, it will disappear and
-        a second one will be shown. If the second picture looks the same as the first one, press the left arrow.
-        Your task is to compare a displayed symbol with the one that has just disappeared.
+        The main goal of this game is to compute easy mathematical equations displayed inside falling lava stones. You
+        can enter the results by using the numerical keyboard or by clicking on the numbers displayed in the game.
+      </p>
+      <p class='mb10'>
+        The number and speed of the falling stones increases. Therefore, take the advantage of the blue ice stones that
+        help you to get rid of all the other falling lava stones. When you compute the equation inside of the blue
+        stones, you get extra bonus points.
       </p>
     </div>
   </section>
@@ -157,9 +158,39 @@
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
 		textureCache,
-		level = 2
+		level = 2, lives = 3, computedGroup, calculatorGroup
 	
-	let logicScene = null, symbolBg
+	const operators = [
+		{type: 'plus', text: '+'},
+		{type: 'minus', text: '-'},
+		{type: 'multiple', text: '×'},
+		{type: 'divide', text: '÷'}
+	]
+	
+	// 所有正在运动的待计算的item
+	let computedItems = []
+	
+	// 间隔生成item
+	let intervalRender = null
+	
+	// 每生成一条该值加1，作为该条item的name
+	let computedIndex = 0
+	
+	// 封装键盘操作函数
+	let keyboardHandler = null
+	
+	// welcome, introduce scene animate params
+	let transform = {
+		x: 0
+	}
+	let introTransform = {
+		posX: -centerX * 2
+	}
+	let gameTransform = {
+		x: -centerX * 2
+	}
+	
+	const rightPanelWidth = 194
 	
 	// 加载图片转化成纹理
 	loader
@@ -168,12 +199,7 @@
 	.add('correctImg', './assets/symbol-match/common/sign_ok.png')
 	.add('failImg', './assets/symbol-match/common/sign_fail.png')
 	
-	.add('colorSymbols', './assets/symbol-match/common/symbols_stars.png')
-	.add('shapeSymbolsSmall', './assets/symbol-match/common/symbols_small.png')
-	.add('symbolBackground', './assets/symbol-match/common/symbolBackground.png')
 	.add('gameBackground', './assets/symbol-match/common/gameBackground.png')
-	.add('arrow', './assets/symbol-match/common/arrowRight.png')
-	
 	.add('playBtn', './assets/symbol-match/en/button_play.png')
 	.add('counts', './assets/symbol-match/common/counts.png')
 	.load(setup)
@@ -199,114 +225,8 @@
 	// 游戏业务代码
 	// 生成computedItem，键盘输入 或 右侧模拟数字键盘输入后 enter 键，检测答案正确性
 	// 生成当前游戏状态，remain lives以及当前level
-	
 	function renderGameLogic () {
-		// 第一次渲染，需要加上些描述，不渲染是否match按钮
-		const symbols = []
-		const types = [textureCache['colorSymbols'], textureCache['shapeSymbolsSmall']]
-		for (let i = 0; i < 6; i++) {
-			let texture = new Texture(types[getRangeNum(0, types.length)])
-			texture.frame = new PIXI.Rectangle((i % 3) * 189, i > 3 ? 163 : 0, 189, 163)
-			let sprite = new Sprite(texture)
-			sprite.name = 'index-' + i
-			sprite.zIndex = 2
-			// sprite.mask = symbolBg
-			symbols.push({
-				sprite,
-				name: sprite.name
-			})
-		}
-		logicScene = new PIXI.Container()
-		
-		const tipText = new PIXI.Text('Remember the symbol', {
-			fontSize: 16
-		})
-		tipText.zIndex = 3
-		tipText.anchor.set(0.5)
-		tipText.x = centerX
-		tipText.y = centerY * 2 - 80
-		tipText.alpha = 0
-		
-		new TWEEN.Tween({alpha: tipText.alpha})
-		.to({alpha: 1}, 200)
-		.onUpdate(result => {tipText.alpha = result.alpha})
-		.start()
-		gameScene.addChild(tipText)
-		
-		// 生成symbol 方法
-		const renderSymbol = (isFirst = false) => {
-			const currentSprite = symbols[getRangeNum(0, symbols.length)].sprite
-			currentSprite.anchor.set(0.5)
-			currentSprite.x = isFirst ? centerX : centerX + 260
-			currentSprite.y = centerY - 20
-			gameScene.addChild(currentSprite)
-			return currentSprite
-		}
-		
-		const currentSymbol = renderSymbol(true)
-		const nextSymbol = renderSymbol()
-		
-		// 生成 match button
-		
-		const renderMatchBtns = () => {
-			const matchTexture = new Texture(textureCache['arrow'])
-			matchTexture.frame = new PIXI.Rectangle(0, 0, 50, 50)
-			const matchBtn = new Sprite(matchTexture)
-			matchBtn.zIndex = 3
-			matchBtn.anchor.set(0.5)
-			matchBtn.scale.set(-1, 1)
-			matchBtn.x = 140
-			matchBtn.y = centerY * 2 - 80
-			matchBtn.interactive = true
-			matchBtn.buttonMode = true
-			
-			const sameText = new PIXI.Text('The same', {
-				fontSize: 20
-			})
-			sameText.anchor.set(0.5)
-			sameText.x = 120
-			matchBtn.addChild(sameText)
-			
-			const notMatchBtn = new Sprite(matchTexture)
-			notMatchBtn.zIndex = 3
-			notMatchBtn.anchor.set(0.5)
-			notMatchBtn.x = centerX * 2 - 140
-			notMatchBtn.y = centerY * 2 - 80
-			notMatchBtn.interactive = true
-			notMatchBtn.buttonMode = true
-			
-			gameScene.addChild(notMatchBtn)
-			gameScene.addChild(matchBtn)
-		}
-		
-		// 后面的渲染
-		playButton.on('pointerdown', () => {
-			if (currentScene !== 3) return
-			// 移除字符
-			new TWEEN.Tween({alpha: tipText.alpha})
-			.to({alpha: 0}, 400)
-			.onUpdate(result => {tipText.alpha = result.alpha})
-			.onComplete(() => {gameScene.removeChild(tipText)})
-			.start()
-			
-			// 生成第一个symbol
-			new TWEEN.Tween(currentSymbol.position)
-			.to({x: 0}, 200)
-			.onUpdate(result => {currentSymbol.x = result.x})
-			.onComplete(() => {
-				gameScene.removeChild(currentSymbol)
-				app.stage.removeChild(playButton)
-				renderMatchBtns()
-			})
-			.start()
-			
-			// 生成下一个
-			new TWEEN.Tween(nextSymbol.position)
-			.delay(100)
-			.to({x: centerX}, 200)
-			.onUpdate(result => {nextSymbol.x = result.x})
-			.start()
-		})
+		console.log('renderGameLogic')
 	}
 	
 	// 游戏开始倒计时
@@ -395,7 +315,6 @@
 			playBtn,
 			intro,
 			gameBackground,
-			symbolBackground,
 			counts,
 			correctImg,
 			failImg
@@ -406,8 +325,8 @@
 		welcomeScene = new Sprite(new Texture(welcome))
 		introScene = new Sprite(new Texture(intro))
 		
-		welcomeScene.x = 0
-		introScene.x = -centerX * 2
+		welcomeScene.x = transform.x
+		introScene.x = introTransform.posX
 		
 		playBtnTexture = new Texture(playBtn)
 		playBtnTexture.frame = new PIXI.Rectangle(0, 0, 202, 60)
@@ -416,9 +335,8 @@
 		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 60, 202, 60)
 		
 		playButton = new Sprite(playBtnTexture)
-		playButton.anchor.set(0.5)
-		playButton.x = centerX
-		playButton.y = centerY * 2 - 40
+		playButton.x = (centerX * 2 - playButton.width) / 2
+		playButton.y = centerY * 2 - 80
 		
 		playButton.interactive = true
 		playButton.buttonMode = true
@@ -428,21 +346,15 @@
 		
 		app.stage.addChild(welcomeScene)
 		app.stage.addChild(introScene)
+		app.stage.addChild(playButton)
 		
 		// gameContent
-		symbolBg = new Sprite(symbolBackground)
-		symbolBg.zIndex = 1
-		let gameBg = new Sprite(gameBackground)
-		gameBg.zIndex = 3
-		gameScene = new PIXI.Container()
-		gameScene.sortableChildren = true
+		let gameBg = new Sprite(new Texture(gameBackground))
 		
-		gameScene.x = -centerX * 2
-		gameScene.addChild(symbolBg)
+		gameScene = new PIXI.Container()
+		gameScene.x = gameTransform.x
 		gameScene.addChild(gameBg)
 		app.stage.addChild(gameScene)
-		
-		app.stage.addChild(playButton)
 		
 		const countOneTexture = new PIXI.Texture(counts)
 		countOneTexture.frame = new PIXI.Rectangle(0, 0, 200, 200)
@@ -493,50 +405,56 @@
 		clickSound.play()
 		self.texture = playBtnActiveTexture
 		if (currentScene === 0) {
+			const tween = new TWEEN.Tween(transform)
+			.to({
+				x: centerX * 2
+			}, 500)
+			.onUpdate(updateScene1Handler)
+			.onComplete(() => {
+				currentScene = 1
+			})
 			
-			// welcomeScene 向左隐藏
-			new TWEEN.Tween(welcomeScene.position)
-			.to({x: centerX * 2}, 500)
-			.onUpdate(result => welcomeScene.x = result.x)
-			.onComplete(() => currentScene = 1)
-			.start()
+			const introSceneTween = new TWEEN.Tween(introTransform)
+			.to({
+				posX: 0
+			}, 500)
+			.onUpdate(updateScene2Handler)
 			
-			// introScene 向左隐藏
-			new TWEEN.Tween(introScene.position)
-			.to({x: 0}, 500)
-			.onUpdate(result => introScene.x = result.x)
-			.start()
+			tween.start()
+			introSceneTween.start()
+			
+			function updateScene1Handler (object) {
+				welcomeScene.x = object.x
+			}
+			
+			function updateScene2Handler (object) {
+				introScene.x = object.posX
+			}
 		}
 		if (currentScene === 1) {
-			new TWEEN.Tween(gameScene.position)
-			.to({x: 0}, 500)
-			.onUpdate(obj => { gameScene.x = obj.x })
-			.start()
-			
-			new TWEEN.Tween(introScene.position)
-			.to({x: centerX * 2}, 500)
-			.onUpdate(obj => { introScene.x = obj.x })
-			.onComplete(() => {
-				new TWEEN.Tween({
-					scaleX: playButton.scale.x,
-					scaleY: playButton.scale.y,
-					y: playButton.position.y
-				})
-				.easing(TWEEN.Easing.Bounce.Out)
-				.to({
-					scaleX: 0.8,
-					scaleY: 0.8,
-					y: centerY * 2 - 40
-				}, 400)
-				.onUpdate(result => {
-					playButton.scale.set(result.scaleX, result.scaleY)
-					playButton.position.y = result.y
-				})
-				.start()
-				renderCount(countSet)
-				currentScene = 3
+			self.alpha = 0
+			const tween = new TWEEN.Tween(gameTransform)
+			.to({
+				x: 0
+			}, 500)
+			.onUpdate(obj => {
+				gameScene.x = obj.x
 			})
-			.start()
+			
+			const introTrans = new TWEEN.Tween(introTransform)
+			.to({
+				posX: centerX * 2
+			}, 500)
+			.onUpdate(obj => {
+				introScene.x = obj.posX
+			})
+			.onComplete(() => {
+				app.stage.removeChild(playButton)
+				renderCount(countSet)
+			})
+			
+			tween.start()
+			introTrans.start()
 		}
 	}
 	
