@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-<h1 class='game-title'>Frantic-calculation</h1>
+<h1 class='game-title'>Identify Similar == Symbol match</h1>
 <div class='playground'></div>
 <div class='game-info'>
   <section>
@@ -159,7 +159,7 @@
 		textureCache,
 		level = 2
 	
-	let logicScene = null, symbolBg
+	let symbolBg, matchBtns = [], currentSymbol, nextSymbol, isMatch
 	
 	// 加载图片转化成纹理
 	loader
@@ -188,36 +188,12 @@
 		return Math.floor(Math.random() * (max - min)) + min
 	}
 	
-	// shuffle array，数组混淆
-	function shuffle (array) {
-		for (let i = array.length - 1; i > 0; i--) {
-			let j = Math.floor(Math.random() * (i + 1));
-			[array[i], array[j]] = [array[j], array[i]]
-		}
-	}
-	
 	// 游戏业务代码
 	// 生成computedItem，键盘输入 或 右侧模拟数字键盘输入后 enter 键，检测答案正确性
 	// 生成当前游戏状态，remain lives以及当前level
 	
 	function renderGameLogic () {
 		// 第一次渲染，需要加上些描述，不渲染是否match按钮
-		const symbols = []
-		const types = [textureCache['colorSymbols'], textureCache['shapeSymbolsSmall']]
-		for (let i = 0; i < 6; i++) {
-			let texture = new Texture(types[getRangeNum(0, types.length)])
-			texture.frame = new PIXI.Rectangle((i % 3) * 189, i > 3 ? 163 : 0, 189, 163)
-			let sprite = new Sprite(texture)
-			sprite.name = 'index-' + i
-			sprite.zIndex = 2
-			// sprite.mask = symbolBg
-			symbols.push({
-				sprite,
-				name: sprite.name
-			})
-		}
-		logicScene = new PIXI.Container()
-		
 		const tipText = new PIXI.Text('Remember the symbol', {
 			fontSize: 16
 		})
@@ -234,7 +210,21 @@
 		gameScene.addChild(tipText)
 		
 		// 生成symbol 方法
+		const types = [textureCache['colorSymbols'], textureCache['shapeSymbolsSmall']]
+		const typeIndex = getRangeNum(0, types.length)
 		const renderSymbol = (isFirst = false) => {
+			let symbols = []
+			for (let i = 0; i < 6; i++) {
+				let texture = new Texture(types[typeIndex])
+				texture.frame = new PIXI.Rectangle((i % 3) * 189, i >= 3 ? 163 : 0, 189, 163);
+				let sprite = new Sprite(texture)
+				sprite.name = 'index-' + i
+				sprite.zIndex = 2
+				symbols.push({
+					sprite,
+					name: sprite.name
+				})
+			}
 			const currentSprite = symbols[getRangeNum(0, symbols.length)].sprite
 			currentSprite.anchor.set(0.5)
 			currentSprite.x = isFirst ? centerX : centerX + 260
@@ -243,45 +233,112 @@
 			return currentSprite
 		}
 		
-		const currentSymbol = renderSymbol(true)
-		const nextSymbol = renderSymbol()
+		currentSymbol = renderSymbol(true)
+		
+		// 循环生成symbols
+		let animating = false
+		const renderSymbolsCycle = () => {
+			if (animating) return
+			animating = true
+			// 移除前一个symbol
+			new TWEEN.Tween(currentSymbol.position)
+			.to({x: 0}, 200)
+			.onUpdate(result => {currentSymbol.x = result.x})
+			.onComplete(() => {
+				playButton && app.stage.removeChild(playButton)
+				if (!matchBtns.length) renderMatchBtns()
+			})
+			.start()
+			
+			// 生成下一个symbol
+			nextSymbol = renderSymbol()
+			isMatch = currentSymbol.name === nextSymbol.name
+			new TWEEN.Tween(nextSymbol.position)
+			.delay(100)
+			.to({x: centerX}, 200)
+			.onUpdate(result => {
+				nextSymbol.x = result.x
+			})
+			.onComplete(() => {
+				// 先移除前面的
+				gameScene.removeChild(currentSymbol)
+				currentSymbol.destroy()
+				currentSymbol = null
+				currentSymbol = nextSymbol
+				animating = false
+			})
+			.start()
+		}
 		
 		// 生成 match button
-		
 		const renderMatchBtns = () => {
 			const matchTexture = new Texture(textureCache['arrow'])
 			matchTexture.frame = new PIXI.Rectangle(0, 0, 50, 50)
-			const matchBtn = new Sprite(matchTexture)
-			matchBtn.zIndex = 3
-			matchBtn.anchor.set(0.5)
-			matchBtn.scale.set(-1, 1)
-			matchBtn.x = 140
-			matchBtn.y = centerY * 2 - 80
-			matchBtn.interactive = true
-			matchBtn.buttonMode = true
 			
-			const sameText = new PIXI.Text('The same', {
-				fontSize: 20
-			})
-			sameText.anchor.set(0.5)
-			sameText.x = 120
-			matchBtn.addChild(sameText)
+			const matchActiveTexture = new Texture(textureCache['arrow'])
+			matchActiveTexture.frame = new PIXI.Rectangle(50, 0, 50, 50)
 			
 			const notMatchBtn = new Sprite(matchTexture)
 			notMatchBtn.zIndex = 3
 			notMatchBtn.anchor.set(0.5)
-			notMatchBtn.x = centerX * 2 - 140
-			notMatchBtn.y = centerY * 2 - 80
-			notMatchBtn.interactive = true
-			notMatchBtn.buttonMode = true
+			notMatchBtn.scale.set(-0.6, 0.6)
+			notMatchBtn.x = 240
+			notMatchBtn.y = centerY * 2 - 60
 			
-			gameScene.addChild(notMatchBtn)
-			gameScene.addChild(matchBtn)
+			const notMatchText = new PIXI.Text('Not the same', {fontSize: 20})
+			notMatchText.anchor.set(0.5)
+			notMatchText.x = 120
+			notMatchText.scale.set(-1.2, 1.2)
+			notMatchBtn.addChild(notMatchText)
+			
+			const matchBtn = new Sprite(matchTexture)
+			matchBtn.zIndex = 3
+			matchBtn.anchor.set(0.5)
+			matchBtn.scale.set(0.6, 0.6)
+			matchBtn.x = centerX * 2 - 240
+			matchBtn.y = centerY * 2 - 60
+			
+			const matchText = new PIXI.Text('The same', {fontSize: 20})
+			matchText.anchor.set(0.5)
+			matchText.x = 100
+			matchText.scale.set(1.2, 1.2)
+			matchBtn.addChild(matchText)
+			
+			matchBtns = [matchBtn, notMatchBtn]
+			
+			for (let i = 0; i < matchBtns.length; i++) {
+				matchBtns[i].interactive = true
+				matchBtns[i].buttonMode = true
+				matchBtns[i].on('pointerover', () => {
+					matchBtns[i].texture = matchActiveTexture
+				})
+				matchBtns[i].on('pointerout', () => {
+					matchBtns[i].texture = matchTexture
+				})
+				matchBtns[i].on('pointerdown', () => {
+					if (isMatch) {
+						if (i === 0) {
+							checkHint(true)
+						} else {
+							checkHint(false)
+						}
+					} else {
+						if (i !== 0) {
+							checkHint(true)
+						} else {
+							checkHint(false)
+						}
+					}
+					renderSymbolsCycle()
+				})
+				gameScene.addChild(matchBtns[i])
+			}
 		}
 		
 		// 后面的渲染
 		playButton.on('pointerdown', () => {
 			if (currentScene !== 3) return
+			
 			// 移除字符
 			new TWEEN.Tween({alpha: tipText.alpha})
 			.to({alpha: 0}, 400)
@@ -289,23 +346,8 @@
 			.onComplete(() => {gameScene.removeChild(tipText)})
 			.start()
 			
-			// 生成第一个symbol
-			new TWEEN.Tween(currentSymbol.position)
-			.to({x: 0}, 200)
-			.onUpdate(result => {currentSymbol.x = result.x})
-			.onComplete(() => {
-				gameScene.removeChild(currentSymbol)
-				app.stage.removeChild(playButton)
-				renderMatchBtns()
-			})
-			.start()
-			
-			// 生成下一个
-			new TWEEN.Tween(nextSymbol.position)
-			.delay(100)
-			.to({x: centerX}, 200)
-			.onUpdate(result => {nextSymbol.x = result.x})
-			.start()
+			// 开始循环symbol
+			renderSymbolsCycle()
 		})
 	}
 	
@@ -316,7 +358,6 @@
 		const one = sprites[0]
 		
 		const countAnimate = (obj, callback) => {
-			console.log(obj, 'countAnimate')
 			obj.visible = true
 			const scales = {x: obj.scale.x, y: obj.scale.y}
 			const tween = new TWEEN.Tween(scales)
@@ -338,6 +379,7 @@
 		const twoStart = countAnimate(two)
 		const oneStart = countAnimate(one, () => {
 			renderGameLogic()
+			renderToolbar(400)
 			TWEEN.remove(threeStart)
 			TWEEN.remove(twoStart)
 			TWEEN.remove(oneStart)
@@ -347,6 +389,50 @@
 		twoStart.chain(oneStart)
 		
 		threeStart.start()
+	}
+	
+	// 游戏计时及计分
+	function renderToolbar (remains) {
+		const toolbars = new PIXI.Container()
+		const statue = new PIXI.Graphics()
+		let time = remains
+		let remainTime = null
+		statue.beginFill(0X000000, 0.5)
+		statue.drawRect(0, 0, centerX * 2, 40)
+		statue.endFill()
+		toolbars.addChild(statue)
+		let textStyle = new PIXI.TextStyle({
+			fontFamily: 'PingFang SC Regular',
+			fontSize: 18,
+			fill: '#FFFFFF',
+			stroke: '#cd0000',
+			align: 'center',
+			lineHeight: 40,
+			textBaseline: 'middle'
+		})
+		toolbars.zIndex = 3
+		gameScene.addChild(toolbars)
+		
+		const renderText = () => {
+			remainTime = new PIXI.Text(`Remaining time: 00:${zeroFill(time)}`, textStyle)
+			remainTime.resolution = 2
+			remainTime.x = centerX - remainTime.width / 2
+			remainTime.y = 5
+			toolbars.addChild(remainTime)
+		}
+		
+		renderText()
+		
+		counterInterval = setInterval(() => {
+			remainTime && toolbars.removeChild(remainTime)
+			if (time === 0) {
+				gameOverHandler()
+			}
+			if (time > 0) {
+				time--
+			}
+			renderText()
+		}, 1000)
 	}
 	
 	// 游戏结束逻辑
@@ -384,6 +470,39 @@
 			alphaTween.start()
 		})
 		tween.start()
+	}
+	
+	// 错误正确判断 及计数
+	function checkHint (isRight) {
+		const hint = sprite => {
+			const transform = {
+				alpha: sprite.alpha,
+				x: sprite.scale.x,
+				y: sprite.scale.y
+			}
+			let tween = new TWEEN.Tween(transform)
+			.to({
+				x: 0.8,
+				y: 0.8,
+				alpha: 1
+			}, 200)
+			.onUpdate(result => {
+				sprite.scale.set(result.x, result.y)
+				sprite.alpha = result.alpha
+			})
+			.onComplete(() => {
+				sprite.alpha = 0
+				sprite.scale.set(0.4, 0.4)
+			})
+			tween.start()
+		}
+		if (isRight) {
+			hint(correctBtn)
+			successSound.play()
+		} else {
+			hint(failBtn)
+			errorSound.play()
+		}
 	}
 	
 	// 初始化多个游戏场景, start -> introduce -> ready
