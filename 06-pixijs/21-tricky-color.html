@@ -173,26 +173,7 @@
 		correctBtn, failBtn,
 		countOne, countTwo, countThree, counterInterval, countSet = [],
 		textureCache,
-		level = 2, lives = 3, computedGroup, calculatorGroup
-	
-	const operators = [
-		{type: 'plus', text: '+'},
-		{type: 'minus', text: '-'},
-		{type: 'multiple', text: '×'},
-		{type: 'divide', text: '÷'}
-	]
-	
-	// 所有正在运动的待计算的item
-	let computedItems = []
-	
-	// 间隔生成item
-	let intervalRender = null
-	
-	// 每生成一条该值加1，作为该条item的name
-	let computedIndex = 0
-	
-	// 封装键盘操作函数
-	let keyboardHandler = null
+		level = 2
 	
 	// welcome, introduce scene animate params
 	let transform = {
@@ -209,14 +190,19 @@
 	
 	// 加载图片转化成纹理
 	loader
-	.add('welcome', './assets/symbol-match/en/title_screen.png')
-	.add('intro', './assets/symbol-match/en/instructions.png')
-	.add('correctImg', './assets/symbol-match/common/sign_ok.png')
-	.add('failImg', './assets/symbol-match/common/sign_fail.png')
+	.add('welcome', './assets/tricky-color/en/title_screen.png')
+	.add('intro', './assets/tricky-color/en/instructions.png')
 	
-	.add('gameBackground', './assets/symbol-match/common/gameBackground.png')
-	.add('playBtn', './assets/symbol-match/en/button_play.png')
-	.add('counts', './assets/symbol-match/common/counts.png')
+	.add('correctImg', './assets/tricky-color/common/sign_ok.png')
+	.add('failImg', './assets/tricky-color/common/sign_fail.png')
+	
+	.add('yesBtn', './assets/tricky-color/en/button_right.png')
+	.add('noBtn', './assets/tricky-color/en/button_left.png')
+	.add('bubble', './assets/tricky-color/common/bubble_small.png')
+	
+	.add('gameBackground', './assets/tricky-color/common/gameBackground.png')
+	.add('playBtn', './assets/tricky-color/en/button_play.png')
+	.add('counts', './assets/tricky-color/common/counts.png')
 	.load(setup)
 	
 	// 补零
@@ -229,19 +215,164 @@
 		return Math.floor(Math.random() * (max - min)) + min
 	}
 	
-	// shuffle array，数组混淆
-	function shuffle (array) {
-		for (let i = array.length - 1; i > 0; i--) {
-			let j = Math.floor(Math.random() * (i + 1));
-			[array[i], array[j]] = [array[j], array[i]]
-		}
-	}
-	
 	// 游戏业务代码
 	// 生成computedItem，键盘输入 或 右侧模拟数字键盘输入后 enter 键，检测答案正确性
 	// 生成当前游戏状态，remain lives以及当前level
+	
+	let correctAnswer = null, bubbleBtn, ctrls = [], text
+	
+	const colors = [
+		{key: 'yellow', value: '#FFFF00'},
+		{key: 'green', value: '#00FF00'},
+		{key: 'black', value: '#000000'},
+		{key: 'orange', value: '#FFA500'},
+		{key: 'red', value: '#FF0000'},
+		{key: 'gray', value: '#BEBEBE'},
+		{key: 'purple', value: '#9B30FF'}
+	]
+	const texts = ['yellow', 'green', 'black', 'orange', 'red', 'gray', 'purple']
+	
 	function renderGameLogic () {
-		console.log('renderGameLogic')
+		if (text) gameScene.removeChild(text)
+		// 添加测试问题
+		const colorIndex = getRangeNum(0, colors.length)
+		const textIndex = getRangeNum(0, texts.length)
+		
+		const textStyle = {
+			fontSize: 28,
+			fill: colors[colorIndex].value,
+			stroke: '#000000',
+			strokeThickness: 1,
+			letterSpacing: 1
+		}
+		
+		text = new PIXI.Text(texts[textIndex], textStyle)
+		text.anchor.set(0.5)
+		text.x = centerX + 130
+		text.y = centerY + 16
+		gameScene.addChild(text)
+		correctAnswer = colors[colorIndex].key === texts[textIndex]
+		
+		// 添加 textTip Bubble
+		function renderBubble () {
+			const bubbleBtn = new Sprite(textureCache['bubble'])
+			bubbleBtn.anchor.set(0.5)
+			bubbleBtn.x = centerX + 130
+			bubbleBtn.y = centerY - 124
+			const bubbleText = new PIXI.Text('text color', {fontSize: 20, fill: '#000'})
+			bubbleText.anchor.set(0.5)
+			bubbleText.y = -2
+			bubbleBtn.addChild(bubbleText)
+			gameScene.addChild(bubbleBtn)
+		}
+		
+		if (!bubbleBtn) renderBubble()
+		
+		// 添加操作按钮
+		function addCtrl () {
+			const yesBtnTexture = textureCache['yesBtn']
+			yesBtnTexture.frame = new PIXI.Rectangle(0, 0, 202, 59)
+			const yesBtn = new Sprite(yesBtnTexture)
+			
+			const yesBtnActiveTexture = new Texture(textureCache['yesBtn'])
+			yesBtnActiveTexture.frame = new PIXI.Rectangle(0, 59, 202, 59)
+			
+			const noBtnTexture = textureCache['noBtn']
+			noBtnTexture.frame = new PIXI.Rectangle(0, 0, 202, 59)
+			const noBtn = new Sprite(noBtnTexture)
+			
+			const noBtnActiveTexture = new Texture(textureCache['noBtn'])
+			noBtnActiveTexture.frame = new PIXI.Rectangle(0, 59, 202, 59)
+			
+			gameScene.addChild(yesBtn)
+			gameScene.addChild(noBtn)
+			
+			ctrls = [yesBtn, noBtn]
+			for (let i = 0; i < ctrls.length; i++) {
+				ctrls[i].anchor.set(0.5)
+				ctrls[i].scale.set(0.8)
+				ctrls[i].interactive = true
+				ctrls[i].buttonMode = true
+				ctrls[i].y = centerY * 2 - 50
+				
+				if (i === 0) {
+					ctrls[i].x = centerX * 2 - 180
+				} else {
+					ctrls[i].x = 180
+				}
+				
+				ctrls[i].on('pointerover', () => {
+					if (i === 0) {
+						ctrls[i].texture = yesBtnActiveTexture
+					} else {
+						ctrls[i].texture = noBtnActiveTexture
+					}
+				})
+				
+				ctrls[i].on('pointerout', () => {
+					if (i === 0) {
+						ctrls[i].texture = yesBtnTexture
+					} else {
+						ctrls[i].texture = noBtnTexture
+					}
+				})
+				
+				ctrls[i].on('pointerdown', () => {
+					if (i === 0) {
+						checkHint(correctAnswer)
+					} else {
+						checkHint(!correctAnswer)
+					}
+					renderGameLogic()
+				})
+			}
+		}
+		
+		if (!ctrls.length) addCtrl()
+	}
+	
+	// 游戏计时及计分
+	function renderToolbar (remains) {
+		const toolbars = new PIXI.Container()
+		const statue = new PIXI.Graphics()
+		let time = remains
+		let remainTime = null
+		statue.beginFill(0X000000, 0.5)
+		statue.drawRect(0, 0, centerX * 2, 40)
+		statue.endFill()
+		toolbars.addChild(statue)
+		let textStyle = new PIXI.TextStyle({
+			fontFamily: 'PingFang SC Regular',
+			fontSize: 18,
+			fill: '#FFFFFF',
+			stroke: '#cd0000',
+			align: 'center',
+			lineHeight: 40,
+			textBaseline: 'middle'
+		})
+		toolbars.zIndex = 3
+		gameScene.addChild(toolbars)
+		
+		const renderText = () => {
+			remainTime = new PIXI.Text(`Remaining time: 00:${zeroFill(time)}`, textStyle)
+			remainTime.resolution = 2
+			remainTime.x = centerX - remainTime.width / 2
+			remainTime.y = 5
+			toolbars.addChild(remainTime)
+		}
+		
+		renderText()
+		
+		counterInterval = setInterval(() => {
+			remainTime && toolbars.removeChild(remainTime)
+			if (time === 0) {
+				gameOverHandler()
+			}
+			if (time > 0) {
+				time--
+			}
+			renderText()
+		}, 1000)
 	}
 	
 	// 游戏开始倒计时
@@ -251,7 +382,6 @@
 		const one = sprites[0]
 		
 		const countAnimate = (obj, callback) => {
-			console.log(obj, 'countAnimate')
 			obj.visible = true
 			const scales = {x: obj.scale.x, y: obj.scale.y}
 			const tween = new TWEEN.Tween(scales)
@@ -273,6 +403,7 @@
 		const twoStart = countAnimate(two)
 		const oneStart = countAnimate(one, () => {
 			renderGameLogic()
+			renderToolbar(400)
 			TWEEN.remove(threeStart)
 			TWEEN.remove(twoStart)
 			TWEEN.remove(oneStart)
@@ -282,6 +413,39 @@
 		twoStart.chain(oneStart)
 		
 		threeStart.start()
+	}
+	
+	// 错误正确判断 及计数
+	function checkHint (isRight) {
+		const hint = sprite => {
+			const transform = {
+				alpha: sprite.alpha,
+				x: sprite.scale.x,
+				y: sprite.scale.y
+			}
+			let tween = new TWEEN.Tween(transform)
+			.to({
+				x: 0.8,
+				y: 0.8,
+				alpha: 1
+			}, 200)
+			.onUpdate(result => {
+				sprite.scale.set(result.x, result.y)
+				sprite.alpha = result.alpha
+			})
+			.onComplete(() => {
+				sprite.alpha = 0
+				sprite.scale.set(0.4, 0.4)
+			})
+			tween.start()
+		}
+		if (isRight) {
+			hint(correctBtn)
+			successSound.play()
+		} else {
+			hint(failBtn)
+			errorSound.play()
+		}
 	}
 	
 	// 游戏结束逻辑
@@ -344,10 +508,10 @@
 		introScene.x = introTransform.posX
 		
 		playBtnTexture = new Texture(playBtn)
-		playBtnTexture.frame = new PIXI.Rectangle(0, 0, 202, 60)
+		playBtnTexture.frame = new PIXI.Rectangle(0, 0, 202, 59)
 		
 		playBtnActiveTexture = new Texture(playBtn)
-		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 60, 202, 60)
+		playBtnActiveTexture.frame = new PIXI.Rectangle(0, 59, 202, 59)
 		
 		playButton = new Sprite(playBtnTexture)
 		playButton.x = (centerX * 2 - playButton.width) / 2
@@ -398,15 +562,15 @@
 		// correct fail hint
 		correctBtn = new Sprite(new PIXI.Texture(correctImg))
 		correctBtn.anchor.set(0.5)
-		correctBtn.y = centerY - correctBtn.height / 2
-		correctBtn.x = 80
+		correctBtn.y = centerY - 72
+		correctBtn.x = centerX
 		correctBtn.scale.set(0.5)
 		correctBtn.alpha = 0
 		
 		failBtn = new Sprite(new PIXI.Texture(failImg))
 		failBtn.anchor.set(0.5)
-		failBtn.y = centerY - correctBtn.height / 2
-		failBtn.x = 80
+		failBtn.y = centerY - 72
+		failBtn.x = centerX
 		failBtn.scale.set(0.5)
 		failBtn.alpha = 0
 		
