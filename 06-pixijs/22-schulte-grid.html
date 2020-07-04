@@ -134,55 +134,55 @@
 	const Sprite = PIXI.Sprite
 	const Texture = PIXI.Texture
 	
+  // 生成外框
+	const rectGraphic = new PIXI.Graphics()
 	const RECT_SIZE = 200
-	
-	const tableContainer = new PIXI.Container()
-	app.stage.addChild(tableContainer)
-	tableContainer.pivot.set(tableContainer.width / 2, tableContainer.height / 2)
-	tableContainer.x = centerX
-	tableContainer.y = centerY
+	const radix = 3
+	const rectNum = Math.pow(radix, 2)
+	const singleRectCenter = RECT_SIZE / radix / 2
+ 
 	
 	// 添加外框
-	const rectGraphic = new PIXI.Graphics()
+	
 	rectGraphic.lineStyle(1, '0XCD0000', 1)
+	rectGraphic.pivot.set(centerX, centerY)
+	rectGraphic.position.set(centerX, centerY)
+	
 	rectGraphic.drawRect(centerX - RECT_SIZE / 2, centerY - RECT_SIZE / 2, RECT_SIZE, RECT_SIZE)
 	rectGraphic.closePath()
 	
+	const center = {
+		x: rectGraphic.x - RECT_SIZE / 2,
+		y: rectGraphic.y - RECT_SIZE / 2
+	}
+ 
 	// 添加内部框线
 	// const linePath = new PIXI.Graphics()
 	rectGraphic.lineStyle(1, '0XCD0000', 1)
-	rectGraphic.moveTo(centerX - RECT_SIZE / 2, centerY)
-	rectGraphic.lineTo(centerX + RECT_SIZE / 2, centerY)
-	rectGraphic.moveTo(centerX, centerY - RECT_SIZE / 2)
-	rectGraphic.lineTo(centerX, centerY + RECT_SIZE / 2)
+ 
+  // 开始绘制框内线条
+	rectGraphic.moveTo(center.x, center.y + RECT_SIZE / radix)
+	rectGraphic.lineTo(center.x + RECT_SIZE, center.y + RECT_SIZE / radix)
+ 
+	rectGraphic.moveTo(center.x + RECT_SIZE / radix, center.y)
+	rectGraphic.lineTo(center.x + RECT_SIZE / radix, center.y + RECT_SIZE)
+ 
 	app.stage.addChild(rectGraphic)
-	
+ 
 	// 先生成位置，再分配数字
-	for (let i = 0; i < 4; i++) {
+	
+	for (let i = 0; i < rectNum; i++) {
+		
 		const num = i + 1
 		const numText = new PIXI.Text(num, {fontSize: 36})
-		switch (num) {
-			case 1:
-				numText.x = centerX - RECT_SIZE / 4 - numText.width / 2
-				numText.y = centerY - RECT_SIZE / 4 - numText.height / 2
-      break
-			case 2:
-				numText.x = centerX + RECT_SIZE / 4 - numText.width / 2
-				numText.y = centerY - RECT_SIZE / 4 - numText.height / 2
-				break
-			case 3:
-				numText.x = centerX - RECT_SIZE / 4 - numText.width / 2
-				numText.y = centerY + RECT_SIZE / 4 - numText.height / 2
-				break
-			case 4:
-				numText.x = centerX + RECT_SIZE / 4 - numText.width / 2
-				numText.y = centerY + RECT_SIZE / 4 - numText.height / 2
-				break
-		}
+		numText.anchor.set(0.5)
+		
+		numText.x = center.x + singleRectCenter + RECT_SIZE / radix * (i % radix)
+		numText.y = center.y + singleRectCenter + RECT_SIZE / radix * ( num > radix && Math.floor( i / radix) )
 		
 		app.stage.addChild(numText)
 	}
-
+ 
 </script>
 </body>
 </html>
