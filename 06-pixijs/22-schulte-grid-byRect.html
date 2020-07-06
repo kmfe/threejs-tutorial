@@ -187,7 +187,7 @@
 		temp.reverse()
   
 		const str = temp.join(',')
-		pointerDownStr = new PIXI.Text(str, {fontSize: 24})
+		pointerDownStr = new PIXI.Text(str, {fontSize: 24, wordWrap: true, wordWrapWidth: 400, breakWords: true})
 		pointerDownStr.anchor.set(0.5)
 		pointerDownStr.x = centerX
 		pointerDownStr.y = centerY * 2 - 30
