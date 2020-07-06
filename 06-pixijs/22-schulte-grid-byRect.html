@@ -88,9 +88,11 @@
 		transparent: false,
 		backgroundColor: 0XEEEEEE
 	}
+	
 	const app = new PIXI.Application(options)
 	let clickSound, successSound, errorSound, flipSound, explosionSound
-	let angle = 30
+	let correctIndex = 1
+  let correctArr = []
 	
 	// shuffle array，数组混淆
 	function shuffle (array) {
@@ -137,51 +139,75 @@
 	
 	// 生成外框
 	const rectGraphic = new PIXI.Graphics()
-	const RECT_SIZE = 400
-	const radix = 5
-	const rectNum = Math.pow(radix, 2)
-	const singleRectCenter = RECT_SIZE / radix
-	const halfSingleRectSize = RECT_SIZE / radix / 2
+	let RECT_SIZE = 150
+	let radix = 2
+  let rectNum, singleRectCenter, halfSingleRectSize, center, rects = [], positions = []
+  
+  const renderFrameAndPosition = () => {
+	  if(radix === 4 || radix === 5){
+		  RECT_SIZE = 300
+	  } else if(radix === 3){
+		  RECT_SIZE = 200
+	  } else if (radix === 6){
+		  RECT_SIZE = 360
+	  }
 	
-	// 添加外框
-	rectGraphic.lineStyle(1, '0XCD0000', 1)
-	rectGraphic.pivot.set(centerX, centerY)
-	rectGraphic.position.set(centerX, centerY)
+	  rectNum = Math.pow(radix, 2)
+	  singleRectCenter = RECT_SIZE / radix
+	  halfSingleRectSize = RECT_SIZE / radix / 2
 	
-	// 获取rectGraph 左上角的起点
-	const center = {
-		x: rectGraphic.x - RECT_SIZE / 2,
-		y: rectGraphic.y - RECT_SIZE / 2
+	  // 添加外框
+	  rectGraphic.lineStyle(1, '0XCD0000', 1)
+	  rectGraphic.pivot.set(centerX, centerY)
+	  rectGraphic.position.set(centerX, centerY)
+	
+	  center = {
+		  x: rectGraphic.x - RECT_SIZE / 2,
+		  y: rectGraphic.y - RECT_SIZE / 2
+	  }
+	
+	  for (let index = 0; index < rectNum; index++) {
+		  let num = index + 1
+		  positions.push({
+			  x: center.x + RECT_SIZE / radix * (index % radix),
+			  y: center.y + RECT_SIZE / radix * (num > radix && Math.floor(index / radix))
+		  })
+	  }
+	  
+	  shuffle(positions)
+  }
+	
+	// 在panel下面显示当前的按键次序
+  let pointerDownStr = null
+  
+	const pointerdownArr = arr => {
+		const temp = [...arr]
+		if(pointerDownStr) app.stage.removeChild(pointerDownStr)
+  
+		temp.reverse()
+  
+		const str = temp.join(',')
+		pointerDownStr = new PIXI.Text(str, {fontSize: 24})
+		pointerDownStr.anchor.set(0.5)
+		pointerDownStr.x = centerX
+		pointerDownStr.y = centerY * 2 - 30
+		app.stage.addChild(pointerDownStr)
 	}
 	
-	// 开始绘制框内线条
-	
-	const rightArr = []
-	
-	const rects = []
-	
-	const positions = []
-	
-	for (let index = 0; index < rectNum; index++) {
-		let num = index + 1
-		positions.push({
-			x: center.x + RECT_SIZE / radix * (index % radix),
-			y: center.y + RECT_SIZE / radix * (num > radix && Math.floor(index / radix))
-		})
+	const pointerHandler = (index, isRight) => {
+		app.stage.removeChild(rects[index].graphic)
+		app.stage.addChild(renderRectWithNum(index, isRight ? 0X00C957 : 0XFF0000, '#ffffff'))
+    setTimeout(() => {
+	    app.stage.removeChild(rects[index].graphic)
+	    app.stage.addChild(renderRectWithNum(index))
+    }, 500)
 	}
-	
-	shuffle(positions)
-	console.log(positions, '被shuffle')
 	
 	const renderRectWithNum = (index, rectColor = '0XFFFFFF', textColor = '0X000000') => {
 		const num = index + 1
 		const rect = new PIXI.Graphics()
 		rect.lineStyle(1, '0XCD0000', 1)
 		rectColor && rect.beginFill(rectColor, 1)
-		
-		// const x = center.x + RECT_SIZE / radix * ( index % radix )
-		// const y = center.y + RECT_SIZE / radix * ( num > radix && Math.floor( index / radix) )
-		console.log(positions[index].x, positions[index].y)
 		
 		rect.drawRect(positions[index].x, positions[index].y, singleRectCenter, singleRectCenter)
 		rect.hitArea = new PIXI.Rectangle(positions[index].x, positions[index].y, singleRectCenter, singleRectCenter)
@@ -199,29 +225,51 @@
 		rects.push({
 			graphic: rect, index
 		})
+		
+		rect.on('pointerdown', () => {
+			console.log(correctIndex, rectNum, '什么秦孔')
+			if (correctIndex > rectNum) {
+				radix += 1
+        // 重新渲染
+				renderGameLogic()
+        console.log('渲染完了')
+        return
+      }
+			if ((index + 1) === correctIndex) {
+				pointerHandler(index, true)
+				correctArr.push(correctIndex)
+				pointerdownArr(correctArr)
+				correctIndex++
+        console.log(correctIndex, '--->')
+			} else {
+				pointerHandler(index, false)
+			}
+		})
+		
+		app.stage.addChild(rect)
+		
 		return rect
 	}
 	
-	for (let i = 0; i < rectNum; i++) {
-		rightArr.push(i + 1)
-		renderRectWithNum(i)
-	}
+	const renderGameLogic = () => {
+		if(rects.length > 0){
+			for(let i = 0; i < rects.length; i++){
+			  app.stage.removeChild(rects[i].graphic)
+			}
+			rects.splice(0)
+			positions.splice(0)
+			correctArr.splice(0)
+			correctIndex = 1
+    }
+		
+		renderFrameAndPosition()
+		for (let i = 0; i < rectNum; i++) {
+			renderRectWithNum(i)
+		}
+  }
 	
-	// shuffle(rects)
-	console.log(rects, '--->')
-	
-	// 点击触发
-	const sortArr = []
-	
-	for (let i = 0; i < rects.length; i++) {
-		app.stage.addChild(rects[i].graphic)
-		rects[i].graphic.on('pointerdown', () => {
-			const index = i + 1
-			app.stage.removeChild(rects[i].graphic)
-			app.stage.addChild(renderRectWithNum(i, '0XFF6600', '#ffffff'))
-		})
-	}
-
+	// 开始游戏
+	renderGameLogic()
 </script>
 </body>
 </html>
