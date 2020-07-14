@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>pixi.js tutorial</title>
+  <script src='./lib/matter.js'></script>
+  <script src='./lib/tween.umd.js'></script>
+  <script src='./lib/pixi.js'></script>
+  <script src='./lib/pixi-sound.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+      'Noto Color Emoji';
+    }
+    
+    ul, li {
+      list-style: none;
+    }
+    
+    html, body {
+    }
+    
+    .playground {
+      width: 600px;
+      height: 400px;
+    }
+    
+    .playground canvas {
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .game-title {
+      text-align: center;
+      font-size: 24px;
+      line-height: 2;
+    }
+    
+    .game-info {
+      margin: 30px auto;
+      width: 80%;
+      line-height: 1.2;
+    }
+    
+    .game-info section {
+      margin-bottom: 20px;
+    }
+    
+    .game-info__title {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class='playground'></div>
+<script>
+	const Bodies = Matter.Bodies,
+		Engine = Matter.Engine,
+		Render = Matter.Render,
+		World = Matter.World,
+		MouseConstraint = Matter.MouseConstraint
+	
+	const w = 600
+	const h = 400
+	
+	const playGround = document.querySelector('.playground')
+	
+	const engine = Engine.create()
+	
+	const render = Render.create({
+		element: playGround,
+		engine: engine,
+		options: {
+			width: w,
+			height: h,
+			showVelocity: true, // 显示速度
+			wireframes: false // 启用实体渲染，默认线框渲染
+		}
+	})
+	
+	Render.run(render)
+	Engine.run(engine)
+	
+	// 添加物体
+	const rectangle = Bodies.rectangle(140, 40, 80, 80, {
+		frictionAir: 0.01,
+		restitution: 0.01
+	})
+	
+	const circle = Bodies.circle(126, 10, 50, {
+		density: 0.8,
+		restitution: 0.1
+	})
+	
+	// 创建自定义的刚体
+	// const customRigid = Matter.Body.create({parts: [rectangle, circle]})
+	
+	const polygon = Bodies.polygon(20, 40, 5, 30)
+	
+	const trapezoid = Bodies.trapezoid(100, 150, 50, 50, 0.5)
+	
+	const wallTop = Bodies.rectangle(w / 2, 0, w, 10, {isStatic: true})
+	const wallRight = Bodies.rectangle(w, h / 2, 10, h, {isStatic: true})
+	const wallBot = Bodies.rectangle(w / 2, h, w, 10, {isStatic: true, restitution: 0.1})
+	const wallLeft = Bodies.rectangle(0, h / 2, 10, h, {isStatic: true})
+	
+	// 添加鼠标控制
+	const mouseConstraint = MouseConstraint.create(engine, {
+		sniffer: 1
+	})
+	
+	// 添加物体 + 鼠标控制
+	World.add(engine.world, [
+		rectangle,
+		circle,
+		polygon,
+		trapezoid,
+		wallTop,
+		wallRight,
+		wallBot,
+		wallLeft,
+		mouseConstraint,
+		// customRigid
+	])
+
+</script>
+</body>
+</html>

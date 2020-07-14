@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>pixi.js tutorial</title>
+  <script src='./lib/matter.js'></script>
+  <script src='./lib/tween.umd.js'></script>
+  <script src='./lib/pixi.js'></script>
+  <script src='./lib/pixi-sound.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+      'Noto Color Emoji';
+    }
+    
+    ul, li {
+      list-style: none;
+    }
+    
+    html, body {
+    }
+    
+    .playground {
+      /*margin: 40px auto;*/
+      width: 600px;
+      height: 400px;
+    }
+    
+    .playground canvas {
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .game-title {
+      text-align: center;
+      font-size: 24px;
+      line-height: 2;
+    }
+    
+    .game-info {
+      margin: 30px auto;
+      width: 80%;
+      line-height: 1.2;
+    }
+    
+    .game-info section {
+      margin-bottom: 20px;
+    }
+    
+    .game-info__title {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class='playground'></div>
+<script>
+	const Bodies = Matter.Bodies,
+		Engine = Matter.Engine,
+		Render = Matter.Render,
+		World = Matter.World,
+		MouseConstraint = Matter.MouseConstraint,
+		Constraint = Matter.Constraint,
+		Composites = Matter.Composites
+	
+	const w = 800
+	const h = 600
+	
+	const playGround = document.querySelector('.playground')
+	
+	const engine = Engine.create()
+	
+	const render = Render.create({
+		element: playGround,
+		engine,
+		options: {
+			width: w,
+			height: h,
+			showVelocity: true,
+			wireframes: false,
+			showAngleIndicator: true
+		}
+	})
+	
+	Engine.run(engine)
+	Render.run(render)
+	
+	// 创建物体
+	
+	// const circle = Bodies.circle(100, 0, 40)
+	
+	const wallTop = Bodies.rectangle(w / 2, 0, w, 10, {isStatic: true})
+	const wallRight = Bodies.rectangle(w, h / 2, 10, h, {isStatic: true})
+	const wallBot = Bodies.rectangle(w / 2, h, w, 10, {isStatic: true})
+	const wallLeft = Bodies.rectangle(0, h / 2, 10, h, {isStatic: true})
+	
+	World.add(engine.world, [wallTop, wallRight, wallBot, wallLeft])
+	
+	// 添加鼠标控制
+	
+	const mouseConstraint = MouseConstraint.create(engine, {})
+	World.add(engine.world, [mouseConstraint])
+	
+	// 添加composite circle
+	// Composites.stack(x, y, columns, rows, columnGap, rowGap, callback)
+	
+	const stackCircle = Matter.Composites.stack(280, 30, 3, 2, 4, 4, function (x, y) {
+		return Bodies.circle(x, y, 20, {
+			restitution: 1 // 增加弹性
+		})
+	})
+	
+	// 添加composite rectangle
+	const stackRectangle = Matter.Composites.stack(420, 120, 3, 4, 1, 1, function (x, y) {
+		return Bodies.rectangle(x, y, 20, 20, {
+			restitution: 0.2
+		})
+	})
+	
+	World.add(engine.world, [stackCircle, stackRectangle])
+	
+	// composite chain
+	// Composites.chain = function(composite, xOffsetA, yOffsetA, xOffsetB, yOffsetB, options){}
+	// offset 取值范围 [-0.5, 0.5]
+	
+	// 创建两个桥墩
+	const bridge_left = Bodies.rectangle(100, 400, 50, 250, {isStatic: true})
+	const bridge_right = Bodies.rectangle(700, 400, 50, 250, {isStatic: true})
+	
+	// 桥面
+	const bridge = Composites.stack(150, 250, 7, 1, 10, 0, (x, y) => {
+		return Bodies.rectangle(x, y, 60, 30, {
+			chamfer: 15
+		})
+	})
+	
+	// 桥面木板创建好，用Composites.chain 链接起来，
+	// Composites.chain(composite, xOffsetA, yOffsetA, xOffsetB, yOffsetB, options)
+	// Composite: 被链接的混合体
+	// xOffsetA, yOffsetA, (0, 0) 表示中心，
+	// (0.5, 0) 右侧中间， (0.5, -0.5) 右上角，(-0.5, -0.5) 左上角，(-0.5, 0.5) 左下角
+	
+	Composites.chain(bridge, 0.4, -0.3, -0.4, -0.3, {})
+	Composites.chain(bridge, 0.4, 0, -0.4, 0, {})
+	Composites.chain(bridge, 0.4, 0.3, -0.4, 0.3, {})
+	
+	/*
+	* Constraint.create 创建约束，将两个物体通过约束点连接在一起，这个约束点，相当于一个钉子将两个物体固定在一起，
+	* 其参数是一个json 对象，主要参数有：bodyA, pointA, bodyB, pointB, length, stiffness
+	* bodyA, bodyB 分别是被连接的连个物体
+	* pointA, pointB, 表示约束点的位置，值为向量，默认为 {x: 0, y: 0} 在物体中心位置，以物体中心为中心进行量相减（三角形法则）
+	*
+	* bridge_left 为左侧桥墩， pointA: {x: 0, y: -100} 表示自身约束点在 中心，向上偏移 100px 的位置
+	* bridge.bodies[0], 获取混合木板的第一个
+	* pointB: {x: -25, y: 0} 表第一块木板的约束点位置为, 木板中心点向左 偏移 25px
+	* */
+	
+	// 将已经 链接好的木板，左侧固定到 左侧桥墩
+	const nailLeft = Constraint.create({
+		bodyA: bridge_left,
+		pointA: {x: 0, y: -100},
+		bodyB: bridge.bodies[0],
+		pointB: {x: -25, y: 0},
+		stiffness: 0,
+		length: 100
+	})
+	
+	// 将已经 链接好的木板，右侧固定到 右侧桥墩
+	const nailRight = Constraint.create({
+		bodyA: bridge_right,
+		pointA: {x: 0, y: -100},
+		bodyB: bridge.bodies[bridge.bodies.length - 1],
+		pointB: {x: 25, y: 0},
+		stiffness: 0,
+		length: 80
+	})
+	
+	World.add(engine.world, [nailLeft, nailRight, bridge_left, bridge_right, bridge])
+	
+	// 添加 softBody 软体
+	// 软体的本质是 先建一个圆形的堆叠，然后使用网孔连接起来
+	
+	// Composites.softBody(x, y, columns, rows, columnGap, rowGap, crossBrace,
+	// particleRadius, particleOptions, constraintOptions)
+  // crossBrace 表示方格是否添加十字线
+  
+	
+	const particleOptions = {
+		friction: 0.0001,
+		collisionGFilter: {
+			group: -1
+		},
+		render: {
+			visible: false
+		}
+	}
+	
+	const constraintOptions = {stiffness: 0.2}
+	const columns = 8
+	const cloth = Composites.softBody(w / 2 - 100, 80, columns, 10, 5, 5, false, 8, particleOptions, constraintOptions)
+	
+	// 最上面一排固定
+	for (let i = 0; i < columns; i++) {
+		cloth.bodies[i].isStatic = true
+	}
+	
+	World.add(engine.world, [cloth])
+
+</script>
+</body>
+</html>
