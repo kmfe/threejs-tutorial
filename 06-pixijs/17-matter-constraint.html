@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>pixi.js tutorial</title>
+  <script src='./lib/matter.js'></script>
+  <script src='./lib/tween.umd.js'></script>
+  <script src='./lib/pixi.js'></script>
+  <script src='./lib/pixi-sound.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+      'Noto Color Emoji';
+    }
+    
+    ul, li {
+      list-style: none;
+    }
+    
+    html, body {
+    }
+    
+    .playground {
+      /*margin: 40px auto;*/
+      width: 600px;
+      height: 400px;
+    }
+    
+    .playground canvas {
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .game-title {
+      text-align: center;
+      font-size: 24px;
+      line-height: 2;
+    }
+    
+    .game-info {
+      margin: 30px auto;
+      width: 80%;
+      line-height: 1.2;
+    }
+    
+    .game-info section {
+      margin-bottom: 20px;
+    }
+    
+    .game-info__title {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class='playground'></div>
+<script>
+	const playGround = document.querySelector('.playground')
+	const stageWidth = 600
+	const stageHeight = 400
+	
+	const Engine = Matter.Engine,
+		World = Matter.World,
+		Bodies = Matter.Bodies,
+		Render = Matter.Render,
+		Body = Matter.Body,
+		Composites = Matter.Composites,
+		Composite = Matter.Composite,
+		Constraint = Matter.Constraint,
+		MouseConstraint = Matter.MouseConstraint
+	
+	const engine = Engine.create()
+	const render = Render.create({
+		engine,
+		element: playGround,
+		options: {
+			width: stageWidth,
+			height: stageHeight,
+			showDebug: true,
+			showCollisions: true,
+      showIds: true
+		}
+	})
+	
+	Engine.run(engine)
+	Render.run(render)
+	
+	/*
+	* 添加stack
+	* stack 的计算顺序
+	* */
+	const stack = Composites.stack(20, 10, 10, 10, 10, 0, (x, y) => {
+		return Bodies.circle(x, y, 16, {
+			restitution: 0
+		})
+	})
+	
+	World.add(engine.world, [stack])
+	console.log(stack)
+	
+	// 将某些stack 设置为static
+	function constraintColumn (stack, column) {
+		stack.bodies[column - 1].isStatic = true
+		
+		// 将某一列的球进行约束
+		for (let i = 0; i < 9; i++) {
+			Composite.add(stack, Constraint.create({
+				bodyA: stack.bodies[column - 1 + (i * 10)],
+				pointA: {x: 0, y: 15},
+				bodyB: stack.bodies[column - 1 + (i * 10) + 10],
+				pointB: {x: 0, y: -15},
+				length: 8,
+				stiffness: 1
+			}))
+		}
+	}
+	
+	constraintColumn(stack, 3)
+	constraintColumn(stack, 8)
+	
+  // 添加鼠标控制
+	const mouseConstraint = MouseConstraint.create(engine, {})
+	World.add(engine.world, [mouseConstraint])
+ 
+	// 添加边界
+	function add4wall () {
+		const wallTop = Bodies.rectangle(stageWidth / 2, 0, stageWidth, 10, {isStatic: true})
+		const wallRight = Bodies.rectangle(stageWidth, stageHeight / 2, 10, stageHeight, {isStatic: true})
+		const wallBot = Bodies.rectangle(stageWidth / 2, stageHeight, stageWidth, 10, {isStatic: true, restitution: 0})
+		const wallLeft = Bodies.rectangle(0, stageHeight / 2, 10, stageHeight, {isStatic: true})
+		World.add(engine.world, [wallTop, wallRight, wallBot, wallLeft])
+	}
+	
+	add4wall()
+</script>
+</body>
+</html>
