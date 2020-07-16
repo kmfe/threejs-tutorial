@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>pixi.js tutorial</title>
+  <script src='./lib/matter.js'></script>
+  <script src='./lib/tween.umd.js'></script>
+  <script src='./lib/pixi.js'></script>
+  <script src='./lib/pixi-sound.js'></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+      'Noto Color Emoji';
+    }
+    
+    ul, li {
+      list-style: none;
+    }
+    
+    html, body {
+    }
+    
+    .playground {
+      /*margin: 40px auto;*/
+      width: 600px;
+      height: 400px;
+    }
+    
+    .playground canvas {
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .game-title {
+      text-align: center;
+      font-size: 24px;
+      line-height: 2;
+    }
+    
+    .game-info {
+      margin: 30px auto;
+      width: 80%;
+      line-height: 1.2;
+    }
+    
+    .game-info section {
+      margin-bottom: 20px;
+    }
+    
+    .game-info__title {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class='playground'></div>
+<script>
+	const Render = Matter.Render,
+		Engine = Matter.Engine,
+		Composites = Matter.Composites,
+		Bodies = Matter.Bodies,
+		World = Matter.World,
+		MouseConstraint = Matter.MouseConstraint
+	
+	const playground = document.querySelector('.playground')
+	const w = 600
+	const h = 400
+	const engine = Engine.create({})
+	const render = Render.create({
+		engine,
+		element: playground,
+		options: {
+			width: w,
+			height: h,
+			wireframes: false
+		}
+	})
+	
+	Render.run(render)
+	Engine.run(engine)
+	
+	const mouse = MouseConstraint.create(engine, {})
+	
+	// 添加物体，不相互碰撞的物体，group 设置为负值 相同
+	const redStack = Composites.stack(10, 10, 1, 10, 0, 10, (x, y) => {
+		return Bodies.circle(x, y, 20, {
+			restitution: 0,
+			render: {
+				fillStyle: 'red',
+				lineWidth: 2
+			},
+			collisionFilter: {
+				category: 0x0002,
+				mask: 0x0002 | 0x0001
+			}
+		})
+	})
+	
+	// 添加不相互碰撞的物体
+	const greenStack = Composites.stack(80, 10, 1, 10, 0, 10, (x, y) => {
+		return Bodies.circle(x, y, 20, {
+			restitution: 0,
+			render: {
+				fillStyle: 'green',
+				lineWidth: 2
+			},
+			collisionFilter: {
+				category: 0x0001,
+				mask: 0x0004 | 0x0001 | 0x0002
+      }
+		})
+	})
+	
+	// 添加不相互碰撞的物体
+	const blueStack = Composites.stack(120, 10, 1, 10, 0, 10, (x, y) => {
+		return Bodies.circle(x, y, 20, {
+			restitution: 0,
+			render: {
+				fillStyle: 'blue',
+				lineWidth: 2
+			},
+			collisionFilter: {
+				category: 0x0008,
+				mask: 0x0008 | 0x0001
+			}
+		})
+	})
+	
+	World.add(engine.world, [redStack, greenStack, blueStack])
+	
+	// 添加边界
+	function add4wall () {
+		const wallTop = Bodies.rectangle(w / 2, 0, w, 10, {isStatic: true})
+		const wallRight = Bodies.rectangle(w, h / 2, 10, h, {isStatic: true})
+		const wallBot = Bodies.rectangle(w / 2, h, w, 10, {isStatic: true, restitution: 0})
+		const wallLeft = Bodies.rectangle(0, h / 2, 10, h, {isStatic: true})
+		World.add(engine.world, [wallTop, wallRight, wallBot, wallLeft, mouse])
+	}
+	
+	add4wall()
+</script>
+</body>
+</html>
