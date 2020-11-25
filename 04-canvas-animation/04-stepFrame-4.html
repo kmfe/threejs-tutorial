@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport'
+    content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <title>Canvas 逐帧动画4</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    
+    canvas {
+      /*background: #ccc;*/
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  /*
+  * 该类用于生成逐帧图片热点 + 文字
+  * 逐帧图片必须为正方向，竖向排列
+  * 需要指定图片的真实大小，上边距，左边距
+  * */
+  const imgTypes = {
+    forward: './assets/forward.png',
+    info: './assets/info.png',
+    right: './assets/right.png'
+  }
+  
+  class RenderHotSpot {
+    constructor(options) {
+      this.options = options
+      const { imgWidth } = this.options
+      this.options.textWidth = this.options.textWidth || this.options.imgWidth
+      
+      this.resource = null
+      this.KEYFRAME = -1
+      this.ratio = window.devicePixelRatio
+      this.lastTime = Date.now()
+      this.x = 0
+      this.y = 0
+      this.stepDistance = imgWidth
+      this.canvas = null
+      this.ctx = null
+    }
+    
+    async start() {
+      await this.loadResource()
+      this.initCanvas()
+      this.draw()
+    }
+    
+    loadResource() {
+      return new Promise(resolve => {
+        const img = new Image()
+        img.src = imgTypes[this.options.type]
+        img.onload = () => {
+          resolve(img)
+          this.resource = img
+        }
+      })
+    }
+    
+    initCanvas() {
+      const canvas = this.canvas = document.createElement('canvas')
+      const { imgWidth, textWidth, imgHeight } = this.options
+      const standardWidth = Math.max(imgWidth, textWidth)
+      this.ctx = canvas.getContext('2d')
+      const { fontSize } = this.options
+      canvas.width = standardWidth * this.ratio
+      canvas.height = (imgHeight + fontSize) * this.ratio
+      canvas.style.cssText = `width: ${standardWidth}px; height: ${imgHeight + fontSize}px`
+      this.ctx.scale(this.ratio, this.ratio)
+    }
+    
+    drawImage(x = 0, y = 0) {
+      const {
+        imgWidth,
+        imgHeight,
+        imgCount
+      } = this.options
+      // switch image
+      this.KEYFRAME = ++this.KEYFRAME % imgCount
+      this.ctx.drawImage(
+        this.resource,
+        0,
+        this.KEYFRAME * imgHeight,
+        imgWidth,
+        imgHeight,
+        x,
+        y,
+        imgWidth,
+        imgHeight)
+      this.y += this.stepDistance
+    }
+    
+    wrapText(x, y, maxWidth, lineHeight) {
+      const { text } = this.options
+      const words = text.split('')
+      let line = ''
+      const lines = []
+      for (let n = 0; n < words.length; n += 1) {
+        const testLine = line + words[n]
+        const metrics = this.ctx.measureText(testLine)
+        const testWidth = metrics.width
+        if (testWidth > maxWidth && n > 0) {
+          this.ctx.fillText(line, x, y)
+          line = words[n]
+          y += lineHeight
+          lines.push(line)
+        } else {
+          line = testLine
+        }
+      }
+      this.ctx.fillText(line, x, y)
+      return lines.length + 1
+    }
+    
+    drawTextWithImg() {
+      const { fontSize, text, imgWidth, imgOffsetTop } = this.options
+      this.ctx.font = `${this.options.fontSize}px bold -apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei`
+      this.ctx.fillStyle = 'white'
+      this.ctx.shadowOffsetX = 3
+      this.ctx.shadowOffsetY = 3
+      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
+      
+      const textWidth = this.ctx.measureText(text).width
+      const lineHeight = 18
+      if (textWidth > imgWidth) {
+        const line = this.wrapText(0, fontSize, imgWidth, lineHeight)
+        this.drawImage(0, fontSize * line - imgOffsetTop)
+      } else {
+        this.ctx.fillText(text, (Math.abs(textWidth - imgWidth)) / 2, fontSize, imgWidth)
+        this.drawImage(0, fontSize - imgOffsetTop)
+      }
+    }
+    
+    draw() {
+      const now = Date.now()
+      if (now - this.lastTime > 10) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+        this.drawTextWithImg()
+        this.lastTime = now
+      }
+      requestAnimationFrame(this.draw.bind(this))
+    }
+  }
+  
+  const pot = new RenderHotSpot({
+    imgCount: 25,
+    imgWidth: 128,
+    imgHeight: 128,
+    imgOffsetTop: 36,
+    type: 'forward',
+    fontSize: 16,
+    text: '省直属文化集团 文山州麻栗坡县'
+  })
+  pot.start().then(() => {
+    document.body.appendChild(pot.canvas)
+  })
+
+</script>
+</body>
+</html>

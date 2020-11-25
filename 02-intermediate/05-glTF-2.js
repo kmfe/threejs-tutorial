@@ -109,7 +109,8 @@ class Tutorial {
     // 增加地面模型
     const gltfLoader = new GLTFLoader()
     let cars
-    gltfLoader.load('https://res.eschervr.com/vrPlayer/scene/scene.gltf',
+    // gltfLoader.load('https://res.eschervr.com/vrPlayer/scene/scene.gltf',
+        gltfLoader.load('https://res.eschervr.com/vrPlayer/scene/scene.gltf',
       gltf => {
         console.log(gltf, 'xxx---xx')
         const root = gltf.scene

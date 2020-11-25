@@ -58,3 +58,6 @@ Pixi的加载器有很多可以设置的功能，add方法有四个基本参数 
 所以add 方法也是可以使用对象的传值方式。
 
 
+#### 平铺sprite
+
+PIXI.TilingSprite
