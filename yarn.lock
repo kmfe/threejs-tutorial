@@ -4,15 +4,38 @@
 
 "@tweenjs/tween.js@^17.3.0":
   version "17.4.0"
-  resolved "http://r.cnpmjs.org/@tweenjs/tween.js/download/@tweenjs/tween.js-17.4.0.tgz#2e9ab3f2111906b30dfe1ef3259a9781dd211d35"
+  resolved "https://r.cnpmjs.org/@tweenjs/tween.js/download/@tweenjs/tween.js-17.4.0.tgz#2e9ab3f2111906b30dfe1ef3259a9781dd211d35"
   integrity sha1-Lpqz8hEZBrMN/h7zJZqXgd0hHTU=
 
 da@^0.0.3:
   version "0.0.3"
-  resolved "http://r.cnpmjs.org/da/download/da-0.0.3.tgz#9d36dd233da767547fce05cefe3a358e2c637242"
+  resolved "https://r.cnpmjs.org/da/download/da-0.0.3.tgz#9d36dd233da767547fce05cefe3a358e2c637242"
   integrity sha1-nTbdIz2nZ1R/zgXO/jo1jixjckI=
 
-three@^0.110.0:
-  version "0.110.0"
-  resolved "http://r.cnpmjs.org/three/download/three-0.110.0.tgz#8719591de1336269113ee79f4268ba247b2324f8"
-  integrity sha1-hxlZHeEzYmkRPuefQmi6JHsjJPg=
+dat.gui@^0.7.6:
+  version "0.7.7"
+  resolved "https://registry.yarnpkg.com/dat.gui/-/dat.gui-0.7.7.tgz#7f96dbd21621a76385203659aebfa264ee6ae89b"
+  integrity sha512-sRl/28gF/XRC5ywC9I4zriATTsQcpSsRG7seXCPnTkK8/EQMIbCu5NPMpICLGxX9ZEUvcXR3ArLYCtgreFoMDw==
+
+mutation-observer@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/mutation-observer/-/mutation-observer-1.0.3.tgz#42e9222b101bca82e5ba9d5a7acf4a14c0f263d0"
+  integrity sha512-M/O/4rF2h776hV7qGMZUH3utZLO/jK7p8rnNgGkjKUw8zCGjRQPxB8z6+5l8+VjRUQ3dNYu4vjqXYLr+U8ZVNA==
+
+three@^0.125.0:
+  version "0.125.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.125.0.tgz#19e922b9dc51ad0b706893aeee888de68e99850a"
+  integrity sha512-qL36qUGsPQ/Ofo/RZdXwHwM7A8wzUSAIyawtjIebJSPvounUQeneSqxI0aBY2iwKpseGy+RUtj3C5f/z4poyXw==
+
+transitionEnd@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/transitionEnd/-/transitionEnd-1.0.2.tgz#1914db5b45a7efdc34a01af69285a3a693871633"
+  integrity sha1-GRTbW0Wn79w0oBr2koWjppOHFjM=
+
+vconsole@^3.3.4:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/vconsole/-/vconsole-3.4.0.tgz#2cf2ffaa86cd7ab736997a22b63d05627c6ab567"
+  integrity sha512-N9py7Ch9M9nzsigYf8T/WHIOood7jq2MNtUWDqicnrCsPsOZj8Z3NsmFgBmDA3bPKwnzace11HXHxYKPfwV32A==
+  dependencies:
+    mutation-observer "^1.0.3"
+    transitionEnd "^1.0.2"
